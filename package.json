@@ -2,7 +2,7 @@
   "name": "omni-cad",
   "displayName": "OmniCAD",
   "description": "Universal CAD engine frontend router for VS Code",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "publisher": "omni-cad",
   "repository": {
     "type": "git",
