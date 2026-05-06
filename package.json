@@ -1,0 +1,68 @@
+{
+  "name": "omni-cad",
+  "displayName": "OmniCAD",
+  "description": "Universal CAD engine frontend router for VS Code",
+  "version": "0.1.0",
+  "publisher": "omni-cad",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:python",
+    "onLanguage:scad",
+    "onCommand:omniCAD.openViewer"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "omniCAD.openViewer",
+        "title": "OmniCAD: Open Viewer"
+      }
+    ],
+    "configuration": {
+      "title": "OmniCAD",
+      "properties": {
+        "omniCAD.freecadPath": {
+          "type": "string",
+          "default": "FreeCADCmd",
+          "description": "Path to the FreeCADCmd executable"
+        },
+        "omniCAD.openscadPath": {
+          "type": "string",
+          "default": "openscad",
+          "description": "Path to the openscad CLI executable"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "pretest": "npm run compile",
+    "test": "node ./dist/test/suite/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@react-three/drei": "^9.105.4",
+    "@react-three/fiber": "^8.16.8",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.165.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.21.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.165.0",
+    "typescript": "^5.4.5"
+  }
+}
