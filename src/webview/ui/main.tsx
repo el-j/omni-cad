@@ -4,7 +4,8 @@ import { Scene } from './components/Scene';
 import { Toolbar } from './components/Toolbar';
 import { MeshPayload, ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../../types';
 
-// VS Code API for webview
+// VS Code API for webview.
+// acquireVsCodeApi() must be called exactly once per webview lifetime.
 declare function acquireVsCodeApi(): {
   postMessage(msg: WebviewToExtensionMessage): void;
   getState<T>(): T | undefined;

@@ -130,13 +130,12 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid }
 
     const mat = new THREE.MeshStandardMaterial({
       color: 0x4fc3f7,
-      wireframe,
       side: THREE.DoubleSide,
     });
     const mesh = new THREE.Mesh(geo, mat);
     meshRef.current = mesh;
     scene.add(mesh);
-  }, [meshPayload, wireframe]);
+  }, [meshPayload]);
 
   // Toggle wireframe on existing mesh without reloading geometry
   useEffect(() => {

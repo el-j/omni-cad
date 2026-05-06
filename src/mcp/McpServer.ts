@@ -20,6 +20,15 @@ interface ExportGeometryArgs {
 
 type ToolContent = { content: Array<{ type: 'text'; text: string }> };
 
+// Minimal type for McpServer.tool() that avoids TS2589 (excessive type depth
+// from the SDK's zod-inference overloads) while preserving runtime correctness.
+type RegisterToolFn = (
+  name: string,
+  description: string,
+  schema: Record<string, z.ZodTypeAny>,
+  handler: (args: Record<string, unknown>) => Promise<ToolContent>
+) => void;
+
 function engineExtension(engine: EngineId): string {
   if (engine === 'opengeometry') { return '.ts'; }
   if (engine === 'freecad') { return '.py'; }
@@ -44,24 +53,18 @@ const exportGeometrySchema = {
 export class OmniCadMcpServer {
   private server: McpServer;
   private router: EngineRouter;
+  // Narrowed reference to server.tool that bypasses the SDK's deep zod overloads (TS2589).
+  private readonly registerTool: RegisterToolFn;
 
   constructor(router: EngineRouter) {
     this.router = router;
     this.server = new McpServer({ name: 'OmniCAD-MCP', version: '1.0.0' });
+    this.registerTool = (this.server.tool as unknown as RegisterToolFn).bind(this.server);
     this._registerTools();
   }
 
   private _registerTools(): void {
-    // Cast to avoid TS2589 (excessive type instantiation from MCP SDK's zod-inference overload)
-    const registerTool = (
-      this.server.tool as (
-        name: string,
-        description: string,
-        schema: Record<string, z.ZodTypeAny>,
-        handler: (args: Record<string, unknown>) => Promise<ToolContent>
-      ) => void
-    ).bind(this.server);
-    registerTool(
+    this.registerTool(
       'compile_and_measure',
       'Compiles CAD code and returns bounding box, volume, and topology for AI validation.',
       compileMeasureSchema,
@@ -79,7 +82,7 @@ export class OmniCadMcpServer {
       }
     );
 
-    registerTool(
+    this.registerTool(
       'export_geometry',
       'Exports CAD code to a specified file format (STEP, STL, IGES, glTF).',
       exportGeometrySchema,

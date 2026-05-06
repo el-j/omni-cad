@@ -15,10 +15,9 @@ export class OpenScadAdapter implements ICadEngine {
 
   async compile(code: string): Promise<CompileResponse> {
     const start = Date.now();
-    const timestamp = start;
     const tmpDir = os.tmpdir();
-    const tmpInput = path.join(tmpDir, `omnicad_${timestamp}.scad`);
-    const tmpOutput = path.join(tmpDir, `omnicad_${timestamp}.stl`);
+    const tmpInput = path.join(tmpDir, `omnicad_${start}.scad`);
+    const tmpOutput = path.join(tmpDir, `omnicad_${start}.stl`);
     try {
       fs.writeFileSync(tmpInput, code, 'utf8');
       await this._runOpenScad(tmpInput, tmpOutput);

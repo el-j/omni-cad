@@ -43,7 +43,7 @@
   "scripts": {
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
-    "pretest": "npm run compile",
+    "pretest": "npx tsc --project tsconfig.json",
     "test": "node ./dist/test/suite/index.js"
   },
   "dependencies": {
@@ -60,6 +60,8 @@
     "@types/three": "^0.165.0",
     "@types/vscode": "^1.85.0",
     "esbuild": "^0.21.5",
+    "glob": "^13.0.6",
+    "mocha": "^11.7.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.165.0",
