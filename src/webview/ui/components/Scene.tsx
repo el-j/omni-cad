@@ -136,14 +136,14 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid }
     const mesh = new THREE.Mesh(geo, mat);
     meshRef.current = mesh;
     scene.add(mesh);
-  }, [meshPayload]);
+  }, [meshPayload, wireframe]);
 
-  // Toggle wireframe
+  // Toggle wireframe on existing mesh without reloading geometry
   useEffect(() => {
-    if (meshRef.current) {
+    if (meshRef.current && meshPayload) {
       (meshRef.current.material as THREE.MeshStandardMaterial).wireframe = wireframe;
     }
-  }, [wireframe]);
+  }, [wireframe, meshPayload]);
 
   // Toggle grid
   useEffect(() => {
