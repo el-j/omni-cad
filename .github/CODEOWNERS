@@ -1,0 +1,14 @@
+# CODEOWNERS
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for all files
+* @el-j
+
+# Engine adapters — any new adapter needs a careful review
+src/engines/ @el-j
+
+# CI/CD workflows
+.github/workflows/ @el-j
+
+# Security policy
+SECURITY.md @el-j
