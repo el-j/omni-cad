@@ -4,6 +4,11 @@
   "description": "Universal CAD engine frontend router for VS Code",
   "version": "0.1.0",
   "publisher": "omni-cad",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/el-j/omni-cad.git"
+  },
+  "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -42,9 +47,14 @@
   },
   "scripts": {
     "compile": "node esbuild.js",
+    "build": "npm run compile && npm run package",
     "watch": "node esbuild.js --watch",
-    "pretest": "npx tsc --project tsconfig.json",
-    "test": "node ./dist/test/suite/index.js"
+    "lint": "tsc --noEmit",
+    "pretest": "tsc --project tsconfig.json",
+    "test": "node ./dist/test/suite/index.js",
+    "test:coverage": "c8 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
+    "test:e2e": "node ./dist/test/e2e/runTests.js",
+    "package": "vsce package --no-dependencies"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
@@ -53,17 +63,27 @@
   "devDependencies": {
     "@react-three/drei": "^9.105.4",
     "@react-three/fiber": "^8.16.8",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/three": "^0.165.0",
     "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.9.1",
+    "c8": "^11.0.0",
     "esbuild": "^0.21.5",
     "glob": "^13.0.6",
     "mocha": "^11.7.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "semantic-release": "^25.0.3",
     "three": "^0.165.0",
     "typescript": "^5.4.5"
   }

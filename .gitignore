@@ -3,3 +3,6 @@ dist/
 *.vsix
 .DS_Store
 *.js.map
+coverage/
+.vscode-test/
+CHANGELOG.md

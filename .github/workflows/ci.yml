@@ -1,0 +1,235 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Lint (type-check) ──────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run lint
+
+  # ── Unit Tests & Coverage ─────────────────────────────────────────────────
+  test:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npx tsc --project tsconfig.json
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+      - name: Post coverage summary comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summaryPath = 'coverage/coverage-summary.json';
+            if (!fs.existsSync(summaryPath)) {
+              console.log('No coverage summary found, skipping comment');
+              return;
+            }
+            const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+            const t = summary.total;
+            const pct = (v) => `${v.pct.toFixed(1)}%`;
+            const icon = (v) => v.pct >= 80 ? '🟢' : v.pct >= 50 ? '🟡' : '🔴';
+            const body = [
+              '## 📊 Coverage Report',
+              '',
+              '| Metric | Coverage |',
+              '|--------|----------|',
+              `| ${icon(t.statements)} Statements | ${pct(t.statements)} (${t.statements.covered}/${t.statements.total}) |`,
+              `| ${icon(t.branches)} Branches | ${pct(t.branches)} (${t.branches.covered}/${t.branches.total}) |`,
+              `| ${icon(t.functions)} Functions | ${pct(t.functions)} (${t.functions.covered}/${t.functions.total}) |`,
+              `| ${icon(t.lines)} Lines | ${pct(t.lines)} (${t.lines.covered}/${t.lines.total}) |`,
+              '',
+              `> Full HTML report available as a [workflow artifact](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.startsWith('## 📊 Coverage Report'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  # ── Build & Package .vsix ────────────────────────────────────────────────
+  build:
+    name: Build & Package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension bundles
+        run: npm run compile
+
+      - name: Package .vsix
+        run: npm run package
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omni-cad-vsix
+          path: "*.vsix"
+          retention-days: 7
+
+  # ── E2E Tests (VS Code Extension Development Host) ────────────────────────
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install system dependencies for VS Code / Electron
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            xvfb \
+            libgtk-3-0 \
+            libxss1 \
+            libasound2t64 \
+            libgbm1 \
+            libdrm2 \
+            libxkbcommon0 \
+            libxcomposite1 \
+            libxrandr2 \
+            libxdamage1 \
+            libxfixes3 \
+            libnss3 \
+            libnspr4 \
+            libdbus-1-3
+
+      - name: Cache VS Code download
+        uses: actions/cache@v4
+        with:
+          path: ~/.vscode-test
+          key: vscode-test-${{ runner.os }}-stable
+
+      - name: Compile TypeScript (includes E2E test files)
+        run: npx tsc --project tsconfig.json
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: omni-cad-vsix
+          path: .
+
+      - name: Run E2E tests in headless VS Code
+        run: xvfb-run -a npm run test:e2e
+        env:
+          DISPLAY: ":99"
+
+      - name: Post E2E result comment on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              '## ❌ E2E Tests Failed',
+              '',
+              'One or more VS Code extension E2E tests failed.',
+              '',
+              `See the [workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.startsWith('## ❌ E2E Tests Failed'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

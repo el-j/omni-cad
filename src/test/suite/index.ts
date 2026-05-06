@@ -23,7 +23,9 @@ export async function run(): Promise<void> {
 }
 
 // Allow running directly: `node dist/test/suite/index.js`
-run().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+run()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
