@@ -24,7 +24,7 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 
 | Language / File | Engine | Use Case |
 |---|---|---|
-| `.ts` / `.js` | [OpenGeometry](https://github.com/nicktindall/cyclon.p2p-rtc-client) | Parametric geometry via WebAssembly |
+| `.ts` / `.js` | [OpenGeometry](https://opengeometry.dev) | Parametric geometry via WebAssembly |
 | `.py` / `.fcmacro` | [FreeCAD](https://www.freecad.org/) | Full BREP solid modelling |
 | `.scad` | [OpenSCAD](https://openscad.org/) | CSG-based 3D printing models |
 

@@ -23,9 +23,11 @@ export async function run(): Promise<void> {
 }
 
 // Allow running directly: `node dist/test/suite/index.js`
-run()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+if (require.main === module) {
+  run()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}
