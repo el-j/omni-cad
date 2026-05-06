@@ -189,7 +189,7 @@ jobs:
         run: npx tsc --project tsconfig.json
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.1.3
         with:
           name: omni-cad-vsix
           path: .
