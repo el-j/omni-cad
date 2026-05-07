@@ -65,7 +65,7 @@ test('capture freecad workflow story', async () => {
     await window.keyboard.press(`${modifier}+S`);
 
     // 4. Wait for the engine to show result
-    await window.waitForTimeout(10000);
+    await window.waitForTimeout(3000);
 
   } finally {
     await electronApp.close();

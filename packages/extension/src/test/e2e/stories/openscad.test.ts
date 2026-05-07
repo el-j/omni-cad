@@ -29,7 +29,7 @@ test('capture openscad render story', async () => {
     // Pierce the webview iframe to find the scale slider
     const webviewFrame = window.frameLocator('iframe.webview').frameLocator('iframe#active-frame');
     const slider = webviewFrame.locator('.scale-slider');
-    await slider.waitFor({ state: 'visible', timeout: 15000 });
+    await slider.waitFor({ state: 'visible', timeout: 1000 });
     await slider.fill('0.1');
     await window.waitForTimeout(1000);
 
@@ -37,33 +37,33 @@ test('capture openscad render story', async () => {
     // 1. Initial Save to show the 50mm box
     await window.click('.monaco-editor');
     await window.keyboard.press(`${modifier}+S`);
-    await window.waitForTimeout(10000);
+    await window.waitForTimeout(1000);
 
     // 2. LIVE UPDATE: Change 50 to 10
     // Navigate to line 2 (cube([20,20,20], center=true);
     await window.keyboard.press('F1');
     await window.waitForTimeout(1000);
-    await palette.waitFor({ state: 'visible', timeout: 15000 });
+    await palette.waitFor({ state: 'visible', timeout: 1000 });
     await palette.fill('> Go to Line...');
     await window.keyboard.press('Enter');
     await window.waitForTimeout(1000);
     
     // Type line number '2' and hit Enter
-    await palette.waitFor({ state: 'visible', timeout: 15000 });
+    await palette.waitFor({ state: 'visible', timeout: 1000 });
     await palette.fill(':2');
     await window.keyboard.press('Enter');
     await window.waitForTimeout(1000);
 
     // Modify cube size to 20x20x5
     await window.keyboard.press('Shift+End');
-    await window.keyboard.type('cube([50,15,75], center=true);', { delay: 100 });
+    await window.keyboard.type(' cube([50,15,75], center=true);', { delay: 100 });
     await window.waitForTimeout(1000);
 
     // 3. Save to trigger re-render
     await window.keyboard.press(`${modifier}+S`);
 
     // 4. Wait for the engine to show result
-    await window.waitForTimeout(20000);
+    await window.waitForTimeout(3000);
   } finally {
     await electronApp.close();
     fs.rmSync(userDataDir, { recursive: true, force: true });
