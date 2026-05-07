@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/el-j/omni-cad/compare/v1.0.0...v1.1.0) (2026-05-07)
+
+
+### Features
+
+* implement FreeCAD rendering integration and enhance adapters for improved mesh handling ([d7e4bdf](https://github.com/el-j/omni-cad/commit/d7e4bdfc28f762a88605ca3b2e358f7a3313bd69))
+* Integrate MCP server and experimental OpenGeometry support ([439e850](https://github.com/el-j/omni-cad/commit/439e85064e7a7352f4bbbfa39f87256bca3afeed))
+
 # 1.0.0 (2026-05-06)
 
 
