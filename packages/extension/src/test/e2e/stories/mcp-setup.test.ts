@@ -13,35 +13,47 @@ test('capture mcp setup story', async () => {
   const { electronApp, userDataDir, window, modifier } = await launchVSCode(extensionPath, dummyFile, 'mcp-setup');
 
   try {
-    
-    await window.waitForSelector('.monaco-editor', { timeout: 30000 });
-    
-    // Attempt to close any lingering popups
-    try {
-      const closeBtn = await window.locator('a:has-text("Continue without Signing In")');
-      if (await closeBtn.isVisible()) await closeBtn.click();
-    } catch(e) {}
-
-    await window.click('.monaco-editor');
-    await window.waitForTimeout(2000);
-
-    // Try multiple shortcuts for Command Palette
+    // 1. Open OmniCAD AI Bridge Setup (The modern way)
+    await window.click('.monaco-editor'); // Ensure focus
     await window.keyboard.press('F1');
     await window.waitForTimeout(1000);
-    
     let palette = window.locator('.quick-input-filter input');
     if (!(await palette.isVisible())) {
        await window.keyboard.press(`${modifier}+Shift+P`);
        await window.waitForTimeout(1000);
     }
-    
     await palette.waitFor({ state: 'visible', timeout: 15000 });
-    await palette.fill('OmniCAD: Open Viewer');
+    await palette.fill('> OmniCAD: Setup AI Bridge');
     await window.keyboard.press('Enter');
-    await window.waitForTimeout(2000);
-    await window.keyboard.press(`${modifier}+S`);
+    await window.waitForTimeout(3000);
+    
+    // 2. Show the MCP connection status
+    await window.keyboard.press('F1');
+    await window.waitForTimeout(1000);
+    await palette.waitFor({ state: 'visible', timeout: 15000 });
+    await palette.fill('> OmniCAD: Show MCP Status');
+    await window.keyboard.press('Enter');
+    await window.waitForTimeout(3000);
 
-    await window.waitForTimeout(20000);
+    // 3. Document active monitoring
+    await window.click('.monaco-editor');
+    await window.keyboard.press(`${modifier}+End`);
+    await window.keyboard.type('\n# OmniCAD AI Bridge: Active (MCP enabled)', { delay: 50 });
+    await window.keyboard.press(`${modifier}+S`);
+    await window.waitForTimeout(5000);
+    
+    // 3. Show the MCP interaction in a dummy file
+    await window.click('.monaco-editor');
+    await window.keyboard.type('\n# MCP is now active and monitoring this document...', { delay: 50 });
+    await window.keyboard.press(`${modifier}+S`);
+    await window.waitForTimeout(5000);
+
+    // 4. Open Viewer to show side-by-side
+    await window.keyboard.press('F1');
+    await palette.waitFor({ state: 'visible', timeout: 1500 });
+    await palette.fill('> OmniCAD: Open Viewer');
+    await window.keyboard.press('Enter');
+    await window.waitForTimeout(10000);
   } finally {
     await electronApp.close();
     fs.rmSync(userDataDir, { recursive: true, force: true });

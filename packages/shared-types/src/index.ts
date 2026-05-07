@@ -74,6 +74,12 @@ export type ExtensionToWebviewMessage =
       capabilities?: EngineCapabilities;
       reason?: string;
     };
+  }
+  | {
+    type: 'updateConfig';
+    payload: {
+      renderScale: number;
+    };
   };
 
 export type WebviewToExtensionMessage =

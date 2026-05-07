@@ -1,4 +1,4 @@
 difference() {
-  cube([20,20,20], center=true);
+cube([50,15,75], center=true);
   sphere(r=14, $fn=64);
 }

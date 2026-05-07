@@ -6,9 +6,10 @@ interface SceneProps {
   meshPayload: MeshPayload | null;
   wireframe: boolean;
   showGrid: boolean;
+  scale: number;
 }
 
-export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid }) => {
+export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid, scale }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -109,6 +110,13 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid }
     };
   }, []);
 
+  // Update mesh scale
+  useEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.scale.set(scale, scale, scale);
+    }
+  }, [scale]);
+
   // Update mesh when payload changes
   useEffect(() => {
     const scene = sceneRef.current;
@@ -140,9 +148,10 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid }
       side: THREE.DoubleSide,
     });
     const mesh = new THREE.Mesh(geo, mat);
+    mesh.scale.set(scale, scale, scale);
     meshRef.current = mesh;
     scene.add(mesh);
-  }, [meshPayload]);
+  }, [meshPayload, scale]);
 
   // Toggle wireframe on existing mesh without reloading geometry
   useEffect(() => {

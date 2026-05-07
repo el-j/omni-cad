@@ -24,47 +24,52 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingText, setLoadingText] = useState<string>('');
 
-  useEffect(() => {
-    const handler = (event: MessageEvent<ExtensionToWebviewMessage>) => {
-      const msg = event.data;
-      if (!msg || typeof msg !== 'object' || !('type' in msg)) {
-        return;
-      }
-      switch (msg.type) {
-        case 'compiling':
-          setIsLoading(true);
-          setLoadingText('Compiling...');
-          break;
-        case 'exportStarted':
-          setIsLoading(true);
-          setLoadingText('Exporting...');
-          break;
-        case 'updateMesh':
-          setIsLoading(false);
-          if (msg.payload.success && msg.payload.meshes.length > 0) {
-            setMesh(msg.payload.meshes[0]);
+    const [renderScale, setRenderScale] = useState<number>(1.0);
+  
+    useEffect(() => {
+      const handler = (event: MessageEvent<ExtensionToWebviewMessage>) => {
+        const msg = event.data;
+        if (!msg || typeof msg !== 'object' || !('type' in msg)) {
+          return;
+        }
+        switch (msg.type) {
+          case 'compiling':
+            setIsLoading(true);
+            setLoadingText('Compiling...');
+            break;
+          case 'exportStarted':
+            setIsLoading(true);
+            setLoadingText('Exporting...');
+            break;
+          case 'updateMesh':
+            setIsLoading(false);
+            if (msg.payload.success && msg.payload.meshes.length > 0) {
+              setMesh(msg.payload.meshes[0]);
+              setError(null);
+            } else if (!msg.payload.success) {
+              setError(msg.payload.errors.join('\n'));
+            }
+            break;
+          case 'updateConfig':
+            setRenderScale(msg.payload.renderScale);
+            break;
+          case 'showError':
+            setIsLoading(false);
+            setError(msg.message);
+            break;
+          case 'exportComplete':
+            setIsLoading(false);
             setError(null);
-          } else if (!msg.payload.success) {
-            setError(msg.payload.errors.join('\n'));
-          }
-          break;
-        case 'showError':
-          setIsLoading(false);
-          setError(msg.message);
-          break;
-        case 'exportComplete':
-          setIsLoading(false);
-          setError(null);
-          break;
-        case 'engineCapabilities':
-          setSupportedFormats(msg.payload.capabilities?.supportedExportFormats ?? []);
-          setEngineLabel(msg.payload.engineId ?? null);
-          if (msg.payload.reason) {
-            setError(msg.payload.reason);
-          }
-          break;
-      }
-    };
+            break;
+          case 'engineCapabilities':
+            setSupportedFormats(msg.payload.capabilities?.supportedExportFormats ?? []);
+            setEngineLabel(msg.payload.engineId ?? null);
+            if (msg.payload.reason) {
+              setError(msg.payload.reason);
+            }
+            break;
+        }
+      };
     window.addEventListener('message', handler);
     vscode.postMessage({ type: 'ready' });
     return () => window.removeEventListener('message', handler);
@@ -76,16 +81,18 @@ const App: React.FC = () => {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      <Toolbar
-        showGrid={showGrid}
-        wireframe={wireframe}
-        supportedFormats={supportedFormats}
-        engineLabel={engineLabel}
-        onToggleGrid={() => setShowGrid((v) => !v)}
-        onToggleWireframe={() => setWireframe((v) => !v)}
-        onExport={handleExport}
-      />
-      <Scene meshPayload={mesh} wireframe={wireframe} showGrid={showGrid} />
+    <Toolbar
+      showGrid={showGrid}
+      wireframe={wireframe}
+      scale={renderScale}
+      supportedFormats={supportedFormats}
+      engineLabel={engineLabel}
+      onToggleGrid={() => setShowGrid((v) => !v)}
+      onToggleWireframe={() => setWireframe((v) => !v)}
+      onScaleChange={(s) => setRenderScale(s)}
+      onExport={handleExport}
+    />
+    <Scene meshPayload={mesh} wireframe={wireframe} showGrid={showGrid} scale={renderScale} />
       {isLoading && (
         <div
           style={{

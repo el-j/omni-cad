@@ -53,6 +53,11 @@
           "type": "boolean",
           "default": false,
           "description": "Enable the experimental OpenGeometry preview until a real runtime is implemented."
+        },
+        "omniCAD.renderScale": {
+          "type": "number",
+          "default": 1.0,
+          "description": "Global scaling factor for the 3D viewer. Useful for scaling mm models to a manageable size."
         }
       }
     }

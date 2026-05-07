@@ -5,25 +5,63 @@ import { launchVSCode } from '../launcher';
 
 test('capture freecad workflow story', async () => {
   const extensionPath = path.resolve(__dirname, '../../../../');
-  const pyFile = path.resolve(extensionPath, 'demo_freecad.py');
+  const pyFile = path.resolve(extensionPath, 'demo.py');
   fs.writeFileSync(pyFile, 'import FreeCAD, Part\ndoc = FreeCAD.newDocument()\nbox = doc.addObject("Part::Box", "Box")\nbox.Length = 50\nbox.Width = 20\ndoc.recompute()\n');
 
   const { electronApp, userDataDir, window, modifier } = await launchVSCode(extensionPath, pyFile, 'freecad');
 
   try {
-    await window.waitForSelector('.monaco-editor', { timeout: 30000 });
+    await window.waitForSelector('.monaco-editor', { timeout: 1000 });
     
     // 1. Open OmniCAD Viewer
     await window.keyboard.press('F1');
-    await window.waitForSelector('.quick-input-filter', { timeout: 15000 });
-    await window.type('.quick-input-filter input', 'OmniCAD: Open Viewer');
+    await window.waitForTimeout(100);
+    let palette = window.locator('.quick-input-filter input');
+    if (!(await palette.isVisible())) {
+       await window.keyboard.press(`${modifier}+Shift+P`);
+       await window.waitForTimeout(1000);
+    }
+    await palette.waitFor({ state: 'visible', timeout: 1500 });
+    await palette.fill('> OmniCAD: Open Viewer');
     await window.keyboard.press('Enter');
+    await window.waitForTimeout(2000);
 
-    // 2. Switch focus back to the file tab
+    // Pierce the webview iframe to find the scale slider
+    const webviewFrame = window.frameLocator('iframe.webview').frameLocator('iframe#active-frame');
+    const slider = webviewFrame.locator('.scale-slider');
+    await slider.waitFor({ state: 'visible', timeout: 1500 });
+    await slider.fill('0.1');
+    await window.waitForTimeout(100);
+
+
+    // 1. Initial Save to show the 50mm box
     await window.click('.monaco-editor');
+    await window.keyboard.press(`${modifier}+S`);
+    await window.waitForTimeout(100);
+
+    // 2. LIVE UPDATE: Change 50 to 10
+    // Navigate to line 4 (box.Length = 50)
+    await window.keyboard.press('F1');
+    await window.waitForTimeout(1000);
+    await palette.waitFor({ state: 'visible', timeout: 1500 });
+    await palette.fill('> Go to Line...');
+    await window.keyboard.press('Enter');
+    await window.waitForTimeout(1000);
+    
+    // Type line number '4' and hit Enter
+    await palette.waitFor({ state: 'visible', timeout: 1500 });
+    await palette.fill(':4');
+    await window.keyboard.press('Enter');
     await window.waitForTimeout(1000);
 
-    // 3. Save the file to trigger rendering
+    // Move to end of line, delete '50', type '10'
+    await window.keyboard.press('End');
+    await window.keyboard.press('Backspace');
+    await window.keyboard.press('Backspace');
+    await window.keyboard.type('10', { delay: 100 });
+    await window.waitForTimeout(1000);
+
+    // 3. Save to trigger re-render
     await window.keyboard.press(`${modifier}+S`);
 
     // 4. Wait for the engine to show result

@@ -48,6 +48,25 @@ export class WebviewPanel {
       null,
       this._disposables
     );
+    
+    // Initial config sync
+    this._syncConfig();
+    
+    // Listen for config changes
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('omniCAD.renderScale')) {
+        this._syncConfig();
+      }
+    }, null, this._disposables);
+  }
+  
+  private _syncConfig(): void {
+    const config = vscode.workspace.getConfiguration('omniCAD');
+    const renderScale = config.get<number>('renderScale') ?? 1.0;
+    this.sendMessage({
+      type: 'updateConfig',
+      payload: { renderScale }
+    });
   }
 
   public sendMessage(message: ExtensionToWebviewMessage): void {
@@ -63,6 +82,7 @@ export class WebviewPanel {
   private async _handleMessage(message: WebviewToExtensionMessage): Promise<void> {
     switch (message.type) {
       case 'ready':
+        this._syncConfig();
         break;
       case 'requestExport': {
         const validFormats: ExportFormat[] = ['STEP', 'STL', 'IGES', 'glTF'];

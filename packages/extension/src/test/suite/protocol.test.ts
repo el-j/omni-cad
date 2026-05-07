@@ -15,6 +15,8 @@ function describeExtensionMessage(message: ExtensionToWebviewMessage): string {
       return `export:${message.filePath}`;
     case 'engineCapabilities':
       return `capabilities:${message.payload.engineId ?? 'unknown'}`;
+    case 'updateConfig':
+      return `updateConfig:${message.payload.renderScale}`;
   }
 }
 

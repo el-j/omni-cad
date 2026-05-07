@@ -86,7 +86,7 @@ export async function launchVSCode(extensionPath: string, testFile?: string, vid
 
     // Target the onboarding overlay specifically
     const overlay = window.locator('.onboarding-a-overlay');
-    if (await overlay.isVisible({ timeout: 5000 })) {
+    if (await overlay.isVisible({ timeout: 100 })) {
       // Find the "X" button (usually the first button without text in the overlay)
       const closeBtn = overlay.locator('button').filter({ hasText: '' }).first();
       if (await closeBtn.isVisible()) {
@@ -96,7 +96,7 @@ export async function launchVSCode(extensionPath: string, testFile?: string, vid
     
     // Fallback: Click "Continue without Signing In"
     const signinDismiss = window.locator('button:has-text("Continue without Signing In")');
-    if (await signinDismiss.isVisible({ timeout: 2000 })) {
+    if (await signinDismiss.isVisible({ timeout: 100 })) {
       await signinDismiss.click();
     }
   } catch (e) {}
@@ -110,16 +110,16 @@ export async function launchVSCode(extensionPath: string, testFile?: string, vid
     let palette = window.locator('.quick-input-filter input');
     if (!(await palette.isVisible())) {
        await window.keyboard.press(`${modifier}+Shift+P`);
-       await window.waitForTimeout(1000);
+       await window.waitForTimeout(100);
     }
     await palette.fill('> View: Hide Secondary Side Bar');
-    await window.waitForTimeout(1000);
+    await window.waitForTimeout(100);
     await window.keyboard.press('Enter');
   } catch (e) {}
   // 3. Handle "Extensions require a restart"
   try {
     const restartBtn = window.locator('button:has-text("Restart Extensions")');
-    if (await restartBtn.isVisible({ timeout: 5000 })) {
+    if (await restartBtn.isVisible({ timeout: 1000 })) {
       await restartBtn.click();
       
       // Wait for extension host to signal readiness via command availability
@@ -143,7 +143,7 @@ export async function launchVSCode(extensionPath: string, testFile?: string, vid
           }
           await window.keyboard.press('Escape');
         }
-        await window.waitForTimeout(1000);
+        await window.waitForTimeout(100);
       }
       if (!activated) console.warn('Extension activation signal not detected after 20s');
     }
