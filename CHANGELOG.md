@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/el-j/omni-cad/compare/v1.2.0...v1.3.0) (2026-05-07)
+
+
+### Features
+
+* add update poll mechanism to VS Code extension ([fba326e](https://github.com/el-j/omni-cad/commit/fba326eabb7058ed19fc2ff75cf6aea8477d2141))
+
 # [1.2.0](https://github.com/el-j/omni-cad/compare/v1.1.0...v1.2.0) (2026-05-07)
 
 
