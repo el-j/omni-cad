@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface VideoPlayerProps {
   src: string;
@@ -7,6 +7,33 @@ interface VideoPlayerProps {
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, label, className = '' }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Skip the first 7 seconds on initial load
+    const handleInitialLoad = () => {
+      video.currentTime = 7;
+    };
+
+    // Ensure the loop starts back at 7 seconds instead of 0
+    const handleTimeUpdate = () => {
+      if (video.currentTime < 7) {
+        video.currentTime = 7;
+      }
+    };
+
+    video.addEventListener('loadedmetadata', handleInitialLoad);
+    video.addEventListener('timeupdate', handleTimeUpdate);
+
+    return () => {
+      video.removeEventListener('loadedmetadata', handleInitialLoad);
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+    };
+  }, []);
+
   return (
     <div className={`relative bg-card border border-white/10 rounded-xl overflow-hidden shadow-2xl ${className}`}>
       {label && (
@@ -14,7 +41,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, label, className 
           ● {label}
         </span>
       )}
-      <video autoPlay loop muted playsInline className="w-full h-full object-cover">
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full h-full object-cover"
+      >
         <source src={src} type="video/webm" />
       </video>
     </div>
