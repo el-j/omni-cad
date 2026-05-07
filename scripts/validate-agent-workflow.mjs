@@ -24,8 +24,13 @@ const requiredFiles = [
   '.claude/templates/bugfix.md',
   '.claude/templates/refactor.md',
   '.claude/templates/checklist.md',
+  '.claude/tasks/README.md',
   '.claude/state/orchestrator-state.json',
-  '.claude/tasks/FEAT-201-omni-bridge-export-adapter-roadmap-2026-05-07.md'
+  '.claude/tasks/FEAT-201-omni-bridge-export-adapter-roadmap-2026-05-07.md',
+  '.claude/tasks/FEAT-202-cadquery-adapter-feasibility-2026-05-07.md',
+  '.claude/tasks/FEAT-203-build123d-adapter-feasibility-2026-05-07.md',
+  'docs/EXPORT_CAPABILITY_MATRIX.md',
+  'docs/ADAPTER_FAMILY_DECISIONS.md'
 ];
 
 for (const relativePath of requiredFiles) {
@@ -46,6 +51,8 @@ const state = JSON.parse(
 const expectedPipeline = '/task -> /validate -> /test -> /execute-task -> /review -> /testfix -> /learn';
 assert.match(claudeMd, new RegExp(expectedPipeline.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 assert.match(commandsReadme, new RegExp(expectedPipeline.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+assert.match(claudeMd, /finalized only after required E2E/i);
+assert.match(commandsReadme, /E2E/i);
 
 const requiredRootScripts = ['build', 'lint', 'test', 'test:agents'];
 for (const scriptName of requiredRootScripts) {
@@ -89,6 +96,7 @@ for (const templateName of ['feature', 'bugfix', 'refactor']) {
   );
   assert.match(content, /## Acceptance Criteria/);
   assert.match(content, /## Black-Box Test Spec/);
+  assert.match(content, /## Finalization Gates/);
 }
 
 assert.equal(state.orchestrator.status, 'idle');
@@ -96,5 +104,7 @@ assert.equal(state.orchestrator.baseBranch, 'main');
 assert.ok(Array.isArray(state.queue), 'State queue must be an array');
 assert.ok(Array.isArray(state.history), 'State history must be an array');
 assert.ok(state.queue.some((item) => item.id === 'FEAT-201'), 'State queue must include FEAT-201');
+assert.ok(state.queue.some((item) => item.id === 'FEAT-202'), 'State queue must include FEAT-202');
+assert.ok(state.queue.some((item) => item.id === 'FEAT-203'), 'State queue must include FEAT-203');
 
 console.log('Agent workflow validation passed.');

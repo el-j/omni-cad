@@ -43,7 +43,14 @@ This is a thin, test-driven adaptation of the blueprint workflow for the OmniCAD
 3. Acceptance tests are written or updated before implementation.
 4. Implementation is scoped to making the tests pass.
 5. Review checks conventions, packaging claims, and unintended regressions.
-6. Learnings are appended after completion.
+6. E2E is run for touched runtime surfaces before finalization.
+7. Learnings are appended after completion.
+
+## File Readability Rule
+
+- No monolithic "boss" planning docs for active work.
+- Use one intent per file with explicit ids and date-stamped names.
+- Keep task plans in `.claude/tasks/` split into focused, testable slices.
 
 ## Learnings
 

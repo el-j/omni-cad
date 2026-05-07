@@ -7,6 +7,8 @@ import { FreeCadAdapter } from '../../engines/FreeCadAdapter';
 import { OpenScadAdapter } from '../../engines/OpenScadAdapter';
 import { OmniCadMcpServer } from '../../mcp/McpServer';
 import { getDefaultExportPath, getExportFileInfo } from '../../export/exportFormats';
+import { buildExportSaveDialog, exportToFile, resolveExportRequest } from '../../webview/exportFlow';
+import { ExportFormat, ICadEngine } from '../../types';
 
 const freecadExecutable = '/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd';
 const openscadExecutable = '/opt/homebrew/bin/openscad';
@@ -78,7 +80,13 @@ suite('OmniCAD Extension Tests', () => {
 
     test('compile mesh has vertices and indices when experimental runtime is enabled', async () => {
       const experimentalAdapter = new OpenGeometryAdapter(true);
-      const result = await experimentalAdapter.compile('// test');
+      const result = await experimentalAdapter.compile([
+        'export const model = () => {',
+        '  return box(10, 20, 30);',
+        '};',
+      ].join('\n'));
+      assert.strictEqual(result.success, true, !result.success ? result.errors.join('\n') : undefined);
+      assert.ok(result.meshes && result.meshes.length > 0, 'expected at least one mesh');
       const mesh = result.meshes![0];
       assert.ok(mesh.vertices.length > 0, 'vertices should be non-empty');
       assert.ok(mesh.indices.length > 0, 'indices should be non-empty');
@@ -301,6 +309,159 @@ suite('OmniCAD Extension Tests', () => {
       const server = new OmniCadMcpServer(new EngineRouter());
       const result = await server.exportGeometry({ code: 'cube([1,1,1]);', engine: 'openscad', format: 'STEP' });
       assert.match(result.content[0].text, /UNSUPPORTED_FORMAT/);
+    });
+  });
+
+  suite('webview export flow helpers', () => {
+    function fakeEditor(fileName: string, text: string, isUntitled = false) {
+      return {
+        document: {
+          fileName,
+          isUntitled,
+          getText: () => text,
+        },
+      };
+    }
+
+    test('buildExportSaveDialog provides default STEP path and filter metadata', () => {
+      const dialog = buildExportSaveDialog('STEP', {
+        fileName: '/tmp/model.py',
+        isUntitled: false,
+        getText: () => 'ignored',
+      });
+
+      assert.strictEqual(dialog.defaultPath, path.join('/tmp', 'model.step'));
+      assert.strictEqual(dialog.saveLabel, 'Export STEP');
+      assert.deepStrictEqual(dialog.filters, {
+        'STEP model': ['step', 'stp'],
+      });
+    });
+
+    test('buildExportSaveDialog omits default path for untitled files', () => {
+      const dialog = buildExportSaveDialog('STL', {
+        fileName: 'untitled:Untitled-1',
+        isUntitled: true,
+        getText: () => 'ignored',
+      });
+
+      assert.strictEqual(dialog.defaultPath, undefined);
+      assert.deepStrictEqual(dialog.filters, {
+        'STL mesh': ['stl'],
+      });
+    });
+
+    test('resolveExportRequest rejects unsupported format', () => {
+      const result = resolveExportRequest(
+        'glTF',
+        fakeEditor('/tmp/model.py', 'print("x")'),
+        () => ({
+          id: 'fake',
+          supportedExtensions: ['.py'],
+          capabilities: {
+            supportedExportFormats: ['STL'],
+            supportsBrepMetadata: false,
+            renderable: true,
+          },
+          compile: async () => ({ success: true, meshes: [], computeTimeMs: 0 }),
+          getBrepMetadata: async () => ({
+            boundingBox: { xMin: 0, xMax: 0, yMin: 0, yMax: 0, zMin: 0, zMax: 0 },
+            volume: 0,
+            topology: { faces: 0, edges: 0, vertices: 0 },
+          }),
+          export: async () => Buffer.from('x'),
+          dispose: () => {},
+        })
+      );
+
+      assert.strictEqual(result.ok, false);
+      if (!result.ok) {
+        assert.match(result.message, /does not support glTF export/);
+      }
+    });
+
+    test('resolveExportRequest rejects when no active editor exists', () => {
+      const result = resolveExportRequest('STL', undefined, () => undefined);
+      assert.strictEqual(result.ok, false);
+      if (!result.ok) {
+        assert.strictEqual(result.message, 'No active editor');
+      }
+    });
+
+    test('resolveExportRequest rejects when no engine exists for extension', () => {
+      const result = resolveExportRequest('STL', fakeEditor('/tmp/model.unknown', 'x'), () => undefined);
+      assert.strictEqual(result.ok, false);
+      if (!result.ok) {
+        assert.match(result.message, /No engine for extension \.unknown/);
+      }
+    });
+
+    test('resolveExportRequest returns export context for supported engine', () => {
+      const engine: ICadEngine = {
+        id: 'freecad',
+        supportedExtensions: ['.py'],
+        capabilities: {
+          supportedExportFormats: ['STL', 'STEP', 'IGES'] as ExportFormat[],
+          supportsBrepMetadata: true,
+          renderable: true,
+        },
+        compile: async () => ({ success: true as const, meshes: [], computeTimeMs: 0 }),
+        getBrepMetadata: async () => ({
+          boundingBox: { xMin: 0, xMax: 1, yMin: 0, yMax: 1, zMin: 0, zMax: 1 },
+          volume: 1,
+          topology: { faces: 1, edges: 1, vertices: 1 },
+        }),
+        export: async () => Buffer.from('x'),
+        dispose: () => {},
+      };
+
+      const result = resolveExportRequest('STEP', fakeEditor('/tmp/model.py', 'print("x")'), () => engine);
+      assert.strictEqual(result.ok, true);
+      if (result.ok) {
+        assert.strictEqual(result.sourcePath, '/tmp/model.py');
+        assert.strictEqual(result.code, 'print("x")');
+        assert.strictEqual(result.saveDialog.defaultPath, path.join('/tmp', 'model.step'));
+      }
+    });
+
+    test('exportToFile writes exported bytes and forwards sourcePath', async () => {
+      const tmpDir = fs.mkdtempSync(path.join('/tmp', 'omnicad-exportflow-test-'));
+      const targetPath = path.join(tmpDir, 'model.step');
+      let capturedSourcePath: string | undefined;
+
+      const engine: ICadEngine = {
+        id: 'freecad',
+        supportedExtensions: ['.py'],
+        capabilities: {
+          supportedExportFormats: ['STL', 'STEP', 'IGES'] as ExportFormat[],
+          supportsBrepMetadata: true,
+          renderable: true,
+        },
+        compile: async () => ({ success: true as const, meshes: [], computeTimeMs: 0 }),
+        getBrepMetadata: async () => ({
+          boundingBox: { xMin: 0, xMax: 1, yMin: 0, yMax: 1, zMin: 0, zMax: 1 },
+          volume: 1,
+          topology: { faces: 1, edges: 1, vertices: 1 },
+        }),
+        export: async (_code: string, _format: ExportFormat, options?: { sourcePath?: string }) => {
+          capturedSourcePath = options?.sourcePath;
+          return Buffer.from('STEP_BYTES');
+        },
+        dispose: () => {},
+      };
+
+      await exportToFile(
+        engine,
+        'print("x")',
+        'STEP',
+        '/tmp/model.py',
+        targetPath,
+        (dest, data) => fs.writeFileSync(dest, data)
+      );
+
+      assert.strictEqual(capturedSourcePath, '/tmp/model.py');
+      assert.strictEqual(fs.readFileSync(targetPath, 'utf8'), 'STEP_BYTES');
+
+      fs.rmSync(tmpDir, { recursive: true, force: true });
     });
   });
 });

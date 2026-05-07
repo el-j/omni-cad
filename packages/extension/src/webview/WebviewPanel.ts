@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { EngineRouter } from '../engines/EngineRouter';
-import { getDefaultExportPath, getExportFileInfo } from '../export/exportFormats';
 import { ExportFormat, ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
+import { exportToFile, resolveExportRequest } from './exportFlow';
 
 export class WebviewPanel {
   public static readonly viewType = 'omniCAD.viewer';
@@ -86,45 +86,37 @@ export class WebviewPanel {
         this._syncConfig();
         break;
       case 'requestExport': {
-        const validFormats: ExportFormat[] = ['STEP', 'STL', 'IGES', 'glTF'];
-        if (!validFormats.includes(message.format)) {
-          this.sendMessage({ type: 'showError', message: `Unsupported export format ${message.format}` });
+        const resolved = resolveExportRequest(
+          message.format,
+          vscode.window.activeTextEditor,
+          (ext) => this._getRouter().get(ext)
+        );
+
+        if (!resolved.ok) {
+          this.sendMessage({ type: 'showError', message: resolved.message });
           return;
         }
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-          this.sendMessage({ type: 'showError', message: 'No active editor' });
-          return;
-        }
-        const ext = path.extname(editor.document.fileName).toLowerCase();
-        const engine = this._getRouter().get(ext);
-        if (!engine) {
-          this.sendMessage({ type: 'showError', message: `No engine for extension ${ext}` });
-          return;
-        }
-        if (!engine.capabilities.supportedExportFormats.includes(message.format)) {
-          this.sendMessage({
-            type: 'showError',
-            message: `${engine.id} does not support ${message.format} export`,
-          });
-          return;
-        }
-        const fileInfo = getExportFileInfo(message.format);
-        const defaultUri = editor.document.isUntitled
-          ? undefined
-          : vscode.Uri.file(getDefaultExportPath(editor.document.fileName, message.format));
+
+        const defaultUri = resolved.saveDialog.defaultPath
+          ? vscode.Uri.file(resolved.saveDialog.defaultPath)
+          : undefined;
+
         const saveUri = await vscode.window.showSaveDialog({
           defaultUri,
-          saveLabel: `Export ${message.format}`,
-          filters: { [fileInfo.label]: fileInfo.extensions },
+          saveLabel: resolved.saveDialog.saveLabel,
+          filters: resolved.saveDialog.filters,
         });
         if (!saveUri) { return; }
         try {
           this.sendMessage({ type: 'exportStarted' });
-          const buf = await engine.export(editor.document.getText(), message.format, {
-            sourcePath: editor.document.fileName,
-          });
-          fs.writeFileSync(saveUri.fsPath, buf);
+          await exportToFile(
+            resolved.engine,
+            resolved.code,
+            message.format as ExportFormat,
+            resolved.sourcePath,
+            saveUri.fsPath,
+            (targetPath, data) => fs.writeFileSync(targetPath, data)
+          );
           this.sendMessage({ type: 'exportComplete', filePath: saveUri.fsPath });
           vscode.window.showInformationMessage(`Exported to ${saveUri.fsPath}`);
         } catch (err: unknown) {

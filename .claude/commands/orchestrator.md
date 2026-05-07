@@ -11,12 +11,14 @@ Run queued tasks from `.claude/state/orchestrator-state.json` one at a time.
 4. Run `/execute-task`.
 5. Run `/review`.
 6. If needed, run `/testfix` and re-check.
-7. Run `/learn` and update state.
+7. Run required E2E before marking finalized.
+8. Run `/learn` and update state.
 
 ## Rules
 
 - One task at a time.
 - Do not skip the `/test` step; this repo uses a test-first workflow.
+- Do not mark runtime tasks complete until required E2E passes.
 - If a task is blocked, record the blocker and move on only if the state policy allows it.
 
 ## Result Format

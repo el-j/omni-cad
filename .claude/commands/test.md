@@ -26,6 +26,7 @@ Use the task plan, public behavior, and repo conventions. Do not depend on imple
 1. Tests come before implementation.
 2. Each acceptance criterion needs at least one test or explicit coverage note.
 3. If a surface is not directly testable, write the closest stable contract test and add a follow-up item.
+4. Include an E2E target in the task spec when the task touches user-visible runtime flows.
 
 ## Result Format
 

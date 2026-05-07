@@ -12,6 +12,8 @@ Implement an approved task against the tests prepared by `/test`.
 5. Implement the smallest change that satisfies the failing criterion.
 6. Re-run the same focused test immediately.
 7. After the slice passes, run the smallest additional lint/type/build gate that covers the touched code.
+8. Run required E2E gate for touched runtime surfaces.
+9. Mark task finalized only when E2E gate is green.
 
 ## Rules
 
@@ -19,6 +21,7 @@ Implement an approved task against the tests prepared by `/test`.
 2. Do not close the task while planned tests are still failing.
 3. Keep packaging, README claims, and capability flags consistent with shipped behavior.
 4. Record out-of-scope findings in `.build/followup_queue.json`.
+5. If runtime/UI behavior changed, E2E is mandatory before finalization.
 
 ## Result Format
 

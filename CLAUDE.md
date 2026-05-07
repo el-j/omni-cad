@@ -48,11 +48,13 @@ pnpm --filter omni-cad run package
 - Do not claim engine capabilities that are not implemented and tested.
 - When changing export, render, MCP, packaging, or release behavior, update tests or add focused coverage in the same slice.
 - Keep `.claude/tasks` as the source of agent plans and execution notes for this repo.
+- Keep planning files human-readable and split by concern; avoid monolithic "boss" plans.
 
 ## Testing Policy
 
 - The workflow is test-first: plan the task, write or update black-box acceptance tests from the plan, then implement until they pass.
 - Use focused tests before broad suites when the task scope is narrow.
+- A task is finalized only after required E2E validation passes for the touched runtime surface.
 - Extension validation entrypoints:
   - Unit/integration: `pnpm --filter omni-cad run pretest && pnpm --filter omni-cad run test`
   - Coverage gate: `pnpm --filter omni-cad run test:coverage`
@@ -86,6 +88,7 @@ pnpm --filter omni-cad run package
 Rules:
 - `/test` must work from the task plan and public behavior, not the implementation internals.
 - `/execute-task` does not close a task until the planned tests pass.
+- `/execute-task` marks tasks finalized only after required E2E passes.
 - `/review` can request fixes, but it does not rewrite the task scope.
 - `/learn` preserves prior learnings and appends only concrete new lessons.
 

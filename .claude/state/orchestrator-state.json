@@ -13,9 +13,25 @@
       "status": "planned",
       "priority": "high",
       "specialist": "extension-runtime"
+    },
+    {
+      "id": "FEAT-202",
+      "title": "CadQuery adapter feasibility",
+      "path": ".claude/tasks/FEAT-202-cadquery-adapter-feasibility-2026-05-07.md",
+      "status": "planned",
+      "priority": "high",
+      "specialist": "extension-runtime"
+    },
+    {
+      "id": "FEAT-203",
+      "title": "build123d adapter feasibility",
+      "path": ".claude/tasks/FEAT-203-build123d-adapter-feasibility-2026-05-07.md",
+      "status": "planned",
+      "priority": "high",
+      "specialist": "extension-runtime"
     }
   ],
   "history": [],
   "blocked": [],
-  "updatedAt": "2026-05-07T22:55:00.000Z"
+  "updatedAt": "2026-05-07T23:20:00.000Z"
 }

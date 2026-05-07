@@ -38,3 +38,8 @@ Describe the internal improvement and why it is needed.
 ```bash
 pnpm test:agents
 ```
+
+## Finalization Gates
+
+- Contract tests stay green
+- Required E2E pass for touched runtime surfaces

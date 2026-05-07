@@ -41,6 +41,11 @@ One paragraph describing the user-visible change.
 pnpm test:agents
 ```
 
+## Finalization Gates
+
+- Focused tests pass
+- Required E2E pass for touched runtime surfaces
+
 ## Notes
 
 - Packaging or release impact:

@@ -40,3 +40,8 @@ Describe the broken behavior and the expected corrected behavior.
 ```bash
 pnpm test:agents
 ```
+
+## Finalization Gates
+
+- Regression tests pass
+- Required E2E pass for touched runtime surfaces
