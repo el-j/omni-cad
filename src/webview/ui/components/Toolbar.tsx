@@ -1,12 +1,17 @@
 import React from 'react';
+import { ExportFormat } from '../../../types';
 
 interface ToolbarProps {
   showGrid: boolean;
   wireframe: boolean;
+  supportedFormats: ExportFormat[];
+  engineLabel: string | null;
   onToggleGrid: () => void;
   onToggleWireframe: () => void;
-  onExport: (format: 'STEP' | 'STL' | 'IGES' | 'glTF') => void;
+  onExport: (format: ExportFormat) => void;
 }
+
+const exportFormats: ExportFormat[] = ['STEP', 'STL', 'IGES', 'glTF'];
 
 const btnStyle: React.CSSProperties = {
   background: '#2d2d30',
@@ -28,6 +33,8 @@ const activeBtnStyle: React.CSSProperties = {
 export const Toolbar: React.FC<ToolbarProps> = ({
   showGrid,
   wireframe,
+  supportedFormats,
+  engineLabel,
   onToggleGrid,
   onToggleWireframe,
   onExport,
@@ -49,8 +56,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     <button style={wireframe ? activeBtnStyle : btnStyle} onClick={onToggleWireframe}>
       Wireframe
     </button>
-    <button style={btnStyle} onClick={() => onExport('STEP')}>STEP</button>
-    <button style={btnStyle} onClick={() => onExport('STL')}>STL</button>
-    <button style={btnStyle} onClick={() => onExport('glTF')}>glTF</button>
+    {exportFormats.map((format) => (
+      <button
+        key={format}
+        style={btnStyle}
+        onClick={() => onExport(format)}
+        disabled={!supportedFormats.includes(format)}
+        title={!supportedFormats.includes(format) ? `${engineLabel ?? 'Current engine'} does not support ${format}` : undefined}
+      >
+        {format}
+      </button>
+    ))}
   </div>
 );

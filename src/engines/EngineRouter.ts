@@ -6,8 +6,8 @@ import { OpenScadAdapter } from './OpenScadAdapter';
 export class EngineRouter {
   private engines: Map<string, ICadEngine> = new Map();
 
-  constructor(freecadPath?: string, openscadPath?: string) {
-    const og = new OpenGeometryAdapter();
+  constructor(freecadPath?: string, openscadPath?: string, enableExperimentalOpenGeometry = false) {
+    const og = new OpenGeometryAdapter(enableExperimentalOpenGeometry);
     const fc = new FreeCadAdapter(freecadPath);
     const os = new OpenScadAdapter(openscadPath);
 
@@ -20,11 +20,19 @@ export class EngineRouter {
     return this.engines.get(extension.toLowerCase());
   }
 
+  getCapabilities(extension: string) {
+    return this.get(extension)?.capabilities;
+  }
+
   dispose(): void {
     const seen = new Set<ICadEngine>();
     for (const engine of this.engines.values()) {
       if (!seen.has(engine)) {
-        engine.dispose();
+        try {
+          engine.dispose();
+        } catch {
+          // Best-effort disposal across shared engines.
+        }
         seen.add(engine);
       }
     }

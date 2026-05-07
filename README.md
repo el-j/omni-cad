@@ -24,7 +24,7 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 
 | Language / File | Engine | Use Case |
 |---|---|---|
-| `.ts` / `.js` | [OpenGeometry](https://opengeometry.dev) | Parametric geometry via WebAssembly |
+| `.ts` / `.js` | [OpenGeometry](https://opengeometry.dev) | Experimental preview only until real runtime integration |
 | `.py` / `.fcmacro` | [FreeCAD](https://www.freecad.org/) | Full BREP solid modelling |
 | `.scad` | [OpenSCAD](https://openscad.org/) | CSG-based 3D printing models |
 
@@ -34,9 +34,9 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 
 - **Live 3D Viewer** — Three.js-powered WebGL viewer opens beside your editor. Save your file, see the update instantly.
 - **Engine Router** — Strategy-pattern dispatcher automatically selects the right backend for each file extension.
-- **Multi-format Export** — Export your models to **STEP**, **STL**, **IGES**, or **glTF** with a single click.
+- **Capability-aware Export** — Export actions are gated by the active engine's actual supported formats.
 - **MCP Integration** — Built-in [Model Context Protocol](https://modelcontextprotocol.io) server exposes `compile_and_measure` and `export_geometry` tools to any MCP-capable AI agent.
-- **Zero-config defaults** — Works out of the box for OpenGeometry. FreeCAD and OpenSCAD just need their executables on your `PATH`.
+- **Guarded experimental runtime** — OpenGeometry is explicitly gated until a real runtime is integrated.
 - **Professional CI/CD** — Semantic versioning, automated `.vsix` releases, coverage reports, E2E tests in headless VS Code.
 
 ---
@@ -108,6 +108,8 @@ All settings are under the **OmniCAD** section in VS Code Settings (`Ctrl+,`):
 |---|---|---|
 | `omniCAD.freecadPath` | `FreeCADCmd` | Path to the `FreeCADCmd` executable |
 | `omniCAD.openscadPath` | `openscad` | Path to the `openscad` CLI executable |
+| `omniCAD.mcpEnabled` | `false` | Enable guarded MCP server startup |
+| `omniCAD.enableExperimentalOpenGeometry` | `false` | Enable OpenGeometry preview mode |
 
 ---
 
@@ -188,7 +190,7 @@ npm run build          # compile + package in one step
 |---|---|---|
 | Unit | `npm test` | EngineRouter dispatch, adapter stubs, compile/export responses |
 | Coverage | `npm run test:coverage` | Same, with c8 line/branch/function coverage |
-| E2E | `npm run test:e2e` | Extension activation, command registration, config defaults — runs inside a real VS Code instance via `@vscode/test-electron` |
+| E2E | `npm run test:e2e` | Extension activation, command registration, config defaults, FreeCAD render path — runs inside a real VS Code instance via `@vscode/test-electron` |
 
 ---
 

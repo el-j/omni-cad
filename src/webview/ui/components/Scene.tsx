@@ -94,9 +94,16 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid }
 
     return () => {
       cancelAnimationFrame(frameRef.current);
+      renderer.domElement.removeEventListener('mousedown', onMouseDown);
+      renderer.domElement.removeEventListener('wheel', onWheel);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      if (meshRef.current) {
+        scene.remove(meshRef.current);
+        meshRef.current.geometry.dispose();
+        (meshRef.current.material as THREE.Material).dispose();
+      }
       renderer.dispose();
       mountRef.current?.removeChild(renderer.domElement);
     };
@@ -114,7 +121,7 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid }
       meshRef.current = null;
     }
 
-    if (!meshPayload) { return; }
+    if (!meshPayload || meshPayload.vertices.length === 0 || meshPayload.vertices.length % 3 !== 0) { return; }
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(meshPayload.vertices, 3));
@@ -140,7 +147,9 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid }
   // Toggle wireframe on existing mesh without reloading geometry
   useEffect(() => {
     if (meshRef.current && meshPayload) {
-      (meshRef.current.material as THREE.MeshStandardMaterial).wireframe = wireframe;
+      if (meshRef.current.material instanceof THREE.MeshStandardMaterial) {
+        meshRef.current.material.wireframe = wireframe;
+      }
     }
   }, [wireframe, meshPayload]);
 
