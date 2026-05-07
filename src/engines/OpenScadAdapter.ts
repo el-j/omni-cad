@@ -2,7 +2,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { ICadEngine, CompileResponse, BrepMetadata } from '../types';
+import { ICadEngine, CompileResponse, BrepMetadata, EngineExecutionOptions } from '../types';
 
 export class OpenScadAdapter implements ICadEngine {
   id = 'openscad';
@@ -13,7 +13,7 @@ export class OpenScadAdapter implements ICadEngine {
     this.openscadPath = openscadPath;
   }
 
-  async compile(code: string): Promise<CompileResponse> {
+  async compile(code: string, _options?: EngineExecutionOptions): Promise<CompileResponse> {
     const start = Date.now();
     const tmpDir = os.tmpdir();
     const tmpInput = path.join(tmpDir, `omnicad_${start}.scad`);
@@ -31,8 +31,8 @@ export class OpenScadAdapter implements ICadEngine {
     }
   }
 
-  async getBrepMetadata(code: string): Promise<BrepMetadata> {
-    await this.compile(code);
+  async getBrepMetadata(code: string, options?: EngineExecutionOptions): Promise<BrepMetadata> {
+    await this.compile(code, options);
     return {
       boundingBox: { xMin: 0, xMax: 1, yMin: 0, yMax: 1, zMin: 0, zMax: 1 },
       volume: 1,
@@ -40,8 +40,12 @@ export class OpenScadAdapter implements ICadEngine {
     };
   }
 
-  async export(code: string, format: 'STEP' | 'STL' | 'IGES' | 'glTF'): Promise<Buffer> {
-    await this.compile(code);
+  async export(
+    code: string,
+    format: 'STEP' | 'STL' | 'IGES' | 'glTF',
+    options?: EngineExecutionOptions
+  ): Promise<Buffer> {
+    await this.compile(code, options);
     return Buffer.from(`OPENSCAD_EXPORT_${format}`);
   }
 

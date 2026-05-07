@@ -1,10 +1,10 @@
-import { ICadEngine, CompileResponse, BrepMetadata } from '../types';
+import { ICadEngine, CompileResponse, BrepMetadata, EngineExecutionOptions } from '../types';
 
 export class OpenGeometryAdapter implements ICadEngine {
   id = 'opengeometry';
   supportedExtensions = ['.ts', '.js'];
 
-  async compile(code: string): Promise<CompileResponse> {
+  async compile(code: string, _options?: EngineExecutionOptions): Promise<CompileResponse> {
     const start = Date.now();
     try {
       // Stub: In production this would run opengeometry_bg.wasm
@@ -17,7 +17,7 @@ export class OpenGeometryAdapter implements ICadEngine {
     }
   }
 
-  async getBrepMetadata(_code: string): Promise<BrepMetadata> {
+  async getBrepMetadata(_code: string, _options?: EngineExecutionOptions): Promise<BrepMetadata> {
     return {
       boundingBox: { xMin: -1, xMax: 1, yMin: -1, yMax: 1, zMin: -1, zMax: 1 },
       volume: 8,
@@ -25,7 +25,11 @@ export class OpenGeometryAdapter implements ICadEngine {
     };
   }
 
-  async export(_code: string, _format: 'STEP' | 'STL' | 'IGES' | 'glTF'): Promise<Buffer> {
+  async export(
+    _code: string,
+    _format: 'STEP' | 'STL' | 'IGES' | 'glTF',
+    _options?: EngineExecutionOptions
+  ): Promise<Buffer> {
     return Buffer.from('STUB EXPORT');
   }
 

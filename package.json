@@ -53,6 +53,7 @@
     "pretest": "tsc --project tsconfig.json",
     "test": "node ./dist/test/suite/index.js",
     "test:coverage": "c8 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
+    "pretest:e2e": "tsc --project tsconfig.json",
     "test:e2e": "node ./dist/test/e2e/runTests.js",
     "package": "vsce package --no-dependencies"
   },

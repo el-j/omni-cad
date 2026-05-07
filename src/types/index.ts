@@ -5,6 +5,10 @@ export interface MeshPayload {
   colors?: number[];
 }
 
+export interface EngineExecutionOptions {
+  sourcePath?: string;
+}
+
 export interface CompileResponse {
   success: boolean;
   meshes?: MeshPayload[];
@@ -32,9 +36,9 @@ export interface BrepMetadata {
 export interface ICadEngine {
   id: string;
   supportedExtensions: string[];
-  compile(code: string): Promise<CompileResponse>;
-  getBrepMetadata(code: string): Promise<BrepMetadata>;
-  export(code: string, format: 'STEP' | 'STL' | 'IGES' | 'glTF'): Promise<Buffer>;
+  compile(code: string, options?: EngineExecutionOptions): Promise<CompileResponse>;
+  getBrepMetadata(code: string, options?: EngineExecutionOptions): Promise<BrepMetadata>;
+  export(code: string, format: 'STEP' | 'STL' | 'IGES' | 'glTF', options?: EngineExecutionOptions): Promise<Buffer>;
   dispose(): void;
 }
 

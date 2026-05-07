@@ -9,12 +9,12 @@ export class WebviewPanel {
 
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
-  private readonly _router: EngineRouter;
+  private readonly _getRouter: () => EngineRouter;
   private _disposables: vscode.Disposable[] = [];
 
   public static createOrShow(
     context: vscode.ExtensionContext,
-    router: EngineRouter
+    getRouter: () => EngineRouter
   ): WebviewPanel {
     const column = vscode.ViewColumn.Beside;
     const panel = vscode.window.createWebviewPanel(
@@ -29,17 +29,17 @@ export class WebviewPanel {
         ],
       }
     );
-    return new WebviewPanel(panel, context.extensionUri, router);
+    return new WebviewPanel(panel, context.extensionUri, getRouter);
   }
 
   private constructor(
     panel: vscode.WebviewPanel,
     extensionUri: vscode.Uri,
-    router: EngineRouter
+    getRouter: () => EngineRouter
   ) {
     this._panel = panel;
     this._extensionUri = extensionUri;
-    this._router = router;
+    this._getRouter = getRouter;
 
     this._panel.webview.html = this._getHtmlContent(this._panel.webview);
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
@@ -71,7 +71,7 @@ export class WebviewPanel {
           return;
         }
         const ext = path.extname(editor.document.fileName).toLowerCase();
-        const engine = this._router.get(ext);
+        const engine = this._getRouter().get(ext);
         if (!engine) {
           this.sendMessage({ type: 'showError', message: `No engine for extension ${ext}` });
           return;
@@ -81,7 +81,9 @@ export class WebviewPanel {
         });
         if (!saveUri) { return; }
         try {
-          const buf = await engine.export(editor.document.getText(), message.format);
+          const buf = await engine.export(editor.document.getText(), message.format, {
+            sourcePath: editor.document.fileName,
+          });
           fs.writeFileSync(saveUri.fsPath, buf);
           this.sendMessage({ type: 'exportComplete', filePath: saveUri.fsPath });
           vscode.window.showInformationMessage(`Exported to ${saveUri.fsPath}`);

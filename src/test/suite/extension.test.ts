@@ -1,8 +1,12 @@
 import * as assert from 'assert';
+import * as fs from 'fs';
 import { EngineRouter } from '../../engines/EngineRouter';
 import { OpenGeometryAdapter } from '../../engines/OpenGeometryAdapter';
 import { FreeCadAdapter } from '../../engines/FreeCadAdapter';
 import { OpenScadAdapter } from '../../engines/OpenScadAdapter';
+
+const freecadExecutable = '/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd';
+const windpowerHelixStation = '/Users/rex-fab-alt/Documents/code/playground/windpower-3d/src/base/helix_station.py';
 
 suite('OmniCAD Extension Tests', () => {
   suite('EngineRouter', () => {
@@ -96,6 +100,40 @@ suite('OmniCAD Extension Tests', () => {
       const result = await adapter.compile('import FreeCAD');
       assert.strictEqual(result.success, false);
       assert.ok(result.errors && result.errors.length > 0);
+    });
+
+    test('compile returns a renderable mesh when FreeCAD is available', async function () {
+      if (!fs.existsSync(freecadExecutable)) {
+        this.skip();
+      }
+
+      const workingAdapter = new FreeCadAdapter(freecadExecutable);
+      const result = await workingAdapter.compile([
+        'import FreeCAD as App',
+        'import Part',
+        'doc = App.newDocument("Smoke")',
+        'box = doc.addObject("Part::Feature", "Box")',
+        'box.Shape = Part.makeBox(1, 2, 3)',
+      ].join('\n'));
+
+      assert.strictEqual(result.success, true);
+      assert.ok(result.meshes && result.meshes.length === 1, 'should export one mesh');
+      assert.ok(result.meshes![0].vertices.length > 0, 'mesh should contain vertices');
+      assert.ok(result.meshes![0].indices.length > 0, 'mesh should contain indices');
+    });
+
+    test('compile preserves sourcePath so windpower scripts can resolve project-relative imports', async function () {
+      if (!fs.existsSync(freecadExecutable) || !fs.existsSync(windpowerHelixStation)) {
+        this.skip();
+      }
+
+      const workingAdapter = new FreeCadAdapter(freecadExecutable);
+      const code = fs.readFileSync(windpowerHelixStation, 'utf8');
+      const result = await workingAdapter.compile(code, { sourcePath: windpowerHelixStation });
+
+      assert.strictEqual(result.success, true, result.errors?.join('\n'));
+      assert.ok(result.meshes && result.meshes.length === 1, 'windpower script should produce a mesh');
+      assert.ok(result.meshes![0].vertices.length > 300, 'windpower mesh should be non-trivial');
     });
   });
 
