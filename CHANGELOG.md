@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/el-j/omni-cad/compare/v1.1.0...v1.2.0) (2026-05-07)
+
+
+### Features
+
+* complete backlog — progress UI, finite guards, MCP response validation, test coverage ([c448804](https://github.com/el-j/omni-cad/commit/c4488040c261c991b99736a8de5c6244f2598d44))
+* integrate FreeCAD demo video into landing page and README ([c81916b](https://github.com/el-j/omni-cad/commit/c81916b44ab76f3b1599ca2bf4c978e151cfccd3))
+
 # [1.1.0](https://github.com/el-j/omni-cad/compare/v1.0.0...v1.1.0) (2026-05-07)
 
 
