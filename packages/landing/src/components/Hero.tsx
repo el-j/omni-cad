@@ -3,6 +3,8 @@ import { VideoPlayer } from './VideoPlayer';
 import { CodeWindow } from './CodeWindow';
 
 export const Hero: React.FC = () => {
+  const installHref = `${import.meta.env.BASE_URL}docs`;
+
   return (
     <section id="hero" className="relative min-h-[90vh] flex items-center pt-24 pb-16 overflow-hidden bg-gradient-to-br from-[#050505] via-[#0a0a0a] to-[#050505]">
       {/* Decorative background glow */}
@@ -31,7 +33,7 @@ export const Hero: React.FC = () => {
           </p>
           
           <div className="flex flex-wrap gap-4 mb-12">
-            <a href="#download" className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-500/20">
+            <a href={installHref} className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-500/20">
               Install Extension
             </a>
             <a href="https://github.com/el-j/omni-cad" target="_blank" rel="noopener noreferrer" className="px-8 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all">

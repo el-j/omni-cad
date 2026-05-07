@@ -32,6 +32,12 @@ const activeBtnStyle: React.CSSProperties = {
   color: '#ffffff',
 };
 
+const disabledBtnStyle: React.CSSProperties = {
+  ...btnStyle,
+  opacity: 0.45,
+  cursor: 'not-allowed',
+};
+
 export const Toolbar: React.FC<ToolbarProps> = ({
   showGrid,
   wireframe,
@@ -77,7 +83,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     {exportFormats.map((format) => (
       <button
         key={format}
-        style={btnStyle}
+        style={supportedFormats.includes(format) ? btnStyle : disabledBtnStyle}
         onClick={() => onExport(format)}
         disabled={!supportedFormats.includes(format)}
         title={!supportedFormats.includes(format) ? `${engineLabel ?? 'Current engine'} does not support ${format}` : undefined}

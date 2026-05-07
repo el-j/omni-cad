@@ -3,8 +3,24 @@ name: Living Documentation
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'packages/landing/**'
+      - 'packages/extension/src/test/e2e/**'
+      - 'packages/extension/scripts/finalize-docs.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'packages/landing/**'
+      - 'packages/extension/src/test/e2e/**'
+      - 'packages/extension/scripts/finalize-docs.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
 
 jobs:
   build-and-document:
@@ -19,7 +35,7 @@ jobs:
           version: 10
           
       - name: Setup Node.js
-        uses: actions/core@v4
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
@@ -30,7 +46,7 @@ jobs:
           sudo apt-get install -y freecad openscad xvfb libasound2 libgbm1 libnss3 libxss1
           
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
         
       - name: Install Playwright Browsers & Electron Deps
         run: pnpm exec playwright install --with-deps electron
@@ -51,3 +67,11 @@ jobs:
           
       - name: Build Documentation Site
         run: pnpm --filter @omni-cad/landing run build
+        env:
+          VITE_BASE_PATH: /omni-cad/channels/develop/
+          VITE_DOCS_VERSION: develop
+          VITE_DOCS_CHANNEL: develop
+
+      - name: Validate base-path output
+        run: |
+          grep -q '/omni-cad/channels/develop/' packages/landing/dist/index.html

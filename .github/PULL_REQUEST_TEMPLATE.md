@@ -18,8 +18,8 @@
 ## Checklist
 
 - [ ] My branch is up to date with `main`
-- [ ] I have run `npm run lint` — no errors
-- [ ] I have run `npm test` — all tests pass
+- [ ] I have run `pnpm lint` — no errors
+- [ ] I have run `pnpm test` — all tests pass
 - [ ] I have added tests for new behaviour (unit and/or E2E)
 - [ ] I have updated the documentation (README, CONTRIBUTING, inline comments) where relevant
 - [ ] My commit messages follow the [Conventional Commits](https://www.conventionalcommits.org/) format

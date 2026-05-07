@@ -4,16 +4,34 @@
   "description": "Universal CAD engine frontend router for VS Code",
   "version": "1.2.0",
   "publisher": "omni-cad",
+  "keywords": [
+    "cad",
+    "freecad",
+    "openscad",
+    "3d",
+    "engineering",
+    "viewer"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/el-j/omni-cad.git",
     "directory": "packages/extension"
   },
+  "homepage": "https://github.com/el-j/omni-cad#readme",
+  "bugs": {
+    "url": "https://github.com/el-j/omni-cad/issues"
+  },
   "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#0b1220",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
+    "Visualization",
     "Other"
   ],
   "activationEvents": [
@@ -64,7 +82,7 @@
   },
   "scripts": {
     "compile": "node esbuild.js",
-    "build": "npm run compile",
+    "build": "pnpm run compile",
     "watch": "node esbuild.js --watch",
     "lint": "tsc --noEmit",
     "mcp:stdio": "node ./dist/mcp/entry.js",
@@ -73,7 +91,7 @@
     "test:coverage": "c8 --check-coverage --lines 90 --branches 70 --functions 70 --statements 90 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
     "pretest:e2e": "tsc --project tsconfig.json",
     "test:e2e": "playwright test",
-    "package": "vsce package --no-dependencies"
+    "package": "pnpm run compile && vsce package --no-dependencies"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",

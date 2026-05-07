@@ -38,7 +38,7 @@ By participating, you agree to uphold it.
 | Tool | Version | Notes |
 |---|---|---|
 | [Node.js](https://nodejs.org/) | ≥ 20 LTS | Use [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) |
-| npm | ≥ 10 | Bundled with Node.js |
+| [pnpm](https://pnpm.io/) | 10.x | Workspace package manager used by the monorepo |
 | [VS Code](https://code.visualstudio.com/) | ≥ 1.85 | For extension development |
 | [FreeCAD](https://www.freecad.org/) | any | _Optional_ — needed to run `.py` / `.fcmacro` models |
 | [OpenSCAD](https://openscad.org/) | any | _Optional_ — needed to run `.scad` models |
@@ -51,53 +51,52 @@ git clone https://github.com/<your-username>/omni-cad.git
 cd omni-cad
 
 # 2. Install dependencies
-npm install
+pnpm install
 
 # 3. Verify everything works
-npm run lint    # should produce no errors
-npm test        # should show 13 passing tests
+pnpm lint
+pnpm test
 ```
 
 ### Project Structure
 
 ```
 omni-cad/
-├── src/
-│   ├── extension.ts           # Extension entry point (activate / deactivate)
-│   ├── engines/
-│   │   ├── EngineRouter.ts    # Strategy-pattern dispatcher
-│   │   ├── OpenGeometryAdapter.ts
-│   │   ├── FreeCadAdapter.ts
-│   │   └── OpenScadAdapter.ts
-│   ├── types/
-│   │   └── index.ts           # ICadEngine interface + shared types
-│   ├── mcp/
-│   │   └── McpServer.ts       # Model Context Protocol server
-│   ├── webview/
-│   │   ├── WebviewPanel.ts    # VS Code WebviewPanel host
-│   │   └── ui/
-│   │       ├── main.tsx       # React app entry point
-│   │       └── components/    # Scene, Toolbar, etc.
-│   └── test/
-│       ├── suite/             # Unit tests (Mocha)
-│       └── e2e/               # E2E tests (@vscode/test-electron)
+├── packages/
+│   ├── extension/
+│   │   ├── src/
+│   │   │   ├── extension.ts
+│   │   │   ├── engines/
+│   │   │   ├── mcp/
+│   │   │   ├── test/
+│   │   │   ├── types/
+│   │   │   └── webview/
+│   │   ├── esbuild.js         # Extension + webview bundling
+│   │   └── package.json
+│   ├── landing/
+│   │   ├── src/               # Landing page + docs UI
+│   │   ├── public/            # Static assets and generated demo videos
+│   │   └── package.json
+│   └── shared-types/
+│       ├── src/
+│       └── package.json
 ├── docs/
-│   └── index.html             # Landing page (GitHub Pages)
+│   └── omniCAD-vscode-plugin-freecad.m4v
 ├── .github/
 │   ├── workflows/
-│   │   ├── ci.yml             # PR gate: lint, test, build, E2E
-│   │   ├── release.yml        # Semantic release on main push
-│   │   └── pages.yml          # Landing page deploy to GitHub Pages
+│   │   ├── ci.yml             # Workspace lint, test, build, and extension E2E
+│   │   ├── docs.yml           # Docs asset generation and landing build
+│   │   ├── release.yml        # Semantic release + VSIX publishing
+│   │   └── pages.yml          # Landing/docs deployment to GitHub Pages
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.yml
 │   │   └── feature_request.yml
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── CODEOWNERS
-├── esbuild.js                 # Build script (bundles extension + webview)
-├── tsconfig.json
-├── package.json
-├── .releaserc.json            # Semantic-release configuration
-└── .vscodeignore              # Files excluded from the .vsix package
+├── package.json               # Root workspace scripts
+├── pnpm-workspace.yaml
+├── turbo.json
+└── .releaserc.json            # Semantic-release configuration
 ```
 
 ---
@@ -113,40 +112,35 @@ omni-cad/
 ### Running Tests
 
 ```bash
-# Type-check only (fast)
-npm run lint
+# Workspace lint and tests
+pnpm lint
+pnpm test
 
-# Unit tests
-npm test
+# Extension-only coverage
+pnpm --filter omni-cad run test:coverage
 
-# Unit tests + coverage report (generates coverage/ directory)
-npm run test:coverage
-
-# E2E tests in a headless VS Code instance
-# Requires: npm run compile first, plus X display on Linux (xvfb)
-npm run test:e2e
+# Extension E2E tests in a headless VS Code instance
+pnpm --filter omni-cad run test:e2e
 ```
 
 > **Note for Linux CI / headless environments:** The E2E runner requires a display server.  
-> Wrap the command with `xvfb-run -a npm run test:e2e`.
+> Wrap the command with `xvfb-run -a pnpm --filter omni-cad run test:e2e`.
 
 ### Building a .vsix
 
 ```bash
-npm run compile    # Produce dist/extension.js and dist/webview.js
-npm run package    # Create omni-cad-<version>.vsix
-# or both in one step:
-npm run build
+pnpm --filter omni-cad run compile    # Produce dist/extension.js and dist/webview.js
+pnpm --filter omni-cad run package    # Create omni-cad-<version>.vsix
 ```
 
 ---
 
 ## How to Add a New CAD Engine
 
-1. **Create the adapter** in `src/engines/`:
+1. **Create the adapter** in `packages/extension/src/engines/`:
 
    ```typescript
-   // src/engines/MyNewEngineAdapter.ts
+   // packages/extension/src/engines/MyNewEngineAdapter.ts
    import { ICadEngine, CompileResponse, BrepMetadata } from '../types';
 
    export class MyNewEngineAdapter implements ICadEngine {
@@ -160,7 +154,7 @@ npm run build
    }
    ```
 
-2. **Register it** in `src/engines/EngineRouter.ts`:
+2. **Register it** in `packages/extension/src/engines/EngineRouter.ts`:
 
    ```typescript
    import { MyNewEngineAdapter } from './MyNewEngineAdapter';
@@ -175,7 +169,7 @@ npm run build
    "activationEvents": ["onLanguage:myext"]
    ```
 
-4. **Write unit tests** in `src/test/suite/extension.test.ts` covering at least:
+4. **Write unit tests** in `packages/extension/src/test/suite/extension.test.ts` covering at least:
    - Happy-path `compile` response
    - Error path when the external tool is missing
 
@@ -235,7 +229,7 @@ feat!: rename ICadEngine.compile return type
 
 4. **Run the full suite locally** before pushing:
    ```bash
-   npm run lint && npm test
+   pnpm lint && pnpm test
    ```
 
 5. **Commit** with a [conventional commit message](#commit-message-convention).

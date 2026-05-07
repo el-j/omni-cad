@@ -5,7 +5,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build && pnpm --filter omni-cad run package && node scripts/copy-vsix-to-root.mjs",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e || true && cd packages/extension && npx ts-node scripts/finalize-docs.ts",

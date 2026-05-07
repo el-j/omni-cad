@@ -162,20 +162,19 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide.
 ```bash
 git clone https://github.com/el-j/omni-cad.git
 cd omni-cad
-npm install
+pnpm install
 ```
 
 ### Commands
 
 ```bash
-npm run compile        # Bundle extension + webview with esbuild
-npm run watch          # Same, but in watch mode
-npm run lint           # TypeScript type-check (no emit)
-npm test               # Run unit tests (Mocha)
-npm run test:coverage  # Run unit tests with c8 coverage report
-npm run test:e2e       # Run E2E tests in a headless VS Code instance
-npm run package        # Package a distributable .vsix
-npm run build          # compile + package in one step
+pnpm lint                                 # Run workspace lint/type-check tasks
+pnpm test                                 # Run workspace tests
+pnpm build                                # Build all workspace packages
+pnpm test:e2e                             # Run workspace E2E flow
+pnpm --filter omni-cad run compile        # Build the VS Code extension bundle
+pnpm --filter omni-cad run package        # Package the extension as a .vsix
+pnpm --filter @omni-cad/landing run dev   # Start the landing/docs app locally
 ```
 
 ### Running locally in VS Code
@@ -190,9 +189,9 @@ npm run build          # compile + package in one step
 
 | Suite | Command | What it tests |
 |---|---|---|
-| Unit | `npm test` | EngineRouter dispatch, adapter stubs, compile/export responses |
-| Coverage | `npm run test:coverage` | Same, with c8 line/branch/function coverage |
-| E2E | `npm run test:e2e` | Extension activation, command registration, config defaults, FreeCAD render path — runs inside a real VS Code instance via `@vscode/test-electron` |
+| Workspace | `pnpm test` | Package-level test suites orchestrated through the workspace |
+| Coverage | `pnpm --filter omni-cad run test:coverage` | Extension unit coverage with c8 line/branch/function thresholds |
+| E2E | `pnpm --filter omni-cad run test:e2e` | Extension activation, command registration, config defaults, FreeCAD render path — runs inside a real VS Code instance via `@vscode/test-electron` |
 
 ---
 

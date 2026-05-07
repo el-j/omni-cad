@@ -8,6 +8,9 @@ interface VideoPlayerProps {
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, label, className = '' }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const resolvedSrc = src.startsWith('http')
+    ? src
+    : `${import.meta.env.BASE_URL}${src.replace(/^\//, '')}`;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -49,7 +52,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, label, className 
         playsInline
         className="w-full h-full object-cover"
       >
-        <source src={src} type="video/webm" />
+        <source src={resolvedSrc} type="video/webm" />
       </video>
     </div>
   );

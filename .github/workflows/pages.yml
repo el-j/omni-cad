@@ -4,9 +4,34 @@ on:
   push:
     branches: [main]
     paths:
-      - "docs/**"
-  # Also allow manual trigger
+      - 'packages/landing/**'
+      - 'packages/shared-types/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
+    inputs:
+      rollback_version:
+        description: 'Optional version tag (for example v1.2.3) to roll back a channel to.'
+        required: false
+        type: string
+      rollback_channel:
+        description: 'Channel to roll back when rollback_version is set.'
+        required: false
+        default: latest
+        type: choice
+        options:
+          - latest
+          - beta
+          - alpha
+          - develop
+      keep_prerelease_versions:
+        description: 'How many prerelease docs snapshots to keep.'
+        required: false
+        default: '12'
+        type: string
 
 permissions:
   contents: read
@@ -19,7 +44,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy to GitHub Pages
+    name: Publish Develop Docs Channel
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -28,13 +53,89 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
+
+      - name: Resolve publish mode
+        id: mode
+        run: |
+          keep="${{ github.event.inputs.keep_prerelease_versions || '12' }}"
+          rollbackVersion="${{ github.event.inputs.rollback_version || '' }}"
+          rollbackChannel="${{ github.event.inputs.rollback_channel || 'latest' }}"
+
+          if [ -n "$rollbackVersion" ]; then
+            echo "do_build=false" >> "$GITHUB_OUTPUT"
+            echo "do_rollback=true" >> "$GITHUB_OUTPUT"
+            echo "rollback_version=$rollbackVersion" >> "$GITHUB_OUTPUT"
+            echo "rollback_channel=$rollbackChannel" >> "$GITHUB_OUTPUT"
+          else
+            echo "do_build=true" >> "$GITHUB_OUTPUT"
+            echo "do_rollback=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "keep_prerelease=$keep" >> "$GITHUB_OUTPUT"
+
+      - name: Build landing app
+        if: steps.mode.outputs.do_build == 'true'
+        run: pnpm --filter @omni-cad/landing run build
+        env:
+          VITE_BASE_PATH: /omni-cad/channels/develop/
+          VITE_DOCS_VERSION: develop
+          VITE_DOCS_CHANNEL: develop
+
+      - name: Restore existing published site
+        run: |
+          mkdir -p .pages-site
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages
+            git worktree add /tmp/gh-pages origin/gh-pages
+            cp -R /tmp/gh-pages/. .pages-site/
+            git worktree remove /tmp/gh-pages --force
+          fi
+
+      - name: Merge develop docs channel into published site
+        if: steps.mode.outputs.do_build == 'true'
+        run: |
+          node scripts/docs/merge-versioned-site.mjs \
+            --site .pages-site \
+            --dist packages/landing/dist \
+            --id develop \
+            --label Develop \
+            --kind channel \
+            --path channels/develop/ \
+            --default-if-empty channels/develop/
+
+      - name: Roll back docs channel to version
+        if: steps.mode.outputs.do_rollback == 'true'
+        run: |
+          node scripts/docs/rollback-channel.mjs \
+            --site .pages-site \
+            --version "${{ steps.mode.outputs.rollback_version }}" \
+            --channel "${{ steps.mode.outputs.rollback_channel }}" \
+            --set-default true
+
+      - name: Apply prerelease retention
+        run: |
+          node scripts/docs/apply-retention.mjs \
+            --site .pages-site \
+            --keep-prerelease "${{ steps.mode.outputs.keep_prerelease }}"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/
+          path: .pages-site/
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -1,10 +1,18 @@
 import React from 'react';
 
 export const Docs: React.FC = () => {
+  const docsVersion = import.meta.env.VITE_DOCS_VERSION || 'unversioned';
+  const docsChannel = import.meta.env.VITE_DOCS_CHANNEL || 'develop';
+  const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
+  const appRouteUrl = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
+
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-32 pb-24 px-6">
       <div className="max-w-5xl mx-auto">
         <header className="mb-20">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-300">
+            Channel: {docsChannel} • Version: {docsVersion}
+          </div>
           <div className="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] uppercase tracking-widest font-bold mb-4">
             Documentation
           </div>
@@ -45,6 +53,24 @@ export const Docs: React.FC = () => {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               </a>
             </div>
+          </div>
+        </section>
+
+        <section className="mb-24 rounded-3xl border border-white/10 bg-zinc-900/50 p-10">
+          <h2 className="mb-4 text-3xl font-bold">Release Notes And Migration</h2>
+          <p className="mb-6 text-gray-300">
+            Each docs snapshot corresponds to a release or channel build. Review the changelog and release notes before upgrading between versions.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <a href="https://github.com/el-j/omni-cad/releases" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-white/10">
+              GitHub Releases
+            </a>
+            <a href="https://github.com/el-j/omni-cad/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-white/10">
+              Changelog
+            </a>
+            <a href={appRouteUrl('/roadmap')} className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-white/10">
+              Roadmap Governance
+            </a>
           </div>
         </section>
 
@@ -101,7 +127,7 @@ doc.recompute()`}
                 </div>
                 <div className="relative group-hover:scale-[1.02] transition-transform duration-500">
                   <div className="absolute inset-0 bg-green-500/10 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <video src="/videos/freecad-workflow.webm" autoPlay loop muted playsInline className="relative rounded-3xl border border-white/10 shadow-3xl w-full z-10" />
+                  <video src={assetUrl('/videos/freecad-workflow.webm')} autoPlay loop muted playsInline className="relative rounded-3xl border border-white/10 shadow-3xl w-full z-10" />
                 </div>
               </div>
             </div>
@@ -114,7 +140,7 @@ doc.recompute()`}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center lg:flex-row-reverse">
                 <div className="order-2 lg:order-1 relative group-hover:scale-[1.02] transition-transform duration-500">
                   <div className="absolute inset-0 bg-yellow-500/10 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <video src="/videos/openscad-render.webm" autoPlay loop muted playsInline className="relative rounded-3xl border border-white/10 shadow-3xl w-full z-10" />
+                  <video src={assetUrl('/videos/openscad-render.webm')} autoPlay loop muted playsInline className="relative rounded-3xl border border-white/10 shadow-3xl w-full z-10" />
                 </div>
                 <div className="order-1 lg:order-2 bg-zinc-900/50 p-8 rounded-3xl border border-white/10 group-hover:border-yellow-500/30 transition-colors">
                   <p className="text-gray-400 text-sm mb-6 leading-relaxed italic border-l-2 border-yellow-500/50 pl-4">
@@ -150,7 +176,7 @@ shell.render();`}
                 </div>
                 <div className="relative group-hover:scale-[1.02] transition-transform duration-500">
                   <div className="absolute inset-0 bg-purple-500/10 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <video src="/videos/opengeometry-preview.webm" autoPlay loop muted playsInline className="relative rounded-3xl border border-white/10 shadow-3xl w-full z-10" />
+                  <video src={assetUrl('/videos/opengeometry-preview.webm')} autoPlay loop muted playsInline className="relative rounded-3xl border border-white/10 shadow-3xl w-full z-10" />
                 </div>
               </div>
             </div>
