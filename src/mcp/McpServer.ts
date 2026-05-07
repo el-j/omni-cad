@@ -2,10 +2,9 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { EngineRouter } from '../engines/EngineRouter';
-import { ICadEngine } from '../types';
+import { ExportFormat, ICadEngine } from '../types';
 
 type EngineId = 'opengeometry' | 'freecad' | 'openscad';
-type ExportFormat = 'STEP' | 'STL' | 'IGES' | 'glTF';
 
 interface CompileMeasureArgs {
   code: string;
@@ -19,6 +18,11 @@ interface ExportGeometryArgs {
 }
 
 type ToolContent = { content: Array<{ type: 'text'; text: string }> };
+
+interface ErrorResult {
+  code: 'VALIDATION_FAILED' | 'ENGINE_NOT_FOUND' | 'UNSUPPORTED_FORMAT' | 'COMPILE_FAILED' | 'RUNTIME_ERROR';
+  message: string;
+}
 
 // Minimal type for McpServer.tool() that avoids TS2589 (excessive type depth
 // from the SDK's zod-inference overloads) while preserving runtime correctness.
@@ -35,24 +39,25 @@ function engineExtension(engine: EngineId): string {
   return '.scad';
 }
 
-function errorContent(message: string): ToolContent {
-  return { content: [{ type: 'text', text: JSON.stringify({ error: message }) }] };
+function errorContent(error: ErrorResult): ToolContent {
+  return { content: [{ type: 'text', text: JSON.stringify({ error }, null, 2) }] };
 }
 
-const compileMeasureSchema = {
-  code: z.string().describe('The CAD script source code'),
+const compileMeasureSchema = z.object({
+  code: z.string().min(1).max(1_000_000).describe('The CAD script source code'),
   engine: z.enum(['opengeometry', 'freecad', 'openscad'] as const).describe('The engine to compile with'),
-};
+});
 
-const exportGeometrySchema = {
-  code: z.string().describe('The CAD script source code'),
+const exportGeometrySchema = z.object({
+  code: z.string().min(1).max(1_000_000).describe('The CAD script source code'),
   engine: z.enum(['opengeometry', 'freecad', 'openscad'] as const).describe('The engine to use'),
   format: z.enum(['STEP', 'STL', 'IGES', 'glTF'] as const).describe('Export format'),
-};
+});
 
 export class OmniCadMcpServer {
   private server: McpServer;
   private router: EngineRouter;
+  private transport?: StdioServerTransport;
   // Narrowed reference to server.tool that bypasses the SDK's deep zod overloads (TS2589).
   private readonly registerTool: RegisterToolFn;
 
@@ -67,39 +72,93 @@ export class OmniCadMcpServer {
     this.registerTool(
       'compile_and_measure',
       'Compiles CAD code and returns bounding box, volume, and topology for AI validation.',
-      compileMeasureSchema,
-      async (rawArgs: Record<string, unknown>): Promise<ToolContent> => {
-        const args = rawArgs as unknown as CompileMeasureArgs;
-        const adapter: ICadEngine | undefined = this.router.get(engineExtension(args.engine));
-        if (!adapter) { return errorContent(`Engine ${args.engine} not found`); }
-        const [compileResult, brepData] = await Promise.all([
-          adapter.compile(args.code),
-          adapter.getBrepMetadata(args.code),
-        ]);
-        return {
-          content: [{ type: 'text', text: JSON.stringify({ compile: compileResult, brep: brepData }, null, 2) }],
-        };
-      }
+      compileMeasureSchema.shape,
+      async (rawArgs: Record<string, unknown>): Promise<ToolContent> => this.compileAndMeasure(rawArgs)
     );
 
     this.registerTool(
       'export_geometry',
       'Exports CAD code to a specified file format (STEP, STL, IGES, glTF).',
-      exportGeometrySchema,
-      async (rawArgs: Record<string, unknown>): Promise<ToolContent> => {
-        const args = rawArgs as unknown as ExportGeometryArgs;
-        const adapter: ICadEngine | undefined = this.router.get(engineExtension(args.engine));
-        if (!adapter) { return errorContent(`Engine ${args.engine} not found`); }
-        const buf = await adapter.export(args.code, args.format);
-        return {
-          content: [{ type: 'text', text: JSON.stringify({ success: true, bytes: buf.length, format: args.format }) }],
-        };
-      }
+      exportGeometrySchema.shape,
+      async (rawArgs: Record<string, unknown>): Promise<ToolContent> => this.exportGeometry(rawArgs)
     );
   }
 
+  public async compileAndMeasure(rawArgs: Record<string, unknown>): Promise<ToolContent> {
+    const parsedArgs = compileMeasureSchema.safeParse(rawArgs);
+    if (!parsedArgs.success) {
+      return errorContent({ code: 'VALIDATION_FAILED', message: parsedArgs.error.message });
+    }
+
+    const args: CompileMeasureArgs = parsedArgs.data;
+    const adapter: ICadEngine | undefined = this.router.get(engineExtension(args.engine));
+    if (!adapter) {
+      return errorContent({ code: 'ENGINE_NOT_FOUND', message: `Engine ${args.engine} not found` });
+    }
+
+    try {
+      const compileResult = await adapter.compile(args.code);
+      if (!compileResult.success) {
+        return errorContent({ code: 'COMPILE_FAILED', message: compileResult.errors.join('\n') });
+      }
+
+      if (!adapter.capabilities.supportsBrepMetadata) {
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ compile: compileResult, brep: null }, null, 2) }],
+        };
+      }
+
+      const brepData = await adapter.getBrepMetadata(args.code);
+      return {
+        content: [{ type: 'text', text: JSON.stringify({ compile: compileResult, brep: brepData }, null, 2) }],
+      };
+    } catch (err: unknown) {
+      return errorContent({
+        code: 'RUNTIME_ERROR',
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  public async exportGeometry(rawArgs: Record<string, unknown>): Promise<ToolContent> {
+    const parsedArgs = exportGeometrySchema.safeParse(rawArgs);
+    if (!parsedArgs.success) {
+      return errorContent({ code: 'VALIDATION_FAILED', message: parsedArgs.error.message });
+    }
+
+    const args: ExportGeometryArgs = parsedArgs.data;
+    const adapter: ICadEngine | undefined = this.router.get(engineExtension(args.engine));
+    if (!adapter) {
+      return errorContent({ code: 'ENGINE_NOT_FOUND', message: `Engine ${args.engine} not found` });
+    }
+
+    if (!adapter.capabilities.supportedExportFormats.includes(args.format)) {
+      return errorContent({
+        code: 'UNSUPPORTED_FORMAT',
+        message: `${adapter.id} does not support ${args.format} export`,
+      });
+    }
+
+    try {
+      const buf = await adapter.export(args.code, args.format);
+      return {
+        content: [{ type: 'text', text: JSON.stringify({ success: true, bytes: buf.length, format: args.format }) }],
+      };
+    } catch (err: unknown) {
+      return errorContent({
+        code: 'RUNTIME_ERROR',
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
   async start(): Promise<void> {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
+    this.transport = new StdioServerTransport();
+    await this.server.connect(this.transport);
+  }
+
+  async dispose(): Promise<void> {
+    await (this.transport as { close?: () => Promise<void> | void } | undefined)?.close?.();
+    await (this.server as { close?: () => Promise<void> | void }).close?.();
   }
 }

@@ -5,12 +5,33 @@ export interface MeshPayload {
   colors?: number[];
 }
 
-export interface CompileResponse {
-  success: boolean;
-  meshes?: MeshPayload[];
-  computeTimeMs: number;
-  errors?: string[];
+export type ExportFormat = 'STEP' | 'STL' | 'IGES' | 'glTF';
+
+export interface EngineCapabilities {
+  supportedExportFormats: ExportFormat[];
+  supportsBrepMetadata: boolean;
+  renderable: boolean;
+  experimental?: boolean;
 }
+
+export interface EngineExecutionOptions {
+  sourcePath?: string;
+}
+
+export type CompileResponse =
+  | {
+    success: true;
+    meshes: MeshPayload[];
+    computeTimeMs: number;
+    warnings?: string[];
+  }
+  | {
+    success: false;
+    meshes: MeshPayload[];
+    computeTimeMs: number;
+    errors: string[];
+    warnings?: string[];
+  };
 
 export interface BrepMetadata {
   boundingBox: {
@@ -31,10 +52,11 @@ export interface BrepMetadata {
 
 export interface ICadEngine {
   id: string;
+  capabilities: EngineCapabilities;
   supportedExtensions: string[];
-  compile(code: string): Promise<CompileResponse>;
-  getBrepMetadata(code: string): Promise<BrepMetadata>;
-  export(code: string, format: 'STEP' | 'STL' | 'IGES' | 'glTF'): Promise<Buffer>;
+  compile(code: string, options?: EngineExecutionOptions): Promise<CompileResponse>;
+  getBrepMetadata(code: string, options?: EngineExecutionOptions): Promise<BrepMetadata>;
+  export(code: string, format: ExportFormat, options?: EngineExecutionOptions): Promise<Buffer>;
   dispose(): void;
 }
 
@@ -42,9 +64,16 @@ export interface ICadEngine {
 export type ExtensionToWebviewMessage =
   | { type: 'updateMesh'; payload: CompileResponse }
   | { type: 'showError'; message: string }
-  | { type: 'exportComplete'; filePath: string };
+  | { type: 'exportComplete'; filePath: string }
+  | {
+    type: 'engineCapabilities';
+    payload: {
+      engineId?: string;
+      capabilities?: EngineCapabilities;
+      reason?: string;
+    };
+  };
 
 export type WebviewToExtensionMessage =
-  | { type: 'requestExport'; format: 'STEP' | 'STL' | 'IGES' | 'glTF' }
-  | { type: 'cameraMoved'; position: { x: number; y: number; z: number } }
+  | { type: 'requestExport'; format: ExportFormat }
   | { type: 'ready' };

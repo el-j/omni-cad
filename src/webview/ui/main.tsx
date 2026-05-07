@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Scene } from './components/Scene';
 import { Toolbar } from './components/Toolbar';
-import { MeshPayload, ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../../types';
+import { ExportFormat, MeshPayload, ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../../types';
 
 // VS Code API for webview.
 // acquireVsCodeApi() must be called exactly once per webview lifetime.
@@ -19,17 +19,22 @@ const App: React.FC = () => {
   const [wireframe, setWireframe] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [supportedFormats, setSupportedFormats] = useState<ExportFormat[]>([]);
+  const [engineLabel, setEngineLabel] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = (event: MessageEvent<ExtensionToWebviewMessage>) => {
       const msg = event.data;
+      if (!msg || typeof msg !== 'object' || !('type' in msg)) {
+        return;
+      }
       switch (msg.type) {
         case 'updateMesh':
-          if (msg.payload.success && msg.payload.meshes && msg.payload.meshes.length > 0) {
+          if (msg.payload.success && msg.payload.meshes.length > 0) {
             setMesh(msg.payload.meshes[0]);
             setError(null);
           } else if (!msg.payload.success) {
-            setError(msg.payload.errors?.join('\n') ?? 'Unknown error');
+            setError(msg.payload.errors.join('\n'));
           }
           break;
         case 'showError':
@@ -38,6 +43,13 @@ const App: React.FC = () => {
         case 'exportComplete':
           setError(null);
           break;
+        case 'engineCapabilities':
+          setSupportedFormats(msg.payload.capabilities?.supportedExportFormats ?? []);
+          setEngineLabel(msg.payload.engineId ?? null);
+          if (msg.payload.reason) {
+            setError(msg.payload.reason);
+          }
+          break;
       }
     };
     window.addEventListener('message', handler);
@@ -45,7 +57,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('message', handler);
   }, []);
 
-  const handleExport = (format: 'STEP' | 'STL' | 'IGES' | 'glTF') => {
+  const handleExport = (format: ExportFormat) => {
     vscode.postMessage({ type: 'requestExport', format });
   };
 
@@ -54,6 +66,8 @@ const App: React.FC = () => {
       <Toolbar
         showGrid={showGrid}
         wireframe={wireframe}
+        supportedFormats={supportedFormats}
+        engineLabel={engineLabel}
         onToggleGrid={() => setShowGrid((v) => !v)}
         onToggleWireframe={() => setWireframe((v) => !v)}
         onExport={handleExport}

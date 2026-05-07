@@ -41,6 +41,16 @@
           "type": "string",
           "default": "openscad",
           "description": "Path to the openscad CLI executable"
+        },
+        "omniCAD.mcpEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the guarded OmniCAD MCP server entrypoint."
+        },
+        "omniCAD.enableExperimentalOpenGeometry": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the experimental OpenGeometry preview until a real runtime is implemented."
         }
       }
     }
@@ -50,9 +60,11 @@
     "build": "npm run compile && npm run package",
     "watch": "node esbuild.js --watch",
     "lint": "tsc --noEmit",
+    "mcp:stdio": "node ./dist/mcp/entry.js",
     "pretest": "tsc --project tsconfig.json",
     "test": "node ./dist/test/suite/index.js",
-    "test:coverage": "c8 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
+    "test:coverage": "c8 --check-coverage --lines 90 --branches 70 --functions 70 --statements 90 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
+    "pretest:e2e": "tsc --project tsconfig.json",
     "test:e2e": "node ./dist/test/e2e/runTests.js",
     "package": "vsce package --no-dependencies"
   },
