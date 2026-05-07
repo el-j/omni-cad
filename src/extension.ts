@@ -4,6 +4,13 @@ import * as path from 'path';
 import { EngineRouter } from './engines/EngineRouter';
 import { WebviewPanel } from './webview/WebviewPanel';
 import { CompileResponse } from './types';
+import {
+  defaultFetcher,
+  isNewerVersion,
+  ReleaseFetcher,
+  LAST_CHECK_KEY,
+  CHECK_INTERVAL_MS,
+} from './updateCheck';
 
 let lastCompileResult: CompileResponse | undefined;
 
@@ -21,6 +28,52 @@ function getEditorExtension(editor?: vscode.TextEditor): string | undefined {
   }
 
   return editor.document.fileName.substring(editor.document.fileName.lastIndexOf('.')).toLowerCase();
+}
+
+/**
+ * Checks GitHub for a newer release and, if one is found, shows a one-time
+ * information message offering to open the release page.
+ *
+ * Checks are throttled to at most once per 24 hours using VS Code global state.
+ * All network errors are silently swallowed so the extension always activates
+ * cleanly even when offline.
+ *
+ * @param context - The extension context (provides version and global state).
+ * @param fetcher - Optional override for the GitHub API call (used in tests).
+ */
+async function checkForUpdate(
+  context: vscode.ExtensionContext,
+  fetcher: ReleaseFetcher = defaultFetcher,
+): Promise<void> {
+  const now = Date.now();
+  const lastCheck = context.globalState.get<number>(LAST_CHECK_KEY, 0);
+  if (now - lastCheck < CHECK_INTERVAL_MS) {
+    return;
+  }
+
+  try {
+    const release = await fetcher();
+
+    const currentVersion = context.extension.packageJSON.version as string;
+    if (!isNewerVersion(release.tagName, currentVersion)) {
+      await context.globalState.update(LAST_CHECK_KEY, now);
+      return;
+    }
+
+    await context.globalState.update(LAST_CHECK_KEY, now);
+
+    const action = await vscode.window.showInformationMessage(
+      `OmniCAD ${release.tagName} is available (you have v${currentVersion}).`,
+      'Open Release',
+    );
+
+    if (action === 'Open Release') {
+      await vscode.env.openExternal(vscode.Uri.parse(release.htmlUrl));
+    }
+  } catch (err) {
+    // Silently ignore failures – update checks must never disrupt the user.
+    console.debug('[OmniCAD] Update check failed:', err instanceof Error ? err.message : String(err));
+  }
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -137,6 +190,9 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   syncMcpProcess();
+
+  // Non-blocking update check – fires in the background on every activation.
+  void checkForUpdate(context);
 
   context.subscriptions.push(openViewer, onSave, onActiveEditorChange, onConfigChange, {
     dispose: () => {
