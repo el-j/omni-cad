@@ -192,6 +192,33 @@ npm run build          # compile + package in one step
 
 ---
 
+## 🔢 Versioning
+
+OmniCAD uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`) with automated releases via `semantic-release`.
+
+- **`main`** → stable releases (`1.2.3`)
+- **`develop`** → integration prereleases (`1.2.4-dev.1`)
+- **`feature/*`** → feature prereleases (`1.2.4-feature-my-branch.1`)
+- **`fix/*`** → fix prereleases (`1.2.4-fix-issue-123.1`)
+
+Version bumps are determined by Conventional Commit messages:
+
+- `feat:` → minor bump
+- `fix:` / `perf:` → patch bump
+- `BREAKING CHANGE:` or `feat!:` / `fix!:` → major bump
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Publish to VS Code Marketplace
+- [ ] Add macOS and Windows E2E jobs
+- [ ] Add export pipeline tests for STEP/STL/IGES/glTF
+- [ ] Add configurable render quality/performance presets
+- [ ] Add first-party engine adapter templates for contributors
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.

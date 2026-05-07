@@ -86,7 +86,7 @@ omni-cad/
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml             # PR gate: lint, test, build, E2E
-│   │   ├── release.yml        # Semantic release on main push
+│   │   ├── release.yml        # Semantic release on main/develop/feature/*/fix/* pushes
 │   │   └── pages.yml          # Landing page deploy to GitHub Pages
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.yml
@@ -103,6 +103,17 @@ omni-cad/
 ---
 
 ## Development Workflow
+
+### Branching & Release Channels
+
+OmniCAD follows a GitVersion-style branching model with Semantic Versioning:
+
+- `main` → stable production releases (`x.y.z`)
+- `develop` → integration prereleases (`x.y.z-dev.n`)
+- `feature/<name>` → feature prereleases (`x.y.z-feature-<name>.n`)
+- `fix/<name>` → fix prereleases (`x.y.z-fix-<name>.n`)
+
+Branch names are validated in CI for pull requests targeting `main` or `develop`.
 
 ### Running the Extension Locally
 
@@ -224,10 +235,12 @@ feat!: rename ICadEngine.compile return type
 
 ## Pull Request Process
 
-1. **Fork** the repository and create a branch from `main`:
+1. **Fork** the repository and create a branch from `develop`:
    ```bash
-   git checkout -b feat/my-feature
+   git checkout -b feature/my-feature
    ```
+
+   Use branch names `feature/<name>` for new features and `fix/<name>` for bug fixes.
 
 2. **Make your changes**, following the code style of the surrounding code (TypeScript strict mode, no `any` without a comment).
 
@@ -240,7 +253,7 @@ feat!: rename ICadEngine.compile return type
 
 5. **Commit** with a [conventional commit message](#commit-message-convention).
 
-6. **Push** and **open a pull request** against `main`. The PR template will guide you through the required checklist.
+6. **Push** and **open a pull request** against `develop` (or `main` for urgent hotfixes). The PR template will guide you through the required checklist.
 
 7. **Address review comments.** All CI checks (lint, unit tests, build, E2E) must be green before a PR can be merged.
 

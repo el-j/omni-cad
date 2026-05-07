@@ -2,13 +2,32 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
+  branch-name:
+    name: Branch Naming
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Validate branch naming convention
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          if [[ "$BRANCH_NAME" =~ ^(main|develop)$ || "$BRANCH_NAME" =~ ^feature\/[a-z0-9._-]+$ || "$BRANCH_NAME" =~ ^fix\/[a-z0-9._-]+$ ]]; then
+            echo "✅ Valid branch name: $BRANCH_NAME"
+          else
+            echo "❌ Invalid branch name: $BRANCH_NAME"
+            echo "Allowed names: main, develop, feature/<name>, fix/<name>"
+            exit 1
+          fi
+
   # ── Lint (type-check) ──────────────────────────────────────────────────────
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    needs: branch-name
     permissions:
       contents: read
 
@@ -30,6 +49,7 @@ jobs:
   test:
     name: Unit Tests & Coverage
     runs-on: ubuntu-latest
+    needs: branch-name
     permissions:
       contents: read
       pull-requests: write
@@ -113,6 +133,7 @@ jobs:
   build:
     name: Build & Package
     runs-on: ubuntu-latest
+    needs: branch-name
     permissions:
       contents: read
 
