@@ -36,7 +36,7 @@ jobs:
         run: npm run test:coverage
 
       - name: E2E
-        run: npm run test:e2ename: CI
+        run: npm run test:e2e
 
 on:
   pull_request:
