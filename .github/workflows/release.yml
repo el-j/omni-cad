@@ -302,13 +302,15 @@ jobs:
   publish-marketplace:
     name: Publish Extension Marketplaces
     runs-on: ubuntu-latest
+    environment:
+      name: production
     needs: release
     if: needs.release.outputs.new_release_published == 'true' && github.ref_name == 'main'
     permissions:
       contents: read
     env:
-      VSCE_PAT: ${{ secrets['VSCE_PAT'] }}
-      OVSX_PAT: ${{ secrets['OVSX_PAT'] }}
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
     steps:
       - uses: actions/checkout@v4
