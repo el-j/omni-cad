@@ -12,7 +12,15 @@ async function main(): Promise<void> {
     extensionDevelopmentPath,
     extensionTestsPath,
     // Disable other extensions to keep the test environment clean
-    launchArgs: ['--disable-extensions'],
+    launchArgs: [
+      '--disable-extensions',
+      '--skip-welcome',
+      '--skip-release-notes',
+      '--disable-telemetry',
+      '--disable-update-check',
+      '--disable-workspace-trust-prompt',
+      '--no-proxy-server',
+    ],
   });
 }
 

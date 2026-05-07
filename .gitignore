@@ -6,3 +6,6 @@ dist/
 coverage/
 .vscode-test/
 CHANGELOG.md
+
+.turbo
+test-results

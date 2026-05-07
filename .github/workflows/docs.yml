@@ -1,0 +1,53 @@
+name: Living Documentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-document:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          
+      - name: Setup Node.js
+        uses: actions/core@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y freecad openscad xvfb libasound2 libgbm1 libnss3 libxss1
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Install Playwright Browsers & Electron Deps
+        run: pnpm exec playwright install --with-deps electron
+        
+      - name: Build Monorepo
+        run: pnpm run build
+        
+      - name: Run E2E Stories & Sync Docs
+        run: |
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" \
+          pnpm run test:e2e
+          
+      - name: Upload Documentation Assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-videos
+          path: packages/landing/public/videos/*.webm
+          
+      - name: Build Documentation Site
+        run: pnpm --filter @omni-cad/landing run build
