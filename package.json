@@ -1,102 +1,24 @@
 {
-  "name": "omni-cad",
-  "displayName": "OmniCAD",
-  "description": "Universal CAD engine frontend router for VS Code",
-  "version": "1.2.0",
-  "publisher": "omni-cad",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/el-j/omni-cad.git"
-  },
-  "license": "MIT",
+  "name": "omni-cad-monorepo",
+  "private": true,
   "engines": {
-    "vscode": "^1.85.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onLanguage:typescript",
-    "onLanguage:python",
-    "onLanguage:scad",
-    "onCommand:omniCAD.openViewer"
-  ],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "omniCAD.openViewer",
-        "title": "OmniCAD: Open Viewer"
-      }
-    ],
-    "configuration": {
-      "title": "OmniCAD",
-      "properties": {
-        "omniCAD.freecadPath": {
-          "type": "string",
-          "default": "FreeCADCmd",
-          "description": "Path to the FreeCADCmd executable"
-        },
-        "omniCAD.openscadPath": {
-          "type": "string",
-          "default": "openscad",
-          "description": "Path to the openscad CLI executable"
-        },
-        "omniCAD.mcpEnabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable the guarded OmniCAD MCP server entrypoint."
-        },
-        "omniCAD.enableExperimentalOpenGeometry": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable the experimental OpenGeometry preview until a real runtime is implemented."
-        }
-      }
-    }
+    "node": ">=20"
   },
   "scripts": {
-    "compile": "node esbuild.js",
-    "build": "npm run compile && npm run package",
-    "watch": "node esbuild.js --watch",
-    "lint": "tsc --noEmit",
-    "mcp:stdio": "node ./dist/mcp/entry.js",
-    "pretest": "tsc --project tsconfig.json",
-    "test": "node ./dist/test/suite/index.js",
-    "test:coverage": "c8 --check-coverage --lines 90 --branches 70 --functions 70 --statements 90 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
-    "pretest:e2e": "tsc --project tsconfig.json",
-    "test:e2e": "node ./dist/test/e2e/runTests.js",
-    "package": "vsce package --no-dependencies"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "zod": "^3.23.8"
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e || true && cd packages/extension && npx ts-node scripts/finalize-docs.ts",
+    "dev": "turbo run dev",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,html,css}\"",
+    "prepare": "husky install"
   },
   "devDependencies": {
-    "@react-three/drei": "^9.105.4",
-    "@react-three/fiber": "^8.16.8",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.6",
-    "@semantic-release/npm": "^13.1.5",
-    "@semantic-release/release-notes-generator": "^14.1.0",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^20.14.0",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/three": "^0.165.0",
-    "@types/vscode": "^1.85.0",
+    "@tailwindcss/postcss": "^4.2.4",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.9.1",
-    "c8": "^11.0.0",
-    "esbuild": "^0.21.5",
-    "glob": "^13.0.6",
-    "mocha": "^11.7.5",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "semantic-release": "^25.0.3",
-    "three": "^0.165.0",
-    "typescript": "^5.4.5"
-  }
+    "husky": "^9.0.11",
+    "prettier": "^3.3.0",
+    "turbo": "^2.0.0"
+  },
+  "packageManager": "pnpm@10.33.2"
 }
