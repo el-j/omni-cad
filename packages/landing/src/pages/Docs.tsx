@@ -57,6 +57,45 @@ export const Docs: React.FC = () => {
         </section>
 
         <section className="mb-24 rounded-3xl border border-white/10 bg-zinc-900/50 p-10">
+          <h2 className="mb-4 text-3xl font-bold">Current Capability Snapshot</h2>
+          <p className="mb-6 text-gray-300">
+            The table below reflects currently verified behavior in the shipped extension. Planned formats and adapters are tracked separately in roadmap docs.
+          </p>
+          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/30">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-gray-300">
+                <tr>
+                  <th className="px-4 py-3">Adapter</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Verified Exports</th>
+                  <th className="px-4 py-3">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-gray-200">
+                <tr>
+                  <td className="px-4 py-3">FreeCAD</td>
+                  <td className="px-4 py-3 text-emerald-300">Production</td>
+                  <td className="px-4 py-3">STL, STEP, IGES</td>
+                  <td className="px-4 py-3 text-gray-400">Primary solid/BREP path</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3">OpenSCAD</td>
+                  <td className="px-4 py-3 text-emerald-300">Production</td>
+                  <td className="px-4 py-3">STL</td>
+                  <td className="px-4 py-3 text-gray-400">Mesh-first export</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3">OpenGeometry</td>
+                  <td className="px-4 py-3 text-yellow-300">Experimental</td>
+                  <td className="px-4 py-3">None</td>
+                  <td className="px-4 py-3 text-gray-400">Preview runtime, export pending</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mb-24 rounded-3xl border border-white/10 bg-zinc-900/50 p-10">
           <h2 className="mb-4 text-3xl font-bold">Release Notes And Migration</h2>
           <p className="mb-6 text-gray-300">
             Each docs snapshot corresponds to a release or channel build. Review the changelog and release notes before upgrading between versions.
@@ -70,6 +109,12 @@ export const Docs: React.FC = () => {
             </a>
             <a href={appRouteUrl('/roadmap')} className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-white/10">
               Roadmap Governance
+            </a>
+            <a href="https://github.com/el-j/omni-cad/blob/main/docs/EXPORT_CAPABILITY_MATRIX.md" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-white/10">
+              Export Capability Matrix
+            </a>
+            <a href="https://github.com/el-j/omni-cad/blob/main/docs/ADAPTER_FAMILY_DECISIONS.md" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-white/10">
+              Adapter Family Decisions
             </a>
           </div>
         </section>

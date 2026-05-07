@@ -33,6 +33,13 @@ Describe the internal improvement and why it is needed.
 
 - Contract tests to protect unchanged behavior:
 
+## Documentation Updates
+
+- Landing hero update required: yes/no
+- Docs page update required: yes/no
+- Capability/roadmap docs update required: yes/no
+- TSDoc updates required for public TS exports: yes/no
+
 ## Validation Commands
 
 ```bash

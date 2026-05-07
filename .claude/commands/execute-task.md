@@ -12,8 +12,9 @@ Implement an approved task against the tests prepared by `/test`.
 5. Implement the smallest change that satisfies the failing criterion.
 6. Re-run the same focused test immediately.
 7. After the slice passes, run the smallest additional lint/type/build gate that covers the touched code.
-8. Run required E2E gate for touched runtime surfaces.
-9. Mark task finalized only when E2E gate is green.
+8. Run `/docs` for user-visible changes.
+9. Run required E2E gate for touched runtime surfaces.
+10. Mark task finalized only when E2E gate is green.
 
 ## Rules
 

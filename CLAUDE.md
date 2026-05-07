@@ -49,6 +49,7 @@ pnpm --filter omni-cad run package
 - When changing export, render, MCP, packaging, or release behavior, update tests or add focused coverage in the same slice.
 - Keep `.claude/tasks` as the source of agent plans and execution notes for this repo.
 - Keep planning files human-readable and split by concern; avoid monolithic "boss" plans.
+- Treat documentation as part of shipping quality: update landing/docs content when important user-visible capabilities change.
 
 ## Testing Policy
 
@@ -72,6 +73,7 @@ pnpm --filter omni-cad run package
 | `/validate` | Check a task plan against the current codebase before work starts |
 | `/test` | Write or update black-box acceptance tests from the plan before implementation |
 | `/execute-task` | Implement the task against the failing or missing tests |
+| `/docs` | Update public docs and landing communication for shipped changes |
 | `/review` | White-box review against repo conventions and the approved plan |
 | `/testfix` | Resolve test failures without shrinking coverage |
 | `/learn` | Write concrete lessons back into command files |
@@ -82,12 +84,13 @@ pnpm --filter omni-cad run package
 ### Pipeline
 
 ```
-/task -> /validate -> /test -> /execute-task -> /review -> /testfix -> /learn
+/task -> /validate -> /test -> /execute-task -> /docs -> /review -> /testfix -> /learn
 ```
 
 Rules:
 - `/test` must work from the task plan and public behavior, not the implementation internals.
 - `/execute-task` does not close a task until the planned tests pass.
+- `/docs` updates `packages/landing` and related docs when user-visible capability changes ship.
 - `/execute-task` marks tasks finalized only after required E2E passes.
 - `/review` can request fixes, but it does not rewrite the task scope.
 - `/learn` preserves prior learnings and appends only concrete new lessons.
@@ -112,3 +115,4 @@ Rules:
 - Verify commands from `package.json` instead of guessing.
 - Prefer current repo conventions over blueprint defaults when they differ.
 - If a task touches marketplace release behavior, preserve the GitHub-based release path and VSIX packaging checks.
+- Add concise TSDoc to important TypeScript public contracts so newcomers get strong IntelliSense context.

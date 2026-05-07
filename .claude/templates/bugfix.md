@@ -35,6 +35,13 @@ Describe the broken behavior and the expected corrected behavior.
 - Minimal regression test:
 - Additional edge-case test:
 
+## Documentation Updates
+
+- Landing hero update required: yes/no
+- Docs page update required: yes/no
+- Capability/roadmap docs update required: yes/no
+- TSDoc updates required for public TS exports: yes/no
+
 ## Validation Commands
 
 ```bash

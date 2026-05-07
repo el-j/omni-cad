@@ -9,10 +9,11 @@ Run queued tasks from `.claude/state/orchestrator-state.json` one at a time.
 2. Run `/validate`.
 3. Run `/test`.
 4. Run `/execute-task`.
-5. Run `/review`.
-6. If needed, run `/testfix` and re-check.
-7. Run required E2E before marking finalized.
-8. Run `/learn` and update state.
+5. Run `/docs` when the task changes shipped behavior.
+6. Run `/review`.
+7. If needed, run `/testfix` and re-check.
+8. Run required E2E before marking finalized.
+9. Run `/learn` and update state.
 
 ## Rules
 

@@ -14,6 +14,7 @@ Keep task files human-readable, separated, and easy to validate.
 3. Avoid monolithic "boss" files for active execution scope.
 4. Split broad work into multiple linked task files with clear dependencies.
 5. Every task must include acceptance criteria, edge cases, black-box test spec, and finalization gates.
+6. Every task must include a `Documentation Updates` section, even if all entries are `no`.
 
 ## Validation
 

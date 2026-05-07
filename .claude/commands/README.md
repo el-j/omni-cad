@@ -11,6 +11,7 @@ This is a thin, test-driven adaptation of the blueprint workflow for the OmniCAD
 | `/validate` | Compare that plan with code reality |
 | `/test` | Create or update black-box acceptance tests first |
 | `/execute-task` | Implement only what is needed to make planned tests pass |
+| `/docs` | Update docs and landing communication for shipped changes |
 | `/review` | Review code against the plan and repo conventions |
 | `/testfix` | Resolve failures without removing coverage |
 | `/learn` | Persist concrete workflow learnings into command files |
@@ -21,7 +22,7 @@ This is a thin, test-driven adaptation of the blueprint workflow for the OmniCAD
 ## Pipeline
 
 ```
-/task -> /validate -> /test -> /execute-task -> /review -> /testfix -> /learn
+/task -> /validate -> /test -> /execute-task -> /docs -> /review -> /testfix -> /learn
 ```
 
 ## Repo-Specific Decisions
@@ -42,15 +43,21 @@ This is a thin, test-driven adaptation of the blueprint workflow for the OmniCAD
 2. Plan is validated against the current codebase before edits.
 3. Acceptance tests are written or updated before implementation.
 4. Implementation is scoped to making the tests pass.
-5. Review checks conventions, packaging claims, and unintended regressions.
-6. E2E is run for touched runtime surfaces before finalization.
-7. Learnings are appended after completion.
+5. Documentation and landing/docs pages are updated for shipped user-visible changes.
+6. Review checks conventions, packaging claims, docs consistency, and unintended regressions.
+7. E2E is run for touched runtime surfaces before finalization.
+8. Learnings are appended after completion.
 
 ## File Readability Rule
 
 - No monolithic "boss" planning docs for active work.
 - Use one intent per file with explicit ids and date-stamped names.
 - Keep task plans in `.claude/tasks/` split into focused, testable slices.
+
+## Developer Documentation Rule
+
+- New or significantly changed TypeScript exports should include concise TSDoc for IntelliSense quality.
+- Prefer documenting public interfaces and contracts over internal one-liners.
 
 ## Learnings
 

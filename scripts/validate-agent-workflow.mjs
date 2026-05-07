@@ -12,6 +12,7 @@ const requiredFiles = [
   '.claude/commands/validate.md',
   '.claude/commands/test.md',
   '.claude/commands/execute-task.md',
+  '.claude/commands/docs.md',
   '.claude/commands/review.md',
   '.claude/commands/testfix.md',
   '.claude/commands/learn.md',
@@ -48,7 +49,7 @@ const state = JSON.parse(
   fs.readFileSync(path.join(repoRoot, '.claude/state/orchestrator-state.json'), 'utf8')
 );
 
-const expectedPipeline = '/task -> /validate -> /test -> /execute-task -> /review -> /testfix -> /learn';
+const expectedPipeline = '/task -> /validate -> /test -> /execute-task -> /docs -> /review -> /testfix -> /learn';
 assert.match(claudeMd, new RegExp(expectedPipeline.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 assert.match(commandsReadme, new RegExp(expectedPipeline.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 assert.match(claudeMd, /finalized only after required E2E/i);
@@ -70,6 +71,7 @@ const commandFiles = [
   'validate',
   'test',
   'execute-task',
+  'docs',
   'review',
   'testfix',
   'learn',
@@ -96,6 +98,7 @@ for (const templateName of ['feature', 'bugfix', 'refactor']) {
   );
   assert.match(content, /## Acceptance Criteria/);
   assert.match(content, /## Black-Box Test Spec/);
+  assert.match(content, /## Documentation Updates/);
   assert.match(content, /## Finalization Gates/);
 }
 

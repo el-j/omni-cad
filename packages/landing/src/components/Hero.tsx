@@ -31,6 +31,10 @@ export const Hero: React.FC = () => {
             OmniCAD routes your file to the right engine, compiles it,
             and renders the result live — right inside your editor.
           </p>
+
+          <div className="mb-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-200 max-w-xl">
+            Current export coverage: FreeCAD supports STL, STEP, and IGES. OpenSCAD supports STL. Additional adapter families are on the public roadmap.
+          </div>
           
           <div className="flex flex-wrap gap-4 mb-12">
             <a href={installHref} className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-500/20">
@@ -47,12 +51,12 @@ export const Hero: React.FC = () => {
               <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">CAD Engines</div>
             </div>
             <div>
-              <div className="text-2xl font-bold">MCP</div>
-              <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">AI Ready</div>
+              <div className="text-2xl font-bold">3</div>
+              <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">Export Formats Live</div>
             </div>
             <div>
               <div className="text-2xl font-bold">E2E</div>
-              <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">Living Docs</div>
+              <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">Release-Gated QA</div>
             </div>
           </div>
         </div>

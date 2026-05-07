@@ -35,6 +35,13 @@ One paragraph describing the user-visible change.
 - Expected failing behavior before implementation:
 - Passing behavior after implementation:
 
+## Documentation Updates
+
+- Landing hero update required: yes/no
+- Docs page update required: yes/no
+- Capability/roadmap docs update required: yes/no
+- TSDoc updates required for public TS exports: yes/no
+
 ## Validation Commands
 
 ```bash
