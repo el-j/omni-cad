@@ -15,7 +15,7 @@ export class FreeCadAdapter implements ICadEngine {
   id = 'freecad';
   supportedExtensions = ['.py', '.fcmacro'];
   capabilities = {
-    supportedExportFormats: ['STL'] as ExportFormat[],
+    supportedExportFormats: ['STL', 'STEP', 'IGES'] as ExportFormat[],
     supportsBrepMetadata: true,
     renderable: true,
   };
@@ -37,7 +37,7 @@ export class FreeCadAdapter implements ICadEngine {
       if (sourcePath === tmpSource) {
         fs.writeFileSync(tmpSource, code, 'utf8');
       }
-      await this._exportWithFreeCad(sourcePath, code, exportPath);
+      await this._exportWithFreeCad(sourcePath, code, exportPath, 'STL');
       const mesh = this._parseStl(exportPath);
       return { success: true, meshes: [mesh], computeTimeMs: Date.now() - start };
     } catch (err: unknown) {
@@ -70,7 +70,7 @@ export class FreeCadAdapter implements ICadEngine {
     format: ExportFormat,
     options?: EngineExecutionOptions
   ): Promise<Buffer> {
-    if (format !== 'STL') {
+    if (!this.capabilities.supportedExportFormats.includes(format)) {
       throw new Error(`FreeCAD export for ${format} is not implemented yet`);
     }
 
@@ -79,13 +79,18 @@ export class FreeCadAdapter implements ICadEngine {
     const sourcePath = options?.sourcePath && fs.existsSync(options.sourcePath)
       ? options.sourcePath
       : tmpSource;
-    const exportPath = path.join(tmpDir, 'model.stl');
+    const exportFileName = format === 'STEP'
+      ? 'model.step'
+      : format === 'IGES'
+        ? 'model.iges'
+        : 'model.stl';
+    const exportPath = path.join(tmpDir, exportFileName);
 
     try {
       if (sourcePath === tmpSource) {
         fs.writeFileSync(tmpSource, code, 'utf8');
       }
-      await this._exportWithFreeCad(sourcePath, code, exportPath);
+      await this._exportWithFreeCad(sourcePath, code, exportPath, format);
       return fs.readFileSync(exportPath);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -110,13 +115,13 @@ export class FreeCadAdapter implements ICadEngine {
     return candidates.find((candidate) => candidate.includes('/') ? fs.existsSync(candidate) : true) ?? configuredPath;
   }
 
-  private _exportWithFreeCad(sourcePath: string, code: string, exportPath: string): Promise<void> {
+  private _exportWithFreeCad(sourcePath: string, code: string, exportPath: string, format: ExportFormat): Promise<void> {
     const runnerPath = path.join(path.dirname(exportPath), 'runner.py');
-    fs.writeFileSync(runnerPath, this._buildRunnerScript(sourcePath, code, exportPath), 'utf8');
+    fs.writeFileSync(runnerPath, this._buildRunnerScript(sourcePath, code, exportPath, format), 'utf8');
     return this._runFreeCAD(runnerPath);
   }
 
-  private _buildRunnerScript(sourcePath: string, code: string, exportPath: string): string {
+  private _buildRunnerScript(sourcePath: string, code: string, exportPath: string, format: ExportFormat): string {
     return [
       'import os',
       'import runpy',
@@ -124,10 +129,12 @@ export class FreeCadAdapter implements ICadEngine {
       'import traceback',
       'import FreeCAD as App',
       'import Mesh',
+      'import Part',
       '',
       `SOURCE_PATH = r${JSON.stringify(sourcePath)}`,
       `INLINE_CODE = ${JSON.stringify(code)}`,
       `EXPORT_PATH = r${JSON.stringify(exportPath)}`,
+      `EXPORT_FORMAT = ${JSON.stringify(format)}`,
       '',
       'def add_search_paths(source_path):',
       '    current = os.path.dirname(os.path.abspath(source_path))',
@@ -162,7 +169,22 @@ export class FreeCadAdapter implements ICadEngine {
       '                exportable.append(obj)',
       '    if not exportable:',
       '        raise RuntimeError(f"No exportable FreeCAD shapes found after running {SOURCE_PATH}")',
-      '    Mesh.export(exportable, EXPORT_PATH)',
+      '    if EXPORT_FORMAT == "STL":',
+      '        Mesh.export(exportable, EXPORT_PATH)',
+      '    elif EXPORT_FORMAT == "STEP":',
+      '        shapes = [obj.Shape for obj in exportable if getattr(obj, "Shape", None) is not None and not obj.Shape.isNull()]',
+      '        if not shapes:',
+      '            raise RuntimeError("No valid FreeCAD shapes available for STEP export")',
+      '        compound = shapes[0] if len(shapes) == 1 else Part.makeCompound(shapes)',
+      '        compound.exportStep(EXPORT_PATH)',
+      '    elif EXPORT_FORMAT == "IGES":',
+      '        shapes = [obj.Shape for obj in exportable if getattr(obj, "Shape", None) is not None and not obj.Shape.isNull()]',
+      '        if not shapes:',
+      '            raise RuntimeError("No valid FreeCAD shapes available for IGES export")',
+      '        compound = shapes[0] if len(shapes) == 1 else Part.makeCompound(shapes)',
+      '        compound.exportIges(EXPORT_PATH)',
+      '    else:',
+      '        raise RuntimeError(f"Unsupported FreeCAD export format: {EXPORT_FORMAT}")',
       '    print(f"OMNICAD_EXPORT_OK:{EXPORT_PATH}")',
       'except Exception:',
       '    traceback.print_exc()',

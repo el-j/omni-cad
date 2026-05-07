@@ -10,7 +10,7 @@
 [![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Extension-007ACC?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=omni-cad.omni-cad)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
-_Write CAD models in TypeScript, Python, or OpenSCAD — see them live in 3D, export to any format._
+_Write CAD models in TypeScript, Python, or OpenSCAD — see them live in 3D, with capability-aware export from the viewer._
 
 [🌐 Landing Page](https://el-j.github.io/omni-cad/) · [📦 Latest Release](https://github.com/el-j/omni-cad/releases/latest) · [🐛 Report a Bug](https://github.com/el-j/omni-cad/issues/new?template=bug_report.yml) · [✨ Request a Feature](https://github.com/el-j/omni-cad/issues/new?template=feature_request.yml)
 
@@ -37,6 +37,7 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 - **Live 3D Viewer** — Three.js-powered WebGL viewer opens beside your editor. Save your file, see the update instantly.
 - **Engine Router** — Strategy-pattern dispatcher automatically selects the right backend for each file extension.
 - **Capability-aware Export** — Export actions are gated by the active engine's actual supported formats.
+- **Current export coverage** — OpenSCAD exports STL, and FreeCAD exports STL, STEP, and IGES.
 - **MCP Integration** — Built-in [Model Context Protocol](https://modelcontextprotocol.io) server exposes `compile_and_measure` and `export_geometry` tools to any MCP-capable AI agent.
 - **Guarded experimental runtime** — OpenGeometry is explicitly gated until a real runtime is integrated.
 - **Professional CI/CD** — Semantic versioning, automated `.vsix` releases, coverage reports, E2E tests in headless VS Code.
@@ -63,7 +64,7 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 1. **Open a supported file** — create or open any `.ts`, `.js`, `.py`, `.fcmacro`, or `.scad` file.
 2. **Open the viewer** — run `OmniCAD: Open Viewer` from the Command Palette (`Ctrl+Shift+P`).
 3. **Edit and save** — every time you save the file, OmniCAD re-compiles and updates the 3D view automatically.
-4. **Export** — click the **Export** button in the viewer toolbar and choose your format.
+4. **Export** — use the viewer toolbar to export one of the formats supported by the active engine.
 
 ### Example: OpenGeometry (TypeScript)
 

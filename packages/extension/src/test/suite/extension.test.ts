@@ -1,10 +1,12 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
+import * as path from 'path';
 import { EngineRouter } from '../../engines/EngineRouter';
 import { OpenGeometryAdapter } from '../../engines/OpenGeometryAdapter';
 import { FreeCadAdapter } from '../../engines/FreeCadAdapter';
 import { OpenScadAdapter } from '../../engines/OpenScadAdapter';
 import { OmniCadMcpServer } from '../../mcp/McpServer';
+import { getDefaultExportPath, getExportFileInfo } from '../../export/exportFormats';
 
 const freecadExecutable = '/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd';
 const openscadExecutable = '/opt/homebrew/bin/openscad';
@@ -137,6 +139,65 @@ suite('OmniCAD Extension Tests', () => {
       assert.ok(result.meshes && result.meshes.length === 1, 'windpower script should produce a mesh');
       assert.ok(result.meshes![0].vertices.length > 300, 'windpower mesh should be non-trivial');
     });
+
+    test('export returns STL bytes when FreeCAD is available', async function () {
+      this.timeout(30000);
+      if (!fs.existsSync(freecadExecutable)) {
+        this.skip();
+      }
+
+      const workingAdapter = new FreeCadAdapter(freecadExecutable);
+      const buf = await workingAdapter.export([
+        'import FreeCAD as App',
+        'import Part',
+        'doc = App.newDocument("Smoke")',
+        'box = doc.addObject("Part::Feature", "Box")',
+        'box.Shape = Part.makeBox(1, 2, 3)',
+      ].join('\n'), 'STL');
+
+      assert.ok(Buffer.isBuffer(buf));
+      assert.ok(buf.length > 84, 'expected STL export content');
+    });
+
+    test('export returns STEP bytes when FreeCAD is available', async function () {
+      this.timeout(30000);
+      if (!fs.existsSync(freecadExecutable)) {
+        this.skip();
+      }
+
+      const workingAdapter = new FreeCadAdapter(freecadExecutable);
+      const buf = await workingAdapter.export([
+        'import FreeCAD as App',
+        'import Part',
+        'doc = App.newDocument("Smoke")',
+        'box = doc.addObject("Part::Feature", "Box")',
+        'box.Shape = Part.makeBox(1, 2, 3)',
+      ].join('\n'), 'STEP');
+
+      assert.ok(Buffer.isBuffer(buf));
+      assert.ok(buf.length > 32, 'expected STEP export content');
+      assert.match(buf.toString('utf8', 0, Math.min(buf.length, 128)), /ISO-10303|FILE_DESCRIPTION|STEP/i);
+    });
+
+    test('export returns IGES bytes when FreeCAD is available', async function () {
+      this.timeout(30000);
+      if (!fs.existsSync(freecadExecutable)) {
+        this.skip();
+      }
+
+      const workingAdapter = new FreeCadAdapter(freecadExecutable);
+      const buf = await workingAdapter.export([
+        'import FreeCAD as App',
+        'import Part',
+        'doc = App.newDocument("Smoke")',
+        'box = doc.addObject("Part::Feature", "Box")',
+        'box.Shape = Part.makeBox(1, 2, 3)',
+      ].join('\n'), 'IGES');
+
+      assert.ok(Buffer.isBuffer(buf));
+      assert.ok(buf.length > 32, 'expected IGES export content');
+      assert.match(buf.toString('utf8', 0, Math.min(buf.length, 256)), /S\s+1|IGES|Copyright/i);
+    });
   });
 
   suite('OpenScadAdapter', () => {
@@ -187,10 +248,45 @@ suite('OmniCAD Extension Tests', () => {
   });
 
   suite('Engine capabilities', () => {
+    test('router exposes FreeCAD STL, STEP, and IGES capability', () => {
+      const router = new EngineRouter();
+      assert.deepStrictEqual(router.getCapabilities('.py')?.supportedExportFormats, ['STL', 'STEP', 'IGES']);
+      router.dispose();
+    });
+
     test('router exposes OpenSCAD STL capability', () => {
       const router = new EngineRouter();
       assert.deepStrictEqual(router.getCapabilities('.scad')?.supportedExportFormats, ['STL']);
       router.dispose();
+    });
+  });
+
+  suite('export format metadata', () => {
+    test('builds default export paths from source file names', () => {
+      assert.strictEqual(
+        getDefaultExportPath('/tmp/model.py', 'STEP'),
+        path.join('/tmp', 'model.step')
+      );
+      assert.strictEqual(
+        getDefaultExportPath('/tmp/model.scad', 'STL'),
+        path.join('/tmp', 'model.stl')
+      );
+    });
+
+    test('returns save metadata for STEP', () => {
+      assert.deepStrictEqual(getExportFileInfo('STEP'), {
+        label: 'STEP model',
+        extensions: ['step', 'stp'],
+        defaultExtension: 'step',
+      });
+    });
+
+    test('returns save metadata for IGES', () => {
+      assert.deepStrictEqual(getExportFileInfo('IGES'), {
+        label: 'IGES model',
+        extensions: ['iges', 'igs'],
+        defaultExtension: 'iges',
+      });
     });
   });
 

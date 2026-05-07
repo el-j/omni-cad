@@ -14,7 +14,7 @@ It routes your active model file to the correct backend, compiles it on save, an
 
 ## Current export support
 
-- FreeCAD: STL
+- FreeCAD: STL, STEP, IGES
 - OpenSCAD: STL
 - OpenGeometry: not yet implemented
 

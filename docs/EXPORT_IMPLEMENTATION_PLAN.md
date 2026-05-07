@@ -9,12 +9,12 @@ Date: 2026-05-07
 1. Toolbar buttons post export requests from the webview.
 2. The extension host receives `requestExport`, validates the active engine, opens a save dialog, and writes returned bytes to disk.
 3. Engine export support currently exists only for STL on:
-- FreeCAD
+- FreeCAD and STEP is now implemented as well
 - OpenSCAD
 
 ### What does not work today
 
-1. STEP export is not implemented in the current adapters.
+1. STEP export is only implemented for FreeCAD.
 2. IGES export is not implemented in the current adapters.
 3. glTF export is not implemented in the current adapters.
 4. OpenGeometry export is not implemented at all.
@@ -29,6 +29,8 @@ Unsupported buttons were previously disabled without strong visual feedback, so 
 Completed in this pass:
 
 1. Unsupported export buttons now render with a clear disabled style.
+2. Save dialog defaults now use format-specific extensions and source-adjacent filenames.
+3. FreeCAD can export STL, STEP, and IGES.
 
 Still recommended:
 

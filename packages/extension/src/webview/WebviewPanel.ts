@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { EngineRouter } from '../engines/EngineRouter';
+import { getDefaultExportPath, getExportFileInfo } from '../export/exportFormats';
 import { ExportFormat, ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
 
 export class WebviewPanel {
@@ -108,8 +109,14 @@ export class WebviewPanel {
           });
           return;
         }
+        const fileInfo = getExportFileInfo(message.format);
+        const defaultUri = editor.document.isUntitled
+          ? undefined
+          : vscode.Uri.file(getDefaultExportPath(editor.document.fileName, message.format));
         const saveUri = await vscode.window.showSaveDialog({
-          filters: { [message.format]: [message.format.toLowerCase()] },
+          defaultUri,
+          saveLabel: `Export ${message.format}`,
+          filters: { [fileInfo.label]: fileInfo.extensions },
         });
         if (!saveUri) { return; }
         try {
