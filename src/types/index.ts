@@ -62,8 +62,10 @@ export interface ICadEngine {
 
 // Message bus types (Extension <-> Webview)
 export type ExtensionToWebviewMessage =
+  | { type: 'compiling' }
   | { type: 'updateMesh'; payload: CompileResponse }
   | { type: 'showError'; message: string }
+  | { type: 'exportStarted' }
   | { type: 'exportComplete'; filePath: string }
   | {
     type: 'engineCapabilities';

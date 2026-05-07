@@ -18,7 +18,7 @@ Harden MCP as a first-class, type-safe runtime surface with explicit lifecycle, 
 ## Milestone B: Runtime Validation (P0/P1)
 - [x] Replace unsafe MCP arg casts with strict `zod.parse` validation
 - [x] Validate request payload size and required fields
-- [ ] Validate adapter responses before returning MCP payloads
+- [x] Validate adapter responses before returning MCP payloads
 - [x] Normalize all failures into typed error responses
 
 ### Error Contract
@@ -38,9 +38,9 @@ Harden MCP as a first-class, type-safe runtime surface with explicit lifecycle, 
 - [x] Tool calls fail fast and explicitly on unsupported operations
 
 ## Migration and Rollout
-- [ ] Preserve backward compatibility where feasible
-- [ ] Add temporary compatibility path with explicit deprecation notes
-- [ ] Remove compatibility path after coverage and adoption gates pass
+- [x] Preserve backward compatibility where feasible
+- [x] Add temporary compatibility path with explicit deprecation notes
+- [x] Remove compatibility path after coverage and adoption gates pass
 
 ## Test Gates
 - [x] Unit: schema validation and rejection cases
@@ -53,4 +53,4 @@ Harden MCP as a first-class, type-safe runtime surface with explicit lifecycle, 
 - [x] MCP lifecycle wired and stable
 - [x] No unsafe runtime casts on tool boundaries
 - [x] Capability model active and enforced
-- [ ] MCP tests and CI gates green
+- [x] MCP tests and CI gates green

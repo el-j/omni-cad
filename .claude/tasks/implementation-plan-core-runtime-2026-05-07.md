@@ -26,7 +26,7 @@ Status: IN PROGRESS
 - [x] Wrap save compile flow in robust try/catch with user-visible diagnostics
 - [x] Ensure config changes rebind engine behavior deterministically
 - [x] Add safe disposal behavior for router/panel lifecycle
-- [ ] Ensure unsupported file extensions fail gracefully with explicit feedback
+- [x] Ensure unsupported file extensions fail gracefully with explicit feedback
 
 ### Acceptance Criteria
 - [x] No unhandled promise rejections in save/compile/export path
@@ -35,17 +35,17 @@ Status: IN PROGRESS
 ## Milestone C: Webview Robustness (P2)
 - [x] Implement or remove `cameraMoved` message path
 - [x] Fix scene listener/resource cleanup for all attached listeners
-- [ ] Add compile/export progress and unsupported-format feedback UI
+- [x] Add compile/export progress and unsupported-format feedback UI
 - [x] Tighten CSP posture and remove avoidable unsafe directives
 
 ### Acceptance Criteria
 - [x] No dead message types in protocol contracts
-- [ ] No listener leaks after panel close/remount cycles
+- [x] No listener leaks after panel close/remount cycles
 - [x] Unsupported actions produce clear actionable messages
 
 ## Type-Safety Requirements
 - [x] Strengthen `CompileResponse` contract to avoid ambiguous success states
-- [ ] Guard mesh/bounds values against non-finite numeric values
+- [x] Guard mesh/bounds values against non-finite numeric values
 - [x] Avoid unsafe casts in runtime paths; use explicit narrowing/guards
 
 ## Risk Controls
@@ -54,6 +54,6 @@ Status: IN PROGRESS
 - [x] Keep subprocess timeouts and cleanup deterministic
 
 ## Done Criteria
-- [ ] Runtime milestones A/B/C completed
+- [x] Runtime milestones A/B/C completed
 - [x] New behavior covered by unit/integration tests
 - [x] E2E verifies at least one real render path per implemented engine

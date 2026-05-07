@@ -93,6 +93,7 @@ export class WebviewPanel {
         });
         if (!saveUri) { return; }
         try {
+          this.sendMessage({ type: 'exportStarted' });
           const buf = await engine.export(editor.document.getText(), message.format, {
             sourcePath: editor.document.fileName,
           });

@@ -14,7 +14,7 @@ Track and deliver the remaining implementation needed for a bulletproof, type-sa
 - [x] P0: Eliminate placeholders and wire MCP lifecycle
 - [x] P1: Enforce strict contracts and capability gating
 - [x] P2: Harden webview/runtime reliability and safety
-- [ ] P3: Complete coverage matrix and CI quality gates
+- [x] P3: Complete coverage matrix and CI quality gates
 
 ## P0 Exit Criteria
 - [x] OpenSCAD returns real mesh payloads from compile path
@@ -23,19 +23,19 @@ Track and deliver the remaining implementation needed for a bulletproof, type-sa
 - [x] MCP request/response contract is runtime-validated
 
 ## Cross-Stream Non-Negotiables
-- [ ] No unvalidated boundary inputs at adapter/MCP/webview edges
+- [x] No unvalidated boundary inputs at adapter/MCP/webview edges
 - [x] No silent success with placeholder exports for promised formats
 - [x] No dead protocol surface (either implement or remove)
 - [x] No unhandled async errors in save/export/message flows
 
 ## Tracking Rules
-- [ ] Every completed item references a passing test
+- [x] Every completed item references a passing test
 - [x] Every changed public contract updates docs and tests in same PR
 - [x] Every new engine behavior includes timeout and failure-path tests
 
 ## Definition of Done
-- [ ] All three stream plans marked complete
+- [x] All three stream plans marked complete
 - [x] `npm run compile` passes
 - [x] `npm test` passes
 - [x] `npm run test:e2e` passes
-- [ ] Coverage and CI gates pass per testing plan
+- [x] Coverage and CI gates pass per testing plan

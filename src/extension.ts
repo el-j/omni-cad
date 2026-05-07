@@ -103,6 +103,7 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!engine || !panel) { return; }
 
     try {
+      panel.sendMessage({ type: 'compiling' });
       const result = await engine.compile(doc.getText(), { sourcePath: doc.fileName });
       lastCompileResult = result;
       panel.sendMessage({ type: 'updateMesh', payload: result });

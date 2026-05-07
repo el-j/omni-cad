@@ -22,6 +22,61 @@ suite('OmniCAD MCP Contracts', () => {
     assert.match(result.content[0].text, /VALIDATION_FAILED/);
   });
 
+  test('compile_and_measure handles empty mesh responses for renderable adapters', async () => {
+    const fakeRouter = new EngineRouter();
+    fakeRouter.get = () => ({
+      id: 'fake',
+      capabilities: { supportedExportFormats: [], supportsBrepMetadata: false, renderable: true },
+      supportedExtensions: ['.fake'],
+      compile: async () => ({ success: true, meshes: [], computeTimeMs: 0 }),
+      getBrepMetadata: async () => { throw new Error('Not implemented'); },
+      export: async () => { throw new Error('Not implemented'); },
+      dispose: () => {},
+    });
+    const server = new OmniCadMcpServer(fakeRouter);
+    const result = await server.compileAndMeasure({ code: 'x', engine: 'freecad' });
+    assert.match(result.content[0].text, /COMPILE_FAILED/);
+    assert.match(result.content[0].text, /Engine returned success but produced no meshes/);
+  });
+
+  test('compile_and_measure handles non-finite bounds', async () => {
+    const fakeRouter = new EngineRouter();
+    fakeRouter.get = () => ({
+      id: 'fake',
+      capabilities: { supportedExportFormats: [], supportsBrepMetadata: true, renderable: true },
+      supportedExtensions: ['.fake'],
+      compile: async () => ({ success: true, meshes: [{ vertices: [], normals: [], indices: [] }], computeTimeMs: 0 }),
+      getBrepMetadata: async () => ({
+        boundingBox: { xMin: Infinity, xMax: 1, yMin: 1, yMax: 1, zMin: 1, zMax: 1 },
+        volume: 0,
+        topology: { faces: 0, edges: 0, vertices: 0 }
+      }),
+      export: async () => { throw new Error('Not implemented'); },
+      dispose: () => {},
+    });
+    const server = new OmniCadMcpServer(fakeRouter);
+    const result = await server.compileAndMeasure({ code: 'x', engine: 'freecad' });
+    assert.match(result.content[0].text, /RUNTIME_ERROR/);
+    assert.match(result.content[0].text, /Engine returned non-finite bounding box values/);
+  });
+
+  test('export_geometry rejects formats unsupported by the engine', async () => {
+    const fakeRouter = new EngineRouter();
+    fakeRouter.get = () => ({
+      id: 'fake',
+      capabilities: { supportedExportFormats: ['STL'], supportsBrepMetadata: true, renderable: true },
+      supportedExtensions: ['.fake'],
+      compile: async () => { throw new Error('Not implemented'); },
+      getBrepMetadata: async () => { throw new Error('Not implemented'); },
+      export: async () => { throw new Error('Not implemented'); },
+      dispose: () => {},
+    });
+    const server = new OmniCadMcpServer(fakeRouter);
+    const result = await server.exportGeometry({ code: 'x', engine: 'freecad', format: 'STEP' });
+    assert.match(result.content[0].text, /UNSUPPORTED_FORMAT/);
+    assert.match(result.content[0].text, /fake does not support STEP export/);
+  });
+
   test('export_geometry succeeds for OpenSCAD STL when the binary is available', async function () {
     this.timeout(30000);
     if (!fs.existsSync(openscadExecutable)) {

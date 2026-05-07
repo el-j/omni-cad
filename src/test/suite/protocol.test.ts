@@ -3,6 +3,10 @@ import { ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../../type
 
 function describeExtensionMessage(message: ExtensionToWebviewMessage): string {
   switch (message.type) {
+    case 'compiling':
+      return 'compiling';
+    case 'exportStarted':
+      return 'exportStarted';
     case 'updateMesh':
       return message.payload.success ? 'mesh-success' : 'mesh-error';
     case 'showError':
@@ -26,6 +30,8 @@ function describeWebviewMessage(message: WebviewToExtensionMessage): string {
 suite('Protocol contracts', () => {
   test('covers all extension-to-webview message variants', () => {
     const messages: ExtensionToWebviewMessage[] = [
+      { type: 'compiling' },
+      { type: 'exportStarted' },
       { type: 'updateMesh', payload: { success: true, meshes: [], computeTimeMs: 1 } },
       { type: 'showError', message: 'boom' },
       { type: 'exportComplete', filePath: '/tmp/model.stl' },
@@ -43,6 +49,8 @@ suite('Protocol contracts', () => {
     ];
 
     assert.deepStrictEqual(messages.map(describeExtensionMessage), [
+      'compiling',
+      'exportStarted',
       'mesh-success',
       'error:boom',
       'export:/tmp/model.stl',

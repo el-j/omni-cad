@@ -286,7 +286,11 @@ export class FreeCadAdapter implements ICadEngine {
       bounds.zMax = Math.max(bounds.zMax, vertices[index + 2]);
     }
 
-    if (!Number.isFinite(bounds.xMin)) {
+    if (
+      !Number.isFinite(bounds.xMin) || !Number.isFinite(bounds.xMax) ||
+      !Number.isFinite(bounds.yMin) || !Number.isFinite(bounds.yMax) ||
+      !Number.isFinite(bounds.zMin) || !Number.isFinite(bounds.zMax)
+    ) {
       throw new Error('FreeCAD mesh bounds could not be computed from the exported geometry');
     }
 

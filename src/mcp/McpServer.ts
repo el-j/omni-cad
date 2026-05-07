@@ -102,6 +102,10 @@ export class OmniCadMcpServer {
         return errorContent({ code: 'COMPILE_FAILED', message: compileResult.errors.join('\n') });
       }
 
+      if (adapter.capabilities.renderable && (!compileResult.meshes || compileResult.meshes.length === 0)) {
+        return errorContent({ code: 'COMPILE_FAILED', message: 'Engine returned success but produced no meshes.' });
+      }
+
       if (!adapter.capabilities.supportsBrepMetadata) {
         return {
           content: [{ type: 'text', text: JSON.stringify({ compile: compileResult, brep: null }, null, 2) }],
@@ -109,6 +113,16 @@ export class OmniCadMcpServer {
       }
 
       const brepData = await adapter.getBrepMetadata(args.code);
+      
+      const b = brepData.boundingBox;
+      if (
+        !Number.isFinite(b.xMin) || !Number.isFinite(b.xMax) ||
+        !Number.isFinite(b.yMin) || !Number.isFinite(b.yMax) ||
+        !Number.isFinite(b.zMin) || !Number.isFinite(b.zMax)
+      ) {
+        return errorContent({ code: 'RUNTIME_ERROR', message: 'Engine returned non-finite bounding box values.' });
+      }
+
       return {
         content: [{ type: 'text', text: JSON.stringify({ compile: compileResult, brep: brepData }, null, 2) }],
       };

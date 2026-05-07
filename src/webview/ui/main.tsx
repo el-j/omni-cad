@@ -21,6 +21,8 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [supportedFormats, setSupportedFormats] = useState<ExportFormat[]>([]);
   const [engineLabel, setEngineLabel] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingText, setLoadingText] = useState<string>('');
 
   useEffect(() => {
     const handler = (event: MessageEvent<ExtensionToWebviewMessage>) => {
@@ -29,7 +31,16 @@ const App: React.FC = () => {
         return;
       }
       switch (msg.type) {
+        case 'compiling':
+          setIsLoading(true);
+          setLoadingText('Compiling...');
+          break;
+        case 'exportStarted':
+          setIsLoading(true);
+          setLoadingText('Exporting...');
+          break;
         case 'updateMesh':
+          setIsLoading(false);
           if (msg.payload.success && msg.payload.meshes.length > 0) {
             setMesh(msg.payload.meshes[0]);
             setError(null);
@@ -38,9 +49,11 @@ const App: React.FC = () => {
           }
           break;
         case 'showError':
+          setIsLoading(false);
           setError(msg.message);
           break;
         case 'exportComplete':
+          setIsLoading(false);
           setError(null);
           break;
         case 'engineCapabilities':
@@ -73,6 +86,27 @@ const App: React.FC = () => {
         onExport={handleExport}
       />
       <Scene meshPayload={mesh} wireframe={wireframe} showGrid={showGrid} />
+      {isLoading && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontSize: '24px',
+            fontFamily: 'sans-serif',
+            zIndex: 20,
+          }}
+        >
+          {loadingText}
+        </div>
+      )}
       {error && (
         <div
           style={{
