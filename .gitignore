@@ -11,4 +11,5 @@ CHANGELOG.md
 test-results
 
 demo
-.claude/
+
+.env
