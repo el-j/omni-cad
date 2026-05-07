@@ -7,10 +7,11 @@ Implement an approved task against the tests prepared by `/test`.
 
 1. Read the task plan.
 2. Confirm the validation result is still current.
-3. Run the focused failing test or the missing-coverage check.
-4. Implement the smallest change that satisfies the failing criterion.
-5. Re-run the same focused test immediately.
-6. After the slice passes, run the smallest additional lint/type/build gate that covers the touched code.
+3. If the task names a specialist, route to it before implementation.
+4. Run the focused failing test or the missing-coverage check.
+5. Implement the smallest change that satisfies the failing criterion.
+6. Re-run the same focused test immediately.
+7. After the slice passes, run the smallest additional lint/type/build gate that covers the touched code.
 
 ## Rules
 

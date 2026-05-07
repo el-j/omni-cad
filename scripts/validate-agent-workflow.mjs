@@ -7,6 +7,7 @@ const repoRoot = process.cwd();
 const requiredFiles = [
   'CLAUDE.md',
   '.claude/commands/README.md',
+  '.claude/commands/bootstrap.md',
   '.claude/commands/task.md',
   '.claude/commands/validate.md',
   '.claude/commands/test.md',
@@ -16,11 +17,15 @@ const requiredFiles = [
   '.claude/commands/learn.md',
   '.claude/commands/orchestrator.md',
   '.claude/commands/state.md',
+  '.claude/commands/resolve.md',
+  '.claude/commands/extension-runtime.md',
+  '.claude/commands/marketplace-release.md',
   '.claude/templates/feature.md',
   '.claude/templates/bugfix.md',
   '.claude/templates/refactor.md',
   '.claude/templates/checklist.md',
-  '.claude/state/orchestrator-state.json'
+  '.claude/state/orchestrator-state.json',
+  '.claude/tasks/FEAT-201-omni-bridge-export-adapter-roadmap-2026-05-07.md'
 ];
 
 for (const relativePath of requiredFiles) {
@@ -53,6 +58,7 @@ for (const scriptName of requiredExtensionScripts) {
 }
 
 const commandFiles = [
+  'bootstrap',
   'task',
   'validate',
   'test',
@@ -61,7 +67,10 @@ const commandFiles = [
   'testfix',
   'learn',
   'orchestrator',
-  'state'
+  'state',
+  'resolve',
+  'extension-runtime',
+  'marketplace-release'
 ];
 
 for (const commandName of commandFiles) {
@@ -86,5 +95,6 @@ assert.equal(state.orchestrator.status, 'idle');
 assert.equal(state.orchestrator.baseBranch, 'main');
 assert.ok(Array.isArray(state.queue), 'State queue must be an array');
 assert.ok(Array.isArray(state.history), 'State history must be an array');
+assert.ok(state.queue.some((item) => item.id === 'FEAT-201'), 'State queue must include FEAT-201');
 
 console.log('Agent workflow validation passed.');

@@ -25,6 +25,10 @@ One paragraph describing the user-visible change.
 
 - Files, commands, or behaviors expected to change
 
+## Suggested Specialist
+
+- `extension-runtime` | `marketplace-release` | none
+
 ## Black-Box Test Spec
 
 - Focused test entrypoint:

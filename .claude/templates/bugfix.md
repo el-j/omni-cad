@@ -26,6 +26,10 @@ Describe the broken behavior and the expected corrected behavior.
 
 - Files or commands affected
 
+## Suggested Specialist
+
+- `extension-runtime` | `marketplace-release` | none
+
 ## Black-Box Test Spec
 
 - Minimal regression test:

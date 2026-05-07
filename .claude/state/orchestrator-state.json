@@ -5,8 +5,17 @@
     "baseBranch": "main",
     "activeTask": null
   },
-  "queue": [],
+  "queue": [
+    {
+      "id": "FEAT-201",
+      "title": "Omni-Bridge export and adapter roadmap",
+      "path": ".claude/tasks/FEAT-201-omni-bridge-export-adapter-roadmap-2026-05-07.md",
+      "status": "planned",
+      "priority": "high",
+      "specialist": "extension-runtime"
+    }
+  ],
   "history": [],
   "blocked": [],
-  "updatedAt": "2026-05-07T00:00:00.000Z"
+  "updatedAt": "2026-05-07T22:55:00.000Z"
 }

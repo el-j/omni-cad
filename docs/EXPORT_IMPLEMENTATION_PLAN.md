@@ -89,3 +89,30 @@ Recommended order:
 3. FreeCAD exports STL and at least one BREP format successfully.
 4. Unsupported formats fail explicitly with a user-facing message.
 5. Export flow has unit or integration coverage for success and failure paths.
+
+## Omni-Bridge Roadmap
+
+### Capability Policy
+
+1. The toolbar and marketplace copy must reflect adapter-specific reality, not aspirational format coverage.
+2. Solid/BREP outputs (`STEP`, `IGES`) stay separate from mesh outputs (`STL`, `glTF`, `OBJ`) and drafting outputs (`DXF`, `SVG`).
+3. New formats are added only after an adapter has a real file-producing backend plus validation.
+
+### Export Priority Matrix
+
+| Family | Formats | First Candidate Adapters | Why |
+|--------|---------|--------------------------|-----|
+| Solid/BREP | `STEP`, `IGES` | FreeCAD, future CadQuery/build123d | Best engineering interchange value |
+| Mesh | `STL`, `glTF`, `OBJ` | OpenSCAD, FreeCAD, future JS/TS adapters | Viewer and downstream rendering workflows |
+| Fabrication | `3MF`, `AMF` | Mesh-first adapters after stable mesh export | Print/manufacturing usefulness |
+| Drafting | `DXF`, `SVG` | Future drafting-capable adapters or explicit conversion layers | 2D/CNC/laser workflows |
+
+### Adapter Expansion Roadmap
+
+1. BREP Python family next: investigate `CadQuery` and `build123d` as the most realistic next adapters.
+2. JS/TS CAD family after that: treat `OpenJSCAD/JSCAD` as separate from `OpenGeometry`, then harden `OpenGeometry` instead of overloading it.
+3. Library profiles later: treat ecosystems like `BOSL2` as adapter profiles if they ride an existing runtime.
+
+### Planning Source
+
+The active planning task for this expansion is `.claude/tasks/FEAT-201-omni-bridge-export-adapter-roadmap-2026-05-07.md`.

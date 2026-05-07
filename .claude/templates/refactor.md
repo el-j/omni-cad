@@ -25,6 +25,10 @@ Describe the internal improvement and why it is needed.
 - Expected unchanged behavior:
 - Intentional changes:
 
+## Suggested Specialist
+
+- `extension-runtime` | `marketplace-release` | none
+
 ## Black-Box Test Spec
 
 - Contract tests to protect unchanged behavior:

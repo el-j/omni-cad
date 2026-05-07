@@ -10,6 +10,7 @@ Create or update a task file in `.claude/tasks/`.
 - Acceptance criteria as testable statements
 - At least 3 edge cases when the task is non-trivial
 - Public interfaces or files expected to change
+- Suggested specialist when a task clearly belongs to one
 - Black-box test specification for `/test`
 - Validation commands for the smallest meaningful slice
 
