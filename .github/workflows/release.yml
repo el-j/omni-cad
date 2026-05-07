@@ -58,6 +58,9 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
+      - name: Validate agent workflow
+        run: pnpm test:agents
+
   # ── Semantic Release ──────────────────────────────────────────────────────
   release:
     name: Release

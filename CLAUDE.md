@@ -1,0 +1,104 @@
+# CLAUDE.md -- OmniCAD
+
+This file is the working contract for AI agents operating in OmniCAD.
+
+## Project Overview
+
+OmniCAD is a pnpm/turbo monorepo for a VS Code CAD extension, a docs/landing app,
+and shared types. The extension routes source files to CAD engines, renders meshes,
+exposes guarded MCP tooling, and packages to a VSIX for marketplace release.
+
+## Repository Structure
+
+```
+omni-cad/
+├── packages/
+│   ├── extension/          # VS Code extension, engines, MCP, webview, tests
+│   ├── landing/            # Vite landing/docs site
+│   └── shared-types/       # Shared TypeScript contracts
+├── .github/workflows/      # CI, release, docs, pages
+├── .claude/
+│   ├── commands/           # Core agent workflow prompts
+│   ├── tasks/              # Planned and completed task records
+│   ├── templates/          # Task plan templates
+│   └── state/              # Orchestrator state
+├── .build/                 # Runtime agent artifacts (gitignored)
+└── scripts/                # Repo automation
+```
+
+## Development Commands
+
+Verified commands for this repo:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm test
+pnpm test:agents
+pnpm build
+pnpm --filter omni-cad run test:coverage
+pnpm --filter omni-cad run test:e2e
+pnpm --filter omni-cad run package
+```
+
+## Working Conventions
+
+- Prefer the smallest validated change over broad rewrites.
+- Treat `packages/extension` as the primary product surface; keep docs and release metadata aligned with shipped VSIX behavior.
+- Do not claim engine capabilities that are not implemented and tested.
+- When changing export, render, MCP, packaging, or release behavior, update tests or add focused coverage in the same slice.
+- Keep `.claude/tasks` as the source of agent plans and execution notes for this repo.
+
+## Testing Policy
+
+- The workflow is test-first: plan the task, write or update black-box acceptance tests from the plan, then implement until they pass.
+- Use focused tests before broad suites when the task scope is narrow.
+- Extension validation entrypoints:
+  - Unit/integration: `pnpm --filter omni-cad run pretest && pnpm --filter omni-cad run test`
+  - Coverage gate: `pnpm --filter omni-cad run test:coverage`
+  - E2E: `pnpm --filter omni-cad run test:e2e`
+- Workflow validation entrypoint: `pnpm test:agents`
+
+## Agent Workflow
+
+### Core Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/task` | Create or refine a task plan in `.claude/tasks/` with acceptance criteria, edge cases, and test spec |
+| `/validate` | Check a task plan against the current codebase before work starts |
+| `/test` | Write or update black-box acceptance tests from the plan before implementation |
+| `/execute-task` | Implement the task against the failing or missing tests |
+| `/review` | White-box review against repo conventions and the approved plan |
+| `/testfix` | Resolve test failures without shrinking coverage |
+| `/learn` | Write concrete lessons back into command files |
+| `/orchestrator` | Run queued tasks in order using the same gates |
+| `/state` | Show current queue and task status from `.claude/state/orchestrator-state.json` |
+
+### Pipeline
+
+```
+/task -> /validate -> /test -> /execute-task -> /review -> /testfix -> /learn
+```
+
+Rules:
+- `/test` must work from the task plan and public behavior, not the implementation internals.
+- `/execute-task` does not close a task until the planned tests pass.
+- `/review` can request fixes, but it does not rewrite the task scope.
+- `/learn` preserves prior learnings and appends only concrete new lessons.
+
+### Runtime Artifacts
+
+- State file: `.claude/state/orchestrator-state.json`
+- Follow-up queue: `.build/followup_queue.json`
+
+## Commit Guidance
+
+- Keep commits scoped to one task slice when possible.
+- Reference the task file or task id in commit messages and PR descriptions.
+
+## General Behavior
+
+- Verify commands from `package.json` instead of guessing.
+- Prefer current repo conventions over blueprint defaults when they differ.
+- If a task touches marketplace release behavior, preserve the GitHub-based release path and VSIX packaging checks.

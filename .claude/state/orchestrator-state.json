@@ -1,0 +1,12 @@
+{
+  "orchestrator": {
+    "status": "idle",
+    "phase": null,
+    "baseBranch": "main",
+    "activeTask": null
+  },
+  "queue": [],
+  "history": [],
+  "blocked": [],
+  "updatedAt": "2026-05-07T00:00:00.000Z"
+}
