@@ -460,10 +460,84 @@
     .footer-links a { font-size: .85rem; color: var(--text-muted); }
 
     /* ── Responsive ────────────────────────────────────────────────────────── */
+    /* ── Demo Video ────────────────────────────────────────────────────────── */
+    #demo { background: var(--bg); }
+    .demo-video-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow), var(--shadow-glow);
+      position: relative;
+    }
+    .demo-video-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: var(--radius);
+      padding: 1px;
+      background: linear-gradient(135deg, #388bfd44 0%, transparent 40%, #3fb95044 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .demo-video-wrap video {
+      width: 100%;
+      display: block;
+      border-radius: var(--radius);
+    }
+    .demo-label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #0d1117cc;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-size: .75rem;
+      font-weight: 600;
+      padding: .25rem .65rem;
+      border-radius: 999px;
+      z-index: 2;
+      letter-spacing: .04em;
+    }
+    .hero-video-container {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow), var(--shadow-glow);
+      position: relative;
+    }
+    .hero-video-container::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: var(--radius);
+      padding: 1px;
+      background: linear-gradient(135deg, #388bfd44 0%, transparent 40%, #3fb95044 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .hero-video-container video {
+      width: 100%;
+      display: block;
+      border-radius: var(--radius);
+    }
+
     @media (max-width: 768px) {
       .hero-visual { display: none; }
       .nav-links { display: none; }
       section { padding: 3.5rem 0; }
+    }
+    @media (min-width: 769px) {
+      #demo { display: none; }
     }
   </style>
 </head>
@@ -484,6 +558,7 @@
     <ul class="nav-links">
       <li><a href="#features">Features</a></li>
       <li><a href="#engines">Engines</a></li>
+      <li><a href="#demo-desktop">Demo</a></li>
       <li><a href="#architecture">Architecture</a></li>
       <li><a href="#download">Download</a></li>
       <li><a href="https://github.com/el-j/omni-cad" target="_blank" rel="noopener">GitHub</a></li>
@@ -536,34 +611,30 @@
       </div>
     </div>
 
-    <div class="hero-visual">
-      <div class="code-window">
-        <div class="code-titlebar">
-          <div class="dot dot-r"></div>
-          <div class="dot dot-y"></div>
-          <div class="dot dot-g"></div>
-          <span class="code-filename">my-model.scad</span>
-        </div>
-        <div class="code-body">
-          <pre><code><span class="cmt">// Save this file → OmniCAD renders it live</span>
-
-<span class="fn">difference</span>() {
-  <span class="fn">union</span>() {
-    <span class="fn">cube</span>([<span class="num">40</span>, <span class="num">40</span>, <span class="num">20</span>], center = <span class="kw">true</span>);
-    <span class="fn">cylinder</span>(h = <span class="num">30</span>, r = <span class="num">12</span>,
-             center = <span class="kw">true</span>, $fn = <span class="num">64</span>);
-  }
-  <span class="fn">cylinder</span>(h = <span class="num">40</span>, r = <span class="num">7</span>,
-           center = <span class="kw">true</span>, $fn = <span class="num">64</span>);
-  <span class="kw">for</span> (i = [<span class="num">0</span> : <span class="num">3</span>]) {
-    <span class="fn">rotate</span>([<span class="num">0</span>, <span class="num">0</span>, i * <span class="num">90</span>])
-      <span class="fn">translate</span>([<span class="num">15</span>, <span class="num">0</span>, <span class="num">0</span>])
-        <span class="fn">cylinder</span>(h = <span class="num">25</span>, r = <span class="num">4</span>,
-                 center = <span class="kw">true</span>, $fn = <span class="num">32</span>);
-  }
-}</code></pre>
-        </div>
+    <div class="hero-visual" id="demo-desktop">
+      <div class="hero-video-container">
+        <video autoplay loop muted playsinline>
+          <source src="omniCAD-vscode-plugin-freecad.m4v" type="video/mp4">
+        </video>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────── Demo (mobile) ─────────────────────────── -->
+<section id="demo">
+  <div class="container">
+    <div class="section-tag">See it in action</div>
+    <h2>FreeCAD Rendering in OmniCAD</h2>
+    <p class="section-lead">
+      Write Python CAD scripts — OmniCAD compiles them with FreeCAD and renders
+      the geometry live in a Three.js viewer, right inside VS Code.
+    </p>
+    <div class="demo-video-wrap">
+      <span class="demo-label">● FreeCAD · Python</span>
+      <video autoplay loop muted playsinline>
+        <source src="omniCAD-vscode-plugin-freecad.m4v" type="video/mp4">
+      </video>
     </div>
   </div>
 </section>

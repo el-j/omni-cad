@@ -14,6 +14,8 @@ _Write CAD models in TypeScript, Python, or OpenSCAD — see them live in 3D, ex
 
 [🌐 Landing Page](https://el-j.github.io/omni-cad/) · [📦 Latest Release](https://github.com/el-j/omni-cad/releases/latest) · [🐛 Report a Bug](https://github.com/el-j/omni-cad/issues/new?template=bug_report.yml) · [✨ Request a Feature](https://github.com/el-j/omni-cad/issues/new?template=feature_request.yml)
 
+<video src="docs/omniCAD-vscode-plugin-freecad.m4v" autoplay loop muted playsinline width="100%"></video>
+
 </div>
 
 ---
