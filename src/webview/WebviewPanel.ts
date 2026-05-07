@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { EngineRouter } from '../engines/EngineRouter';
-import { ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
+import { ExportFormat, ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
 
 export class WebviewPanel {
   public static readonly viewType = 'omniCAD.viewer';
@@ -65,6 +65,11 @@ export class WebviewPanel {
       case 'ready':
         break;
       case 'requestExport': {
+        const validFormats: ExportFormat[] = ['STEP', 'STL', 'IGES', 'glTF'];
+        if (!validFormats.includes(message.format)) {
+          this.sendMessage({ type: 'showError', message: `Unsupported export format ${message.format}` });
+          return;
+        }
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
           this.sendMessage({ type: 'showError', message: 'No active editor' });
@@ -74,6 +79,13 @@ export class WebviewPanel {
         const engine = this._getRouter().get(ext);
         if (!engine) {
           this.sendMessage({ type: 'showError', message: `No engine for extension ${ext}` });
+          return;
+        }
+        if (!engine.capabilities.supportedExportFormats.includes(message.format)) {
+          this.sendMessage({
+            type: 'showError',
+            message: `${engine.id} does not support ${message.format} export`,
+          });
           return;
         }
         const saveUri = await vscode.window.showSaveDialog({
@@ -93,8 +105,6 @@ export class WebviewPanel {
         }
         break;
       }
-      case 'cameraMoved':
-        break;
     }
   }
 
@@ -110,7 +120,7 @@ export class WebviewPanel {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'none';
-             script-src 'nonce-${nonce}' 'unsafe-eval';
+             script-src 'nonce-${nonce}';
              style-src 'unsafe-inline';
              img-src ${webview.cspSource} data:;
              connect-src 'none';" />

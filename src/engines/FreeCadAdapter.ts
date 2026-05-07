@@ -8,11 +8,17 @@ import {
   BrepMetadata,
   EngineExecutionOptions,
   MeshPayload,
+  ExportFormat,
 } from '../types';
 
 export class FreeCadAdapter implements ICadEngine {
   id = 'freecad';
   supportedExtensions = ['.py', '.fcmacro'];
+  capabilities = {
+    supportedExportFormats: ['STL'] as ExportFormat[],
+    supportsBrepMetadata: true,
+    renderable: true,
+  };
   private freecadPath: string;
 
   constructor(freecadPath = 'FreeCADCmd') {
@@ -36,7 +42,7 @@ export class FreeCadAdapter implements ICadEngine {
       return { success: true, meshes: [mesh], computeTimeMs: Date.now() - start };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, errors: [msg], computeTimeMs: Date.now() - start };
+      return { success: false, meshes: [], errors: [msg], computeTimeMs: Date.now() - start };
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
@@ -45,7 +51,7 @@ export class FreeCadAdapter implements ICadEngine {
   async getBrepMetadata(code: string, options?: EngineExecutionOptions): Promise<BrepMetadata> {
     const result = await this.compile(code, options);
     if (!result.success || !result.meshes?.length) {
-      throw new Error(result.errors?.join('\n') ?? 'Failed to compile FreeCAD model');
+      throw new Error((!result.success ? result.errors.join('\n') : undefined) ?? 'Failed to compile FreeCAD model');
     }
     const bounds = this._calculateBounds(result.meshes[0].vertices);
     return {
@@ -61,7 +67,7 @@ export class FreeCadAdapter implements ICadEngine {
 
   async export(
     code: string,
-    format: 'STEP' | 'STL' | 'IGES' | 'glTF',
+    format: ExportFormat,
     options?: EngineExecutionOptions
   ): Promise<Buffer> {
     if (format !== 'STL') {
@@ -278,6 +284,10 @@ export class FreeCadAdapter implements ICadEngine {
       bounds.yMax = Math.max(bounds.yMax, vertices[index + 1]);
       bounds.zMin = Math.min(bounds.zMin, vertices[index + 2]);
       bounds.zMax = Math.max(bounds.zMax, vertices[index + 2]);
+    }
+
+    if (!Number.isFinite(bounds.xMin)) {
+      throw new Error('FreeCAD mesh bounds could not be computed from the exported geometry');
     }
 
     return bounds;
