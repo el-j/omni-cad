@@ -30,6 +30,9 @@ type ResolvedExportRequest =
 
 const validFormats: ExportFormat[] = ['STEP', 'STL', 'IGES', 'glTF'];
 
+/**
+ * Builds save dialog defaults for an export request.
+ */
 export function buildExportSaveDialog(format: ExportFormat, document: EditorDocumentLike): SaveDialogShape {
   const fileInfo = getExportFileInfo(format);
   return {
@@ -41,6 +44,9 @@ export function buildExportSaveDialog(format: ExportFormat, document: EditorDocu
   };
 }
 
+/**
+ * Resolves the active editor context and validates export capability before opening a save dialog.
+ */
 export function resolveExportRequest(
   format: ExportFormat,
   editor: TextEditorLike | undefined,
@@ -71,6 +77,9 @@ export function resolveExportRequest(
   };
 }
 
+/**
+ * Executes engine export and writes bytes to the chosen destination path.
+ */
 export async function exportToFile(
   engine: ICadEngine,
   code: string,

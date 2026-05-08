@@ -7,31 +7,76 @@
   },
   "queue": [
     {
-      "id": "FEAT-201",
-      "title": "Omni-Bridge export and adapter roadmap",
-      "path": ".claude/tasks/FEAT-201-omni-bridge-export-adapter-roadmap-2026-05-07.md",
+      "id": "FEAT-204",
+      "title": "Auto-discovery & first-open guided setup",
+      "path": ".claude/tasks/FEAT-204-auto-discovery-first-open-setup-2026-05-07.md",
       "status": "planned",
       "priority": "high",
-      "specialist": "extension-runtime"
+      "specialist": "extension-runtime",
+      "notes": "Consent-first engine detection with fallback wizard; ready for /validate → /test → /execute-task"
     },
     {
       "id": "FEAT-202",
       "title": "CadQuery adapter feasibility",
       "path": ".claude/tasks/FEAT-202-cadquery-adapter-feasibility-2026-05-07.md",
-      "status": "planned",
+      "status": "planned-with-outcomes",
       "priority": "high",
-      "specialist": "extension-runtime"
+      "specialist": "extension-runtime",
+      "notes": "Viability confirmed; Python subprocess pattern; .cq.py extension mapping; STL first export contract; part of Python BREP family"
     },
     {
       "id": "FEAT-203",
       "title": "build123d adapter feasibility",
       "path": ".claude/tasks/FEAT-203-build123d-adapter-feasibility-2026-05-07.md",
-      "status": "planned",
+      "status": "planned-with-outcomes",
       "priority": "high",
-      "specialist": "extension-runtime"
+      "specialist": "extension-runtime",
+      "notes": "Viability confirmed; shared Python BREP base layer with CadQuery; STL+STEP targets; depends on FEAT-202 POC"
+    },
+    {
+      "id": "FEAT-201",
+      "title": "Omni-Bridge export and adapter roadmap",
+      "path": ".claude/tasks/FEAT-201-omni-bridge-export-adapter-roadmap-2026-05-07.md",
+      "status": "planned-with-outcomes",
+      "priority": "high",
+      "specialist": "extension-runtime",
+      "notes": "Execution slices A–E defined; central capability matrix + toolbar foundation; ready to start Slice A immediately"
     }
   ],
-  "history": [],
+  "history": [
+    {
+      "id": "OPS-300",
+      "title": "Audit remediation tracker",
+      "path": ".claude/tasks/OPS-300-audit-remediation-tracker-2026-05-07.md",
+      "status": "complete",
+      "completedAt": "2026-05-07T23:55:00.000Z",
+      "notes": "Planning swarm executed, OPS-301/302/303 created and quality-reviewed, validator passed."
+    },
+    {
+      "id": "OPS-301",
+      "title": "P0 capability truthfulness and OpenGeometry contracts",
+      "path": ".claude/tasks/OPS-301-p0-capability-truthfulness-and-opengeometry-contracts-2026-05-07.md",
+      "status": "complete",
+      "completedAt": "2026-05-07T23:59:00.000Z",
+      "notes": "OpenGeometry contract hardened, capability claims aligned, export artifact e2e assertions added, all validation gates passed."
+    },
+    {
+      "id": "OPS-302",
+      "title": "P1 inline docs and TSDoc hardening",
+      "path": ".claude/tasks/OPS-302-p1-inline-docs-and-tsdoc-hardening-2026-05-07.md",
+      "status": "complete",
+      "completedAt": "2026-05-07T23:59:00.000Z",
+      "notes": "TSDoc coverage added across router, adapters, webview, and MCP contracts with passing validation gates."
+    },
+    {
+      "id": "OPS-303",
+      "title": "P1/P2 test, E2E, and docs-claim contracts",
+      "path": ".claude/tasks/OPS-303-p1-p2-test-e2e-and-doc-claim-contracts-2026-05-07.md",
+      "status": "complete",
+      "completedAt": "2026-05-07T23:59:00.000Z",
+      "notes": "Added failure-path tests, recovery e2e coverage, and docs-claim validation gate integrated into test:agents."
+    }
+  ],
   "blocked": [],
-  "updatedAt": "2026-05-07T23:20:00.000Z"
+  "updatedAt": "2026-05-07T23:59:00.000Z"
 }

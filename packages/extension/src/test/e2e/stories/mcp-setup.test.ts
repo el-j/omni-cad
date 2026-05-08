@@ -13,7 +13,7 @@ test('capture mcp setup story', async () => {
   const { electronApp, userDataDir, window, modifier } = await launchVSCode(extensionPath, dummyFile, 'mcp-setup');
 
   try {
-    // 1. Open OmniCAD AI Bridge Setup (The modern way)
+    // 1. Open the registered OmniCAD viewer command
     await window.click('.monaco-editor'); // Ensure focus
     await window.keyboard.press('F1');
     await window.waitForTimeout(1000);
@@ -23,28 +23,28 @@ test('capture mcp setup story', async () => {
        await window.waitForTimeout(1000);
     }
     await palette.waitFor({ state: 'visible', timeout: 15000 });
-    await palette.fill('> OmniCAD: Setup AI Bridge');
+    await palette.fill('> OmniCAD: Open Viewer');
     await window.keyboard.press('Enter');
     await window.waitForTimeout(3000);
     
-    // 2. Show the MCP connection status
+    // 2. Re-run the same registered command to document command availability
     await window.keyboard.press('F1');
     await window.waitForTimeout(1000);
     await palette.waitFor({ state: 'visible', timeout: 15000 });
-    await palette.fill('> OmniCAD: Show MCP Status');
+    await palette.fill('> OmniCAD: Open Viewer');
     await window.keyboard.press('Enter');
     await window.waitForTimeout(3000);
 
     // 3. Document active monitoring
     await window.click('.monaco-editor');
     await window.keyboard.press(`${modifier}+End`);
-    await window.keyboard.type('\n# OmniCAD AI Bridge: Active (MCP enabled)', { delay: 50 });
+    await window.keyboard.type('\n# OmniCAD command surface verified (Open Viewer command available)', { delay: 50 });
     await window.keyboard.press(`${modifier}+S`);
     await window.waitForTimeout(5000);
 
     // 4. Show the MCP interaction in a dummy file
     await window.click('.monaco-editor');
-    await window.keyboard.type('\n# MCP is now active and monitoring this document...', { delay: 50 });
+    await window.keyboard.type('\n# Story capture completed using only registered commands.', { delay: 50 });
     await window.keyboard.press(`${modifier}+S`);
     await window.waitForTimeout(5000);
 

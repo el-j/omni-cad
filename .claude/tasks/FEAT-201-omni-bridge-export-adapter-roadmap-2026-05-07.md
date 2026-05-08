@@ -19,11 +19,11 @@ Define the next product roadmap for OmniCAD so the extension can grow from a Fre
 
 ## Acceptance Criteria
 
-- [ ] The roadmap distinguishes verified support, near-term targets, and deferred formats.
-- [ ] The roadmap covers current adapters and at least three future adapter families.
-- [ ] The roadmap defines a priority order for export formats, with clear reasoning by geometry class.
-- [ ] The roadmap identifies validation gates required before new export buttons or marketplace claims go live.
-- [ ] The plan is stored in `.claude/tasks/` and queued in `.claude/state/orchestrator-state.json`.
+- [x] The roadmap distinguishes verified support, near-term targets, and deferred formats.
+- [x] The roadmap covers current adapters and at least three future adapter families.
+- [x] The roadmap defines a priority order for export formats, with clear reasoning by geometry class.
+- [x] The roadmap identifies validation gates required before new export buttons or marketplace claims go live.
+- [x] The plan is stored in `.claude/tasks/` and queued in `.claude/state/orchestrator-state.json`.
 
 ## Edge Cases
 
@@ -155,3 +155,16 @@ Rationale:
 
 - Marketplace or README copy must not promise “all CAD formats”; the product should instead claim an expanding capability matrix with adapter-specific support.
 - If future non-VS Code markets appear, the export capability matrix created here should become the product-level source of truth for all clients.
+
+## Execution Notes (2026-05-07)
+
+- Roadmap planning execution completed and reflected in docs/task system.
+- Current-vs-planned capability boundaries are explicit in:
+  - `docs/EXPORT_CAPABILITY_MATRIX.md`
+  - `docs/EXPORT_IMPLEMENTATION_PLAN.md`
+  - `docs/ADAPTER_FAMILY_DECISIONS.md`
+- Priority adapter families are now locked for follow-on execution:
+  - P1: Python BREP family (`CadQuery`, `build123d`)
+  - P2: JS/TS CAD family hardening
+  - P3/P4: ecosystem profiles and drafting/fabrication targets
+- Validation gate alignment remains tied to test-first + E2E completion policy.

@@ -11,6 +11,9 @@ import {
   ExportFormat,
 } from '../types';
 
+/**
+ * OpenSCAD adapter for mesh-first CSG workflows.
+ */
 export class OpenScadAdapter implements ICadEngine {
   id = 'openscad';
   supportedExtensions = ['.scad'];
@@ -25,6 +28,7 @@ export class OpenScadAdapter implements ICadEngine {
     this.openscadPath = openscadPath;
   }
 
+  /** Compiles OpenSCAD source into an STL-derived mesh payload for rendering. */
   async compile(code: string, _options?: EngineExecutionOptions): Promise<CompileResponse> {
     const start = Date.now();
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omnicad-openscad-'));
@@ -43,6 +47,7 @@ export class OpenScadAdapter implements ICadEngine {
     }
   }
 
+  /** Derives coarse geometric metadata from STL mesh bounds and topology counts. */
   async getBrepMetadata(code: string, options?: EngineExecutionOptions): Promise<BrepMetadata> {
     const result = await this.compile(code, options);
     if (!result.success || !result.meshes?.length) {
@@ -60,6 +65,7 @@ export class OpenScadAdapter implements ICadEngine {
     };
   }
 
+  /** Exports OpenSCAD code to STL bytes. */
   async export(
     code: string,
     format: ExportFormat,

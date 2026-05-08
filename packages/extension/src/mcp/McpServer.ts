@@ -54,6 +54,11 @@ const exportGeometrySchema = z.object({
   format: z.enum(['STEP', 'STL', 'IGES', 'glTF'] as const).describe('Export format'),
 });
 
+/**
+ * Guarded MCP facade around OmniCAD adapters.
+ *
+ * It validates tool arguments, routes to the selected engine, and returns typed text payloads.
+ */
 export class OmniCadMcpServer {
   private server: McpServer;
   private router: EngineRouter;
@@ -84,6 +89,9 @@ export class OmniCadMcpServer {
     );
   }
 
+  /**
+   * Compiles source code with the requested engine and optionally returns BREP metadata.
+   */
   public async compileAndMeasure(rawArgs: Record<string, unknown>): Promise<ToolContent> {
     const parsedArgs = compileMeasureSchema.safeParse(rawArgs);
     if (!parsedArgs.success) {
@@ -134,6 +142,9 @@ export class OmniCadMcpServer {
     }
   }
 
+  /**
+   * Exports geometry using the requested engine/format pair when capability-gated support exists.
+   */
   public async exportGeometry(rawArgs: Record<string, unknown>): Promise<ToolContent> {
     const parsedArgs = exportGeometrySchema.safeParse(rawArgs);
     if (!parsedArgs.success) {
@@ -166,11 +177,13 @@ export class OmniCadMcpServer {
     }
   }
 
+  /** Connects the MCP server to stdio transport. */
   async start(): Promise<void> {
     this.transport = new StdioServerTransport();
     await this.server.connect(this.transport);
   }
 
+  /** Closes transport and server resources. */
   async dispose(): Promise<void> {
     await (this.transport as { close?: () => Promise<void> | void } | undefined)?.close?.();
     await (this.server as { close?: () => Promise<void> | void }).close?.();

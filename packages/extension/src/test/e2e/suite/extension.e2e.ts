@@ -4,6 +4,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { clearLastCompileResultForTest, getLastCompileResultForTest } from '../../../extension';
+import { FreeCadAdapter } from '../../../engines/FreeCadAdapter';
+import { OpenScadAdapter } from '../../../engines/OpenScadAdapter';
 
 const EXTENSION_ID = 'omni-cad.omni-cad';
 const freecadExecutable = '/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd';
@@ -196,6 +198,77 @@ suite('OmniCAD E2E Tests', function () {
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
       await config.update('openscadPath', undefined, vscode.ConfigurationTarget.Global);
+    }
+  });
+
+  test('FreeCAD export writes a non-empty STEP artifact when FreeCAD is available', async function () {
+    this.timeout(30000);
+    if (!fs.existsSync(freecadExecutable)) {
+      this.skip();
+    }
+
+    const adapter = new FreeCadAdapter(freecadExecutable);
+    const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omnicad-e2e-freecad-export-'));
+    const outPath = path.join(outDir, 'artifact.step');
+    try {
+      const payload = await adapter.export([
+        'import FreeCAD as App',
+        'import Part',
+        'doc = App.newDocument("Smoke")',
+        'box = doc.addObject("Part::Feature", "Box")',
+        'box.Shape = Part.makeBox(1, 2, 3)',
+      ].join('\n'), 'STEP');
+      fs.writeFileSync(outPath, payload);
+
+      assert.ok(fs.existsSync(outPath), 'expected STEP file to be created');
+      assert.ok(fs.statSync(outPath).size > 0, 'expected STEP file size > 0');
+    } finally {
+      fs.rmSync(outDir, { recursive: true, force: true });
+    }
+  });
+
+  test('OpenSCAD export writes a non-empty STL artifact when OpenSCAD is available', async function () {
+    this.timeout(30000);
+    if (!fs.existsSync(openscadExecutable)) {
+      this.skip();
+    }
+
+    const adapter = new OpenScadAdapter(openscadExecutable);
+    const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omnicad-e2e-openscad-export-'));
+    const outPath = path.join(outDir, 'artifact.stl');
+    try {
+      const payload = await adapter.export('cube([1,2,3]);', 'STL');
+      fs.writeFileSync(outPath, payload);
+
+      assert.ok(fs.existsSync(outPath), 'expected STL file to be created');
+      assert.ok(fs.statSync(outPath).size > 0, 'expected STL file size > 0');
+    } finally {
+      fs.rmSync(outDir, { recursive: true, force: true });
+    }
+  });
+
+  test('OpenSCAD export failure and recovery path is stable', async function () {
+    this.timeout(30000);
+    if (!fs.existsSync(openscadExecutable)) {
+      this.skip();
+    }
+
+    const adapter = new OpenScadAdapter(openscadExecutable);
+    const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omnicad-e2e-openscad-recovery-'));
+    const recoveredPath = path.join(outDir, 'recovered.stl');
+
+    try {
+      await assert.rejects(
+        () => adapter.export('cube([1,2,3]);', 'STEP'),
+        /not implemented/
+      );
+
+      const payload = await adapter.export('cube([1,2,3]);', 'STL');
+      fs.writeFileSync(recoveredPath, payload);
+      assert.ok(fs.existsSync(recoveredPath), 'expected recovered STL file to be created');
+      assert.ok(fs.statSync(recoveredPath).size > 0, 'expected recovered STL file size > 0');
+    } finally {
+      fs.rmSync(outDir, { recursive: true, force: true });
     }
   });
 });

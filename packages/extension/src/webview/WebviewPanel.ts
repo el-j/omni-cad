@@ -5,6 +5,9 @@ import { EngineRouter } from '../engines/EngineRouter';
 import { ExportFormat, ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
 import { exportToFile, resolveExportRequest } from './exportFlow';
 
+/**
+ * Hosts the OmniCAD webview runtime and bridges message traffic between UI and extension host.
+ */
 export class WebviewPanel {
   public static readonly viewType = 'omniCAD.viewer';
 
@@ -13,6 +16,7 @@ export class WebviewPanel {
   private readonly _getRouter: () => EngineRouter;
   private _disposables: vscode.Disposable[] = [];
 
+  /** Opens or creates the panel beside the active editor. */
   public static createOrShow(
     context: vscode.ExtensionContext,
     getRouter: () => EngineRouter
@@ -70,10 +74,12 @@ export class WebviewPanel {
     });
   }
 
+  /** Posts a typed message to the webview application. */
   public sendMessage(message: ExtensionToWebviewMessage): void {
     this._panel.webview.postMessage(message);
   }
 
+  /** Releases panel resources and subscriptions. */
   public dispose(): void {
     this._panel.dispose();
     for (const d of this._disposables) { d.dispose(); }

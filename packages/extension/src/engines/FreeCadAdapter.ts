@@ -11,6 +11,9 @@ import {
   ExportFormat,
 } from '../types';
 
+/**
+ * FreeCAD adapter for Python-based CAD sources.
+ */
 export class FreeCadAdapter implements ICadEngine {
   id = 'freecad';
   supportedExtensions = ['.py', '.fcmacro'];
@@ -25,6 +28,7 @@ export class FreeCadAdapter implements ICadEngine {
     this.freecadPath = this._resolveFreeCadPath(freecadPath);
   }
 
+  /** Compiles source into an STL mesh payload for rendering. */
   async compile(code: string, options?: EngineExecutionOptions): Promise<CompileResponse> {
     const start = Date.now();
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omnicad-freecad-'));
@@ -48,6 +52,7 @@ export class FreeCadAdapter implements ICadEngine {
     }
   }
 
+  /** Derives coarse geometric metadata from the compiled mesh representation. */
   async getBrepMetadata(code: string, options?: EngineExecutionOptions): Promise<BrepMetadata> {
     const result = await this.compile(code, options);
     if (!result.success || !result.meshes?.length) {
@@ -65,6 +70,7 @@ export class FreeCadAdapter implements ICadEngine {
     };
   }
 
+  /** Exports source using FreeCAD-backed format writers for supported formats. */
   async export(
     code: string,
     format: ExportFormat,

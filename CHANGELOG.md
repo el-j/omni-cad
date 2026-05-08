@@ -1,3 +1,17 @@
+# Unreleased
+
+### Changed
+
+* harden OpenGeometry export/metadata contracts with explicit unsupported export error shape and computed metadata bounds
+* align landing feature export messaging with currently verified runtime capabilities
+* align MCP setup E2E story to contributed command surface only
+
+### Tests
+
+* add export artifact assertions for FreeCAD STEP and OpenSCAD STL in extension E2E suite
+* add export write-error propagation coverage and unsupported format regression tests
+* add capability claim validator (`scripts/validate-capability-claims.mjs`) and include it in `pnpm test:agents`
+
 # [1.2.0](https://github.com/el-j/omni-cad/compare/v1.1.0...v1.2.0) (2026-05-07)
 
 

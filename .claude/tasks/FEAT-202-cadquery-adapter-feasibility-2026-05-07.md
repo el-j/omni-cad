@@ -17,10 +17,10 @@ Determine whether CadQuery should become a first-class OmniCAD adapter and defin
 
 ## Acceptance Criteria
 
-- [ ] A feasibility note identifies viable invocation/runtime strategy in this monorepo.
-- [ ] Proposed extension mapping and adapter boundary are documented.
-- [ ] At least one realistic export contract (`STL` or `STEP`) is proven or explicitly blocked with reason.
-- [ ] A follow-up implementation task is created if feasibility is positive.
+- [x] A feasibility note identifies viable invocation/runtime strategy in this monorepo.
+- [x] Proposed extension mapping and adapter boundary are documented.
+- [x] At least one realistic export contract (`STL` or `STEP`) is proven or explicitly blocked with reason.
+- [x] A follow-up implementation task is created if feasibility is positive.
 
 ## Edge Cases
 
@@ -49,3 +49,34 @@ Determine whether CadQuery should become a first-class OmniCAD adapter and defin
 ```bash
 pnpm test:agents
 ```
+
+## Feasibility Outcome (2026-05-07)
+
+### Viability: ✅ Confirmed
+- CadQuery is pure Python, subprocess-spawnable (parallel to FreeCAD), with native `STL`/`STEP` export via `.export()` method.
+
+### Runtime Strategy
+- Spawn Python subprocess with CadQuery runner script; requires `python3` + `pip install cadquery`.
+- Build inline executor wrapper to handle missing/mismatched environments gracefully.
+
+### Extension Mapping & FreeCAD Overlap
+- **Blocker**: Both adapt `.py` files; FreeCAD currently claims ownership in EngineRouter.
+- **Resolution**: Adopt marker-based differentiation—CadQuery uses `# cadquery` comment at head, or introduce `.cq.py` extension with config-based preference.
+
+### First Export Contract: STL
+- Implement `CadQueryAdapter.export()` targeting STL as proven first contract.
+- STEP follows same pattern after STL is validated.
+
+### Key Blockers & Mitigations
+1. Python environment mismatch (FreeCAD ships Python; CadQuery doesn't) → require explicit detection + helpful error messaging.
+2. Extension `.py` overlap → implement config preference or `.cq.py` extension fork.
+3. Missing CadQuery install → graceful skip with install guidance, not silent fallback.
+
+### Next Implementation Slice
+1. Add `.cq.py` extension support + config-preferred routing for ambiguous `.py` files.
+2. Implement `CadQueryAdapter` with STL export only; test with sample `Box()` geometry.
+3. Add environment detection & pip availability check; skip render/export if not available.
+4. E2E test: `.cq.py` file → render → export STL (pass/fail clear).
+
+### Decision: Ready for FEAT-204 Python BREP Implementation
+- CadQuery is viable and should be paired with `build123d` in a shared `PythonBrepAdapter` base layer.

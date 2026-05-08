@@ -16,7 +16,7 @@ const features = [
   {
     icon: '📤',
     title: 'Multi-format Export',
-    desc: 'One click to export your model to STEP, STL, IGES, or glTF — the industry standards for mechanical CAD.',
+    desc: 'One click to export your model to STEP, STL, or IGES depending on engine capabilities, with roadmap formats documented separately.',
     colorClass: 'bg-yellow-500/10 text-yellow-400'
   },
   {

@@ -94,14 +94,31 @@ suite('OmniCAD Extension Tests', () => {
 
     test('getBrepMetadata returns expected structure when experimental runtime is enabled', async () => {
       const experimentalAdapter = new OpenGeometryAdapter(true);
-      const meta = await experimentalAdapter.getBrepMetadata('// test');
+      const meta = await experimentalAdapter.getBrepMetadata([
+        'export const model = () => {',
+        '  return box(10, 20, 30);',
+        '};',
+      ].join('\n'));
       assert.ok(typeof meta.volume === 'number');
       assert.ok(typeof meta.boundingBox.xMin === 'number');
       assert.ok(typeof meta.topology.faces === 'number');
+      assert.ok(meta.volume > 0, 'expected computed non-zero volume from generated mesh bounds');
     });
 
-    test('export is unavailable until a real runtime exists', async () => {
-      await assert.rejects(() => adapter.export('// test', 'STL'));
+    test('export returns unsupported contract details until a real runtime exists', async () => {
+      await assert.rejects(
+        () => adapter.export('// test', 'STL'),
+        (err: unknown) => {
+          assert.ok(err instanceof Error);
+          const withCode = err as Error & { code?: string; adapter?: string; format?: string; hint?: string };
+          assert.strictEqual(withCode.code, 'OMNICAD_UNSUPPORTED_EXPORT');
+          assert.strictEqual(withCode.adapter, 'opengeometry');
+          assert.strictEqual(withCode.format, 'STL');
+          assert.match(withCode.message, /does not currently support STL export/);
+          assert.match(withCode.hint ?? '', /FreeCAD|OpenSCAD/);
+          return true;
+        }
+      );
     });
   });
 
@@ -205,6 +222,15 @@ suite('OmniCAD Extension Tests', () => {
       assert.ok(Buffer.isBuffer(buf));
       assert.ok(buf.length > 32, 'expected IGES export content');
       assert.match(buf.toString('utf8', 0, Math.min(buf.length, 256)), /S\s+1|IGES|Copyright/i);
+    });
+
+    test('export rejects unsupported formats', async function () {
+      if (!fs.existsSync(freecadExecutable)) {
+        this.skip();
+      }
+
+      const workingAdapter = new FreeCadAdapter(freecadExecutable);
+      await assert.rejects(() => workingAdapter.export('print("x")', 'glTF'));
     });
   });
 
@@ -462,6 +488,42 @@ suite('OmniCAD Extension Tests', () => {
       assert.strictEqual(fs.readFileSync(targetPath, 'utf8'), 'STEP_BYTES');
 
       fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    test('exportToFile propagates write errors', async () => {
+      const engine: ICadEngine = {
+        id: 'freecad',
+        supportedExtensions: ['.py'],
+        capabilities: {
+          supportedExportFormats: ['STL', 'STEP', 'IGES'] as ExportFormat[],
+          supportsBrepMetadata: true,
+          renderable: true,
+        },
+        compile: async () => ({ success: true as const, meshes: [], computeTimeMs: 0 }),
+        getBrepMetadata: async () => ({
+          boundingBox: { xMin: 0, xMax: 1, yMin: 0, yMax: 1, zMin: 0, zMax: 1 },
+          volume: 1,
+          topology: { faces: 1, edges: 1, vertices: 1 },
+        }),
+        export: async () => Buffer.from('STEP_BYTES'),
+        dispose: () => {},
+      };
+
+      await assert.rejects(
+        () => exportToFile(
+          engine,
+          'print("x")',
+          'STEP',
+          '/tmp/model.py',
+          '/tmp/no-permission.step',
+          () => {
+            const err = new Error('EACCES: permission denied');
+            (err as Error & { code?: string }).code = 'EACCES';
+            throw err;
+          }
+        ),
+        /EACCES/
+      );
     });
   });
 });

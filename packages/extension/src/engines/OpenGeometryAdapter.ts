@@ -6,6 +6,16 @@ import {
   ExportFormat,
 } from '../types';
 
+type UnsupportedOpenGeometryExportError = Error & {
+  code: 'OMNICAD_UNSUPPORTED_EXPORT';
+  adapter: 'opengeometry';
+  format: string;
+  hint?: string;
+};
+
+/**
+ * Experimental TypeScript/JavaScript adapter used for preview-only mesh compilation.
+ */
 export class OpenGeometryAdapter implements ICadEngine {
   id = 'opengeometry';
   supportedExtensions = ['.ts', '.js'];
@@ -20,6 +30,7 @@ export class OpenGeometryAdapter implements ICadEngine {
     };
   }
 
+  /** Compiles supported OpenGeometry model code into renderable mesh payloads. */
   async compile(code: string, _options?: EngineExecutionOptions): Promise<CompileResponse> {
     const start = Date.now();
     if (!this.experimentalEnabled) {
@@ -64,16 +75,45 @@ export class OpenGeometryAdapter implements ICadEngine {
     }
   }
 
+  /**
+   * Computes metadata from generated meshes; intended for preview analytics only.
+   */
   async getBrepMetadata(_code: string, _options?: EngineExecutionOptions): Promise<BrepMetadata> {
+    const result = await this.compile(_code, _options);
+    if (!result.success || !result.meshes.length) {
+      throw new Error(
+        (!result.success ? result.errors.join('\n') : undefined) ??
+        'OpenGeometry metadata requires a successful compile with generated meshes.'
+      );
+    }
+
+    const bounds = this._calculateBounds(result.meshes[0].vertices);
+    const sizeX = bounds.xMax - bounds.xMin;
+    const sizeY = bounds.yMax - bounds.yMin;
+    const sizeZ = bounds.zMax - bounds.zMin;
     return {
-      boundingBox: { xMin: -50, xMax: 50, yMin: -50, yMax: 50, zMin: -50, zMax: 50 },
-      volume: 12500,
-      topology: { faces: 120, edges: 240, vertices: 180 },
+      boundingBox: bounds,
+      volume: Math.max(0, sizeX * sizeY * sizeZ),
+      topology: {
+        faces: result.meshes[0].indices.length / 3,
+        edges: 0,
+        vertices: result.meshes[0].vertices.length / 3,
+      },
     };
   }
 
+  /**
+   * OpenGeometry export is intentionally unavailable until a production export backend exists.
+   */
   async export(_code: string, _format: ExportFormat, _options?: EngineExecutionOptions): Promise<Buffer> {
-    throw new Error('OpenGeometry export is coming in Q3 2026.');
+    const err = new Error(
+      `OpenGeometry does not currently support ${_format} export.`
+    ) as UnsupportedOpenGeometryExportError;
+    err.code = 'OMNICAD_UNSUPPORTED_EXPORT';
+    err.adapter = 'opengeometry';
+    err.format = _format;
+    err.hint = 'Use FreeCAD for STEP/IGES/STL or OpenSCAD for STL export.';
+    throw err;
   }
 
   dispose(): void {}
@@ -171,6 +211,36 @@ export class OpenGeometryAdapter implements ICadEngine {
       out.push(x * m[2] + y * m[6] + z * m[10] + m[14]);
     }
     return out;
+  }
+
+  private _calculateBounds(vertices: number[]) {
+    const bounds = {
+      xMin: Infinity,
+      xMax: -Infinity,
+      yMin: Infinity,
+      yMax: -Infinity,
+      zMin: Infinity,
+      zMax: -Infinity,
+    };
+
+    for (let i = 0; i < vertices.length; i += 3) {
+      bounds.xMin = Math.min(bounds.xMin, vertices[i]);
+      bounds.xMax = Math.max(bounds.xMax, vertices[i]);
+      bounds.yMin = Math.min(bounds.yMin, vertices[i + 1]);
+      bounds.yMax = Math.max(bounds.yMax, vertices[i + 1]);
+      bounds.zMin = Math.min(bounds.zMin, vertices[i + 2]);
+      bounds.zMax = Math.max(bounds.zMax, vertices[i + 2]);
+    }
+
+    if (
+      !Number.isFinite(bounds.xMin) || !Number.isFinite(bounds.xMax) ||
+      !Number.isFinite(bounds.yMin) || !Number.isFinite(bounds.yMax) ||
+      !Number.isFinite(bounds.zMin) || !Number.isFinite(bounds.zMax)
+    ) {
+      throw new Error('OpenGeometry mesh bounds could not be computed from generated geometry.');
+    }
+
+    return bounds;
   }
 
 
