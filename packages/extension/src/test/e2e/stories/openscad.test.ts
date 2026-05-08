@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
 import * as path from "path";
 import * as fs from "fs";
-import { launchVSCode, openOmniCadViewer } from "../launcher";
+import { launchVSCode, openOmniCadViewer, runCommand } from "../launcher";
 
 test("capture openscad render story", async () => {
   const extensionPath = path.resolve(__dirname, "../../../../");
@@ -40,11 +40,7 @@ test("capture openscad render story", async () => {
 
     // 2. LIVE UPDATE: Change 50 to 10
     // Navigate to line 2 (cube([20,20,20], center=true);
-    await window.keyboard.press("F1");
-    await window.waitForTimeout(1000);
-    await palette.waitFor({ state: "visible", timeout: 1000 });
-    await palette.fill("> Go to Line...");
-    await window.keyboard.press("Enter");
+    await runCommand(window, modifier, "Go to Line...");
     await window.waitForTimeout(1000);
 
     // Type line number '2' and hit Enter
@@ -56,12 +52,12 @@ test("capture openscad render story", async () => {
     // Modify cube size to 20x20x5
     await window.keyboard.press("Shift+End");
     await window.keyboard.type(" cube([50,15,75], center=true);", {
-      delay: 100,
+      delay: 10,
     });
+
+    await window.keyboard.press(`${modifier}+S`);
     await window.waitForTimeout(1000);
 
-    // 3. Save to trigger re-render
-    await window.keyboard.press(`${modifier}+S`);
 
     // 4. Wait for the engine to show result
     await window.waitForTimeout(3000);

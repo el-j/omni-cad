@@ -96,16 +96,31 @@ async function runFirstOpenSetup(
   const actionManual = "Manual Setup";
   const actionSkip = "Skip For Now";
 
-  const selection = await vscode.window.showInformationMessage(
-    message,
+  const actionSelection = await vscode.window.showQuickPick(
+    [
+      {
+        label: actionUseDetected,
+        description:
+          discovered.freecadPath || discovered.openscadPath
+            ? "Apply detected executable paths"
+            : "No detected paths available",
+      },
+      {
+        label: actionManual,
+        description: "Configure executable paths manually",
+      },
+      {
+        label: actionSkip,
+        description: "Keep current values and continue",
+      },
+    ],
     {
-      modal: true,
-      detail: "You can update these paths later in OmniCAD settings.",
+      title: "OmniCAD Setup",
+      placeHolder: message,
+      ignoreFocusOut: true,
     },
-    actionUseDetected,
-    actionManual,
-    actionSkip,
   );
+  const selection = actionSelection?.label;
 
   const target = getConfigTarget();
   const shouldOpenManual =
@@ -305,6 +320,18 @@ export function activate(context: vscode.ExtensionContext): void {
     },
   );
 
+  const runSetup = vscode.commands.registerCommand(
+    "omniCAD.runSetup",
+    async () => {
+      const changed = await runFirstOpenSetup(
+        vscode.workspace.getConfiguration("omniCAD"),
+      );
+      if (changed) {
+        refreshRuntime();
+      }
+    },
+  );
+
   const onSave = vscode.workspace.onDidSaveTextDocument(async (doc) => {
     const ext = EngineRouter.getExtensionForFileName(doc.fileName);
     const engine = router.get(ext);
@@ -372,6 +399,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     openViewer,
+    runSetup,
     onSave,
     onActiveEditorChange,
     onConfigChange,

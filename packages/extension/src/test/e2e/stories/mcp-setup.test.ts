@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
 import * as path from "path";
 import * as fs from "fs";
-import { launchVSCode, openOmniCadViewer } from "../launcher";
+import { launchVSCode, openOmniCadViewer, runCommand } from "../launcher";
 
 test("capture mcp setup story", async () => {
   const extensionPath = path.resolve(__dirname, "../../../../");
@@ -23,18 +23,8 @@ test("capture mcp setup story", async () => {
     // 1. Open the registered OmniCAD viewer command (popup-safe)
     await window.click(".monaco-editor");
     await openOmniCadViewer(window, modifier, 15000);
-
-    let palette = window.locator(".quick-input-filter input");
-
-    // 2. Re-run the same registered command to document command availability
-    await window.keyboard.press("F1");
-    await window.waitForTimeout(1000);
-    await palette.waitFor({ state: "visible", timeout: 15000 });
-    await palette.fill("> OmniCAD: Open Viewer");
-    await window.keyboard.press("Enter");
-    await window.waitForTimeout(3000);
-
-    // 3. Document active monitoring
+    
+    // 2. Document active monitoring
     await window.click(".monaco-editor");
     await window.keyboard.press(`${modifier}+End`);
     await window.keyboard.type(
@@ -44,7 +34,7 @@ test("capture mcp setup story", async () => {
     await window.keyboard.press(`${modifier}+S`);
     await window.waitForTimeout(5000);
 
-    // 4. Show the MCP interaction in a dummy file
+    // 3. Show the MCP interaction in a dummy file
     await window.click(".monaco-editor");
     await window.keyboard.type(
       "\n# Story capture completed using only registered commands.",

@@ -47,6 +47,10 @@
       {
         "command": "omniCAD.openViewer",
         "title": "OmniCAD: Open Viewer"
+      },
+      {
+        "command": "omniCAD.runSetup",
+        "title": "OmniCAD: Run Setup"
       }
     ],
     "configuration": {
@@ -79,7 +83,7 @@
         },
         "omniCAD.renderScale": {
           "type": "number",
-          "default": 1,
+          "default": 0.1,
           "description": "Global scaling factor for the 3D viewer. Useful for scaling mm models to a manageable size."
         }
       }

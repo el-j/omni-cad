@@ -70,7 +70,7 @@ test("capture opengeometry preview story", async () => {
     await window.keyboard.press("Backspace");
     await window.keyboard.press("Backspace");
     await window.keyboard.press("Backspace");
-    await window.keyboard.type("90;", { delay: 0 });
+    await window.keyboard.type("[90];", { delay: 0 });
 
     // 3. Final Save & Sync
     await window.keyboard.press(`${modifier}+S`);
