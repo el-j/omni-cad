@@ -17,9 +17,14 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",
     "@vscode/test-electron": "^2.5.2",
-    "husky": "^9.0.11",
-    "prettier": "^3.3.0",
-    "turbo": "^2.0.0"
+    "husky": "^9.1.7",
+    "prettier": "^3.8.3",
+    "turbo": "^2.9.10"
   },
-  "packageManager": "pnpm@10.33.2"
+  "workspaces": [
+    "packages/extension",
+    "packages/shared-types",
+    "packages/landing"
+  ],
+  "packageManager": "pnpm@11.0.8"
 }
