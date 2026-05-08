@@ -161,7 +161,11 @@ export async function openOmniCadViewer(
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
-    const opened = await runCommand(window, modifierKey, 'OmniCAD: Open Viewer');
+    const opened = await runCommand(
+      window,
+      modifierKey,
+      'OmniCAD: Open Viewer',
+    );
     if (!opened) {
       await window.waitForTimeout(300);
       continue;
@@ -230,7 +234,6 @@ export async function launchVSCode(
       'workbench.panel.opened': false,
       'workbench.editor.showSecondarySideBar': false,
       'workbench.panel.defaultLocation': 'hidden',
-      'editor.suggestSelection': 'disable',
       ...settingsOverrides,
     }),
   );
@@ -307,7 +310,7 @@ export async function launchVSCode(
   await runCommand(window, modifier, 'View: Hide Secondary Side Bar').catch(
     () => false,
   );
-  
+
   // 3. Handle "Extensions require a restart"
   try {
     const restartBtn = window.locator('button:has-text("Restart Extensions")');
@@ -319,9 +322,11 @@ export async function launchVSCode(
       for (let i = 0; i < 20; i++) {
         await window.bringToFront();
 
-        const opened = await runCommand(window, modifier, 'OmniCAD: Open Viewer').catch(
-          () => false,
-        );
+        const opened = await runCommand(
+          window,
+          modifier,
+          'OmniCAD: Open Viewer',
+        ).catch(() => false);
         if (opened) {
           activated = true;
           await window.keyboard.press('Escape');

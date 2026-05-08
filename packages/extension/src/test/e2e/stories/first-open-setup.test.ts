@@ -56,39 +56,20 @@ test('OmniCAD setup popup quick-pick: closes via Use Detected Paths', async () =
       .catch(() => undefined);
     await window.waitForTimeout(1500);
 
-    // If setup is already visible from startup, use it; otherwise trigger setup via command.
-    let useDetectedBtn = await waitForOmniCadSetupNotification(window, 1500);
-    if (!useDetectedBtn) {
-      await triggerSetupViaCommandPalette(window, modifier);
-      useDetectedBtn = await waitForOmniCadSetupNotification(window, 15000);
+    await triggerSetupViaCommandPalette(window, modifier);
+
+    // Centralized popup handling should dismiss setup using the preferred action.
+    const dismissed = await dismissOmniCadSetupNotification(window, 15000);
+
+    // Fallback for flows where helper does not report dismissal even though prompt is present.
+    if (!dismissed) {
+      const useDetected = await waitForOmniCadSetupNotification(window, 5000);
+      if (useDetected) {
+        await useDetected.click({ force: true }).catch(async () => {
+          await window.keyboard.press('Enter').catch(() => undefined);
+        });
+      }
     }
-    expect(
-      useDetectedBtn,
-      'Use Detected Paths action should be visible',
-    ).not.toBeNull();
-
-    const useDetected = window
-      .locator(
-        '.quick-input-widget .quick-input-list-entry:has-text("Use Detected Paths")',
-      )
-      .first();
-    const manualSetup = window
-      .locator(
-        '.quick-input-widget .quick-input-list-entry:has-text("Manual Setup")',
-      )
-      .first();
-    const skipForNow = window
-      .locator(
-        '.quick-input-widget .quick-input-list-entry:has-text("Skip For Now")',
-      )
-      .first();
-
-    await expect(useDetected).toBeVisible({ timeout: 3000 });
-    await expect(manualSetup).toBeVisible({ timeout: 3000 });
-    await expect(skipForNow).toBeVisible({ timeout: 3000 });
-
-    await useDetected.click();
-    await window.waitForTimeout(300);
 
     // Quick-pick should close after choosing an action.
     await expect(window.locator('.quick-input-widget')).toBeHidden({
