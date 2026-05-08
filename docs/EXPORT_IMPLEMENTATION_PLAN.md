@@ -9,6 +9,7 @@ Date: 2026-05-07
 1. Toolbar buttons post export requests from the webview.
 2. The extension host receives `requestExport`, validates the active engine, opens a save dialog, and writes returned bytes to disk.
 3. Engine export support currently exists only for STL on:
+
 - FreeCAD and STEP is now implemented as well
 - OpenSCAD
 
@@ -53,12 +54,15 @@ FreeCAD is the best path for richer CAD export because it has actual BREP-capabl
 Implement in this order:
 
 1. STEP export in `FreeCadAdapter.export()`
+
 - Use FreeCAD shape/object export to `.step` or `.stp`.
 
 2. IGES export in `FreeCadAdapter.export()`
+
 - Use FreeCAD shape/object export to `.iges` or `.igs`.
 
 3. Optional glTF export for FreeCAD
+
 - Either mesh through STL/OBJ conversion before glTF generation, or postpone until a proper mesh pipeline is added.
 
 ### Phase 3: Keep OpenSCAD honest
@@ -100,12 +104,12 @@ Recommended order:
 
 ### Export Priority Matrix
 
-| Family | Formats | First Candidate Adapters | Why |
-|--------|---------|--------------------------|-----|
-| Solid/BREP | `STEP`, `IGES` | FreeCAD, future CadQuery/build123d | Best engineering interchange value |
-| Mesh | `STL`, `glTF`, `OBJ` | OpenSCAD, FreeCAD, future JS/TS adapters | Viewer and downstream rendering workflows |
-| Fabrication | `3MF`, `AMF` | Mesh-first adapters after stable mesh export | Print/manufacturing usefulness |
-| Drafting | `DXF`, `SVG` | Future drafting-capable adapters or explicit conversion layers | 2D/CNC/laser workflows |
+| Family      | Formats              | First Candidate Adapters                                       | Why                                       |
+| ----------- | -------------------- | -------------------------------------------------------------- | ----------------------------------------- |
+| Solid/BREP  | `STEP`, `IGES`       | FreeCAD, future CadQuery/build123d                             | Best engineering interchange value        |
+| Mesh        | `STL`, `glTF`, `OBJ` | OpenSCAD, FreeCAD, future JS/TS adapters                       | Viewer and downstream rendering workflows |
+| Fabrication | `3MF`, `AMF`         | Mesh-first adapters after stable mesh export                   | Print/manufacturing usefulness            |
+| Drafting    | `DXF`, `SVG`         | Future drafting-capable adapters or explicit conversion layers | 2D/CNC/laser workflows                    |
 
 ### Adapter Expansion Roadmap
 

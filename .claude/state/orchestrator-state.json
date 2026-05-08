@@ -10,37 +10,37 @@
       "id": "FEAT-204",
       "title": "Auto-discovery & first-open guided setup",
       "path": ".claude/tasks/FEAT-204-auto-discovery-first-open-setup-2026-05-07.md",
-      "status": "planned",
+      "status": "in-progress",
       "priority": "high",
       "specialist": "extension-runtime",
-      "notes": "Consent-first engine detection with fallback wizard; ready for /validate → /test → /execute-task"
+      "notes": "Execution started: consent-first startup setup flow and router discovery utilities implemented; test and e2e completion pending"
     },
     {
       "id": "FEAT-202",
       "title": "CadQuery adapter feasibility",
       "path": ".claude/tasks/FEAT-202-cadquery-adapter-feasibility-2026-05-07.md",
-      "status": "planned-with-outcomes",
+      "status": "in-progress",
       "priority": "high",
       "specialist": "extension-runtime",
-      "notes": "Viability confirmed; Python subprocess pattern; .cq.py extension mapping; STL first export contract; part of Python BREP family"
+      "notes": "Execution started: .cq.py router support and CadQueryAdapter STL runtime slice implemented; e2e artifact coverage pending"
     },
     {
       "id": "FEAT-203",
       "title": "build123d adapter feasibility",
       "path": ".claude/tasks/FEAT-203-build123d-adapter-feasibility-2026-05-07.md",
-      "status": "planned-with-outcomes",
+      "status": "in-progress",
       "priority": "high",
       "specialist": "extension-runtime",
-      "notes": "Viability confirmed; shared Python BREP base layer with CadQuery; STL+STEP targets; depends on FEAT-202 POC"
+      "notes": "Execution started: shared PythonBrepAdapter base layer landed with Build123dAdapter (.b3d.py, STL) and routing/tests"
     },
     {
       "id": "FEAT-201",
       "title": "Omni-Bridge export and adapter roadmap",
       "path": ".claude/tasks/FEAT-201-omni-bridge-export-adapter-roadmap-2026-05-07.md",
-      "status": "planned-with-outcomes",
+      "status": "in-progress",
       "priority": "high",
       "specialist": "extension-runtime",
-      "notes": "Execution slices A–E defined; central capability matrix + toolbar foundation; ready to start Slice A immediately"
+      "notes": "Execution started: central runtime export capability matrix added with tests asserting router-to-matrix alignment"
     }
   ],
   "history": [
@@ -78,5 +78,5 @@
     }
   ],
   "blocked": [],
-  "updatedAt": "2026-05-07T23:59:00.000Z"
+  "updatedAt": "2026-05-08T02:20:00.000Z"
 }

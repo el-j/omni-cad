@@ -5,12 +5,20 @@
 * harden OpenGeometry export/metadata contracts with explicit unsupported export error shape and computed metadata bounds
 * align landing feature export messaging with currently verified runtime capabilities
 * align MCP setup E2E story to contributed command surface only
+* add consent-first first-open CAD engine discovery and setup wizard flow with stale-path revalidation
+* add CadQuery runtime slice with `.cq.py` routing and STL export contract
+* add shared Python BREP adapter base and build123d `.b3d.py` STL runtime slice
+* add central extension export capability matrix for runtime adapter contracts
 
 ### Tests
 
 * add export artifact assertions for FreeCAD STEP and OpenSCAD STL in extension E2E suite
 * add export write-error propagation coverage and unsupported format regression tests
 * add capability claim validator (`scripts/validate-capability-claims.mjs`) and include it in `pnpm test:agents`
+* add unit coverage for engine auto-discovery fallback and stale configured-path handling
+* add unit coverage for CadQuery compound-extension routing and capability gating
+* add unit coverage for build123d compound-extension routing and capability exposure
+* add unit checks enforcing router-to-capability-matrix contract alignment
 
 # [1.2.0](https://github.com/el-j/omni-cad/compare/v1.1.0...v1.2.0) (2026-05-07)
 

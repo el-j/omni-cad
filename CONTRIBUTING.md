@@ -35,13 +35,13 @@ By participating, you agree to uphold it.
 
 ### Prerequisites
 
-| Tool | Version | Notes |
-|---|---|---|
-| [Node.js](https://nodejs.org/) | ≥ 20 LTS | Use [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) |
-| [pnpm](https://pnpm.io/) | 10.x | Workspace package manager used by the monorepo |
-| [VS Code](https://code.visualstudio.com/) | ≥ 1.85 | For extension development |
-| [FreeCAD](https://www.freecad.org/) | any | _Optional_ — needed to run `.py` / `.fcmacro` models |
-| [OpenSCAD](https://openscad.org/) | any | _Optional_ — needed to run `.scad` models |
+| Tool                                      | Version  | Notes                                                                            |
+| ----------------------------------------- | -------- | -------------------------------------------------------------------------------- |
+| [Node.js](https://nodejs.org/)            | ≥ 20 LTS | Use [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) |
+| [pnpm](https://pnpm.io/)                  | 10.x     | Workspace package manager used by the monorepo                                   |
+| [VS Code](https://code.visualstudio.com/) | ≥ 1.85   | For extension development                                                        |
+| [FreeCAD](https://www.freecad.org/)       | any      | _Optional_ — needed to run `.py` / `.fcmacro` models                             |
+| [OpenSCAD](https://openscad.org/)         | any      | _Optional_ — needed to run `.scad` models                                        |
 
 ### Setup
 
@@ -152,15 +152,24 @@ pnpm --filter omni-cad run package    # Create omni-cad-<version>.vsix
 
    ```typescript
    // packages/extension/src/engines/MyNewEngineAdapter.ts
-   import { ICadEngine, CompileResponse, BrepMetadata } from '../types';
+   import { ICadEngine, CompileResponse, BrepMetadata } from "../types";
 
    export class MyNewEngineAdapter implements ICadEngine {
-     id = 'mynewengine';
-     supportedExtensions = ['.myext'];
+     id = "mynewengine";
+     supportedExtensions = [".myext"];
 
-     async compile(code: string): Promise<CompileResponse> { /* … */ }
-     async getBrepMetadata(code: string): Promise<BrepMetadata> { /* … */ }
-     async export(code: string, format: 'STEP' | 'STL' | 'IGES' | 'glTF'): Promise<Buffer> { /* … */ }
+     async compile(code: string): Promise<CompileResponse> {
+       /* … */
+     }
+     async getBrepMetadata(code: string): Promise<BrepMetadata> {
+       /* … */
+     }
+     async export(
+       code: string,
+       format: "STEP" | "STL" | "IGES" | "glTF",
+     ): Promise<Buffer> {
+       /* … */
+     }
      dispose(): void {}
    }
    ```
@@ -168,10 +177,12 @@ pnpm --filter omni-cad run package    # Create omni-cad-<version>.vsix
 2. **Register it** in `packages/extension/src/engines/EngineRouter.ts`:
 
    ```typescript
-   import { MyNewEngineAdapter } from './MyNewEngineAdapter';
+   import { MyNewEngineAdapter } from "./MyNewEngineAdapter";
    // …inside constructor:
    const me = new MyNewEngineAdapter(/* options */);
-   for (const ext of me.supportedExtensions) { this.engines.set(ext, me); }
+   for (const ext of me.supportedExtensions) {
+     this.engines.set(ext, me);
+   }
    ```
 
 3. **Add activationEvents** in `package.json`:
@@ -204,15 +215,15 @@ This project uses **[Conventional Commits](https://www.conventionalcommits.org/)
 
 ### Types
 
-| Type | When to use | Version bump |
-|---|---|---|
-| `feat` | A new user-visible feature | Minor (`0.x.0`) |
-| `fix` | A bug fix | Patch (`0.0.x`) |
-| `docs` | Documentation changes only | — |
-| `refactor` | Code restructuring without behaviour change | — |
-| `test` | Adding or fixing tests | — |
-| `chore` | Build, CI, dependency updates | — |
-| `perf` | Performance improvement | Patch |
+| Type              | When to use                                    | Version bump    |
+| ----------------- | ---------------------------------------------- | --------------- |
+| `feat`            | A new user-visible feature                     | Minor (`0.x.0`) |
+| `fix`             | A bug fix                                      | Patch (`0.0.x`) |
+| `docs`            | Documentation changes only                     | —               |
+| `refactor`        | Code restructuring without behaviour change    | —               |
+| `test`            | Adding or fixing tests                         | —               |
+| `chore`           | Build, CI, dependency updates                  | —               |
+| `perf`            | Performance improvement                        | Patch           |
 | `BREAKING CHANGE` | Footer or `!` suffix — incompatible API change | Major (`x.0.0`) |
 
 ### Examples
@@ -230,6 +241,7 @@ feat!: rename ICadEngine.compile return type
 ## Pull Request Process
 
 1. **Fork** the repository and create a branch from `develop`:
+
    ```bash
    git checkout -b feature/my-feature
    ```
@@ -241,6 +253,7 @@ feat!: rename ICadEngine.compile return type
 3. **Add or update tests** — unit tests for new logic, E2E tests for new VS Code commands or UI.
 
 4. **Run the full suite locally** before pushing:
+
    ```bash
    pnpm lint && pnpm test
    ```

@@ -66,20 +66,20 @@ pnpm --filter omni-cad run package
 
 ### Core Commands
 
-| Command | Purpose |
-|---------|---------|
-| `/bootstrap` | Refresh the OmniCAD agent system from the current repo structure, commands, and conventions |
-| `/task` | Create or refine a task plan in `.claude/tasks/` with acceptance criteria, edge cases, and test spec |
-| `/validate` | Check a task plan against the current codebase before work starts |
-| `/test` | Write or update black-box acceptance tests from the plan before implementation |
-| `/execute-task` | Implement the task against the failing or missing tests |
-| `/docs` | Update public docs and landing communication for shipped changes |
-| `/review` | White-box review against repo conventions and the approved plan |
-| `/testfix` | Resolve test failures without shrinking coverage |
-| `/learn` | Write concrete lessons back into command files |
-| `/orchestrator` | Run queued tasks in order using the same gates |
-| `/state` | Show current queue and task status from `.claude/state/orchestrator-state.json` |
-| `/resolve` | Turn merge conflicts or blocked cross-branch work into a concrete repair plan |
+| Command         | Purpose                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------- |
+| `/bootstrap`    | Refresh the OmniCAD agent system from the current repo structure, commands, and conventions          |
+| `/task`         | Create or refine a task plan in `.claude/tasks/` with acceptance criteria, edge cases, and test spec |
+| `/validate`     | Check a task plan against the current codebase before work starts                                    |
+| `/test`         | Write or update black-box acceptance tests from the plan before implementation                       |
+| `/execute-task` | Implement the task against the failing or missing tests                                              |
+| `/docs`         | Update public docs and landing communication for shipped changes                                     |
+| `/review`       | White-box review against repo conventions and the approved plan                                      |
+| `/testfix`      | Resolve test failures without shrinking coverage                                                     |
+| `/learn`        | Write concrete lessons back into command files                                                       |
+| `/orchestrator` | Run queued tasks in order using the same gates                                                       |
+| `/state`        | Show current queue and task status from `.claude/state/orchestrator-state.json`                      |
+| `/resolve`      | Turn merge conflicts or blocked cross-branch work into a concrete repair plan                        |
 
 ### Pipeline
 
@@ -88,6 +88,7 @@ pnpm --filter omni-cad run package
 ```
 
 Rules:
+
 - `/test` must work from the task plan and public behavior, not the implementation internals.
 - `/execute-task` does not close a task until the planned tests pass.
 - `/docs` updates `packages/landing` and related docs when user-visible capability changes ship.

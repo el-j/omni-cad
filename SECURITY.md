@@ -2,10 +2,10 @@
 
 ## Supported Versions
 
-| Version | Supported |
-|---------|-----------|
-| latest (`main`) | ✅ |
-| older releases | ❌ |
+| Version         | Supported |
+| --------------- | --------- |
+| latest (`main`) | ✅        |
+| older releases  | ❌        |
 
 We always recommend using the **latest release**.
 

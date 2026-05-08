@@ -65,27 +65,32 @@ pnpm test:agents
 ## Implementation Checklist
 
 1. Unit/Integration Coverage Expansion
+
 - [x] Add tests for unsupported format resolution and messaging.
 - [x] Add tests for missing source path and canceled save flow.
 - [x] Add tests for filesystem write error propagation.
 - [x] Add adapter-specific unsupported/deferred behavior tests.
 
 2. Command And MCP Contract Checks
+
 - [x] Add a focused check for expected command registration/callability.
 - [x] Align MCP setup story steps with actual command/tool surface.
 - [x] Add regression tests preventing drift between tests and command ids.
 
 3. E2E Hardening
+
 - [x] Add export failure-and-retry story coverage.
 - [x] Assert user-visible error and successful retry behavior.
 - [x] Keep E2E selectors resilient and deterministic.
 
 4. Docs-Claim Contract Validation
+
 - [x] Add `scripts/validate-capability-claims.mjs` to compare landing/docs capability statements against `docs/EXPORT_CAPABILITY_MATRIX.md`.
 - [x] Fail validation when shipped-claims drift from source-of-truth matrix.
 - [x] Document maintenance path for updating capability claims with tests.
 
 5. Quality And Release Readiness
+
 - [x] Maintain or improve coverage in touched files.
 - [x] Remove fragile assumptions or skipped tests in modified suites.
 - [x] Ensure CI command set remains representative of local validation.
@@ -137,4 +142,3 @@ pnpm test:agents
   - Coverage gate passed with branch coverage above threshold.
 - Validation:
   - Passed `pnpm test:agents`, extension pretest/test/coverage/e2e, and landing build.
-

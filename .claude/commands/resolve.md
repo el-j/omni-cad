@@ -1,4 +1,5 @@
 <!-- skill: resolution -->
+
 # /resolve -- OmniCAD Conflict Resolution Planner
 
 Turn merge conflicts, overlapping work, or blocked task state into a concrete repair plan.

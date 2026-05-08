@@ -1,4 +1,5 @@
 <!-- skill: reporting -->
+
 # /state -- OmniCAD Workflow State
 
 Read `.claude/state/orchestrator-state.json` and present the current queue, active task, blockers, and recent history.

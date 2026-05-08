@@ -5,20 +5,20 @@ Status: Planning baseline
 
 ## Current Verified Support
 
-| Adapter | Runtime Status | Geometry Class | Verified Export Formats | Notes |
-|---------|----------------|----------------|--------------------------|-------|
-| FreeCAD | Production | BREP + mesh render bridge | `STL`, `STEP`, `IGES` | Current strongest engineering path |
-| OpenSCAD | Production | Mesh/CSG | `STL` | Keep mesh-first claims explicit |
-| OpenGeometry | Experimental | TS/JS procedural mesh prototype | none | No production export contract yet |
+| Adapter      | Runtime Status | Geometry Class                  | Verified Export Formats | Notes                              |
+| ------------ | -------------- | ------------------------------- | ----------------------- | ---------------------------------- |
+| FreeCAD      | Production     | BREP + mesh render bridge       | `STL`, `STEP`, `IGES`   | Current strongest engineering path |
+| OpenSCAD     | Production     | Mesh/CSG                        | `STL`                   | Keep mesh-first claims explicit    |
+| OpenGeometry | Experimental   | TS/JS procedural mesh prototype | none                    | No production export contract yet  |
 
 ## Planned Export Families
 
-| Family | Formats | Primary Use | Candidate Adapter Families |
-|--------|---------|-------------|----------------------------|
-| Solid/BREP Interchange | `STEP`, `IGES` | Engineering CAD exchange | FreeCAD, CadQuery/build123d family |
-| Mesh Interchange | `STL`, `glTF`, `OBJ` | Visualization and mesh pipelines | OpenSCAD, FreeCAD mesh path, JS/TS mesh adapters |
-| Fabrication | `3MF`, `AMF` | 3D printing workflows | Mesh adapters after stable mesh contracts |
-| Drafting/2D | `DXF`, `SVG` | CNC/laser/drafting workflows | Future drafting-capable adapters or explicit converters |
+| Family                 | Formats              | Primary Use                      | Candidate Adapter Families                              |
+| ---------------------- | -------------------- | -------------------------------- | ------------------------------------------------------- |
+| Solid/BREP Interchange | `STEP`, `IGES`       | Engineering CAD exchange         | FreeCAD, CadQuery/build123d family                      |
+| Mesh Interchange       | `STL`, `glTF`, `OBJ` | Visualization and mesh pipelines | OpenSCAD, FreeCAD mesh path, JS/TS mesh adapters        |
+| Fabrication            | `3MF`, `AMF`         | 3D printing workflows            | Mesh adapters after stable mesh contracts               |
+| Drafting/2D            | `DXF`, `SVG`         | CNC/laser/drafting workflows     | Future drafting-capable adapters or explicit converters |
 
 ## Capability Rules
 

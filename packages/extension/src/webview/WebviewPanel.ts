@@ -1,15 +1,19 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import { EngineRouter } from '../engines/EngineRouter';
-import { ExportFormat, ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
-import { exportToFile, resolveExportRequest } from './exportFlow';
+import * as vscode from "vscode";
+import * as path from "path";
+import * as fs from "fs";
+import { EngineRouter } from "../engines/EngineRouter";
+import {
+  ExportFormat,
+  ExtensionToWebviewMessage,
+  WebviewToExtensionMessage,
+} from "../types";
+import { exportToFile, resolveExportRequest } from "./exportFlow";
 
 /**
  * Hosts the OmniCAD webview runtime and bridges message traffic between UI and extension host.
  */
 export class WebviewPanel {
-  public static readonly viewType = 'omniCAD.viewer';
+  public static readonly viewType = "omniCAD.viewer";
 
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
@@ -19,20 +23,18 @@ export class WebviewPanel {
   /** Opens or creates the panel beside the active editor. */
   public static createOrShow(
     context: vscode.ExtensionContext,
-    getRouter: () => EngineRouter
+    getRouter: () => EngineRouter,
   ): WebviewPanel {
     const column = vscode.ViewColumn.Beside;
     const panel = vscode.window.createWebviewPanel(
       WebviewPanel.viewType,
-      'OmniCAD Viewer',
+      "OmniCAD Viewer",
       column,
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [
-          vscode.Uri.joinPath(context.extensionUri, 'dist'),
-        ],
-      }
+        localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, "dist")],
+      },
     );
     return new WebviewPanel(panel, context.extensionUri, getRouter);
   }
@@ -40,7 +42,7 @@ export class WebviewPanel {
   private constructor(
     panel: vscode.WebviewPanel,
     extensionUri: vscode.Uri,
-    getRouter: () => EngineRouter
+    getRouter: () => EngineRouter,
   ) {
     this._panel = panel;
     this._extensionUri = extensionUri;
@@ -51,26 +53,30 @@ export class WebviewPanel {
     this._panel.webview.onDidReceiveMessage(
       (msg: WebviewToExtensionMessage) => this._handleMessage(msg),
       null,
-      this._disposables
+      this._disposables,
     );
-    
+
     // Initial config sync
     this._syncConfig();
-    
+
     // Listen for config changes
-    vscode.workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration('omniCAD.renderScale')) {
-        this._syncConfig();
-      }
-    }, null, this._disposables);
+    vscode.workspace.onDidChangeConfiguration(
+      (e) => {
+        if (e.affectsConfiguration("omniCAD.renderScale")) {
+          this._syncConfig();
+        }
+      },
+      null,
+      this._disposables,
+    );
   }
-  
+
   private _syncConfig(): void {
-    const config = vscode.workspace.getConfiguration('omniCAD');
-    const renderScale = config.get<number>('renderScale') ?? 1.0;
+    const config = vscode.workspace.getConfiguration("omniCAD");
+    const renderScale = config.get<number>("renderScale") ?? 1.0;
     this.sendMessage({
-      type: 'updateConfig',
-      payload: { renderScale }
+      type: "updateConfig",
+      payload: { renderScale },
     });
   }
 
@@ -82,24 +88,28 @@ export class WebviewPanel {
   /** Releases panel resources and subscriptions. */
   public dispose(): void {
     this._panel.dispose();
-    for (const d of this._disposables) { d.dispose(); }
+    for (const d of this._disposables) {
+      d.dispose();
+    }
     this._disposables = [];
   }
 
-  private async _handleMessage(message: WebviewToExtensionMessage): Promise<void> {
+  private async _handleMessage(
+    message: WebviewToExtensionMessage,
+  ): Promise<void> {
     switch (message.type) {
-      case 'ready':
+      case "ready":
         this._syncConfig();
         break;
-      case 'requestExport': {
+      case "requestExport": {
         const resolved = resolveExportRequest(
           message.format,
           vscode.window.activeTextEditor,
-          (ext) => this._getRouter().get(ext)
+          (ext) => this._getRouter().get(ext),
         );
 
         if (!resolved.ok) {
-          this.sendMessage({ type: 'showError', message: resolved.message });
+          this.sendMessage({ type: "showError", message: resolved.message });
           return;
         }
 
@@ -112,22 +122,27 @@ export class WebviewPanel {
           saveLabel: resolved.saveDialog.saveLabel,
           filters: resolved.saveDialog.filters,
         });
-        if (!saveUri) { return; }
+        if (!saveUri) {
+          return;
+        }
         try {
-          this.sendMessage({ type: 'exportStarted' });
+          this.sendMessage({ type: "exportStarted" });
           await exportToFile(
             resolved.engine,
             resolved.code,
             message.format as ExportFormat,
             resolved.sourcePath,
             saveUri.fsPath,
-            (targetPath, data) => fs.writeFileSync(targetPath, data)
+            (targetPath, data) => fs.writeFileSync(targetPath, data),
           );
-          this.sendMessage({ type: 'exportComplete', filePath: saveUri.fsPath });
+          this.sendMessage({
+            type: "exportComplete",
+            filePath: saveUri.fsPath,
+          });
           vscode.window.showInformationMessage(`Exported to ${saveUri.fsPath}`);
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
-          this.sendMessage({ type: 'showError', message: msg });
+          this.sendMessage({ type: "showError", message: msg });
         }
         break;
       }
@@ -136,7 +151,7 @@ export class WebviewPanel {
 
   private _getHtmlContent(webview: vscode.Webview): string {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'dist', 'webview.js')
+      vscode.Uri.joinPath(this._extensionUri, "dist", "webview.js"),
     );
     const nonce = this._getNonce();
     return /* html */ `<!DOCTYPE html>
@@ -164,8 +179,9 @@ export class WebviewPanel {
   }
 
   private _getNonce(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let nonce = '';
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let nonce = "";
     for (let i = 0; i < 32; i++) {
       nonce += chars.charAt(Math.floor(Math.random() * chars.length));
     }

@@ -1,4 +1,5 @@
 <!-- skill: orchestration -->
+
 # /orchestrator -- OmniCAD Sequential Queue Runner
 
 Run queued tasks from `.claude/state/orchestrator-state.json` one at a time.

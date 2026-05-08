@@ -64,24 +64,29 @@ pnpm --filter @omni-cad/landing run build
 ## Implementation Checklist
 
 1. Engine Runtime Contracts
+
 - [x] Add/normalize TSDoc for `EngineRouter` public API.
 - [x] Add/normalize TSDoc for each adapter public method.
 - [x] Document capability semantics for `supportsFormat` and `export` methods.
 
 2. Webview And Export Contracts
+
 - [x] Add TSDoc to exported helpers in `exportFlow.ts`.
 - [x] Document webview message payload and error propagation contract in `WebviewPanel.ts`.
 - [x] Ensure error docs reference typed contract values used in tests.
 
 3. MCP Contract Docs
+
 - [x] Add concise contract-oriented TSDoc around MCP tool handlers.
 - [x] Ensure handler docs match schema-enforced input/output behavior.
 
 4. Public Docs Sync
+
 - [x] Cross-check `Docs.tsx` capability snapshot wording against matrix.
 - [x] Keep matrix references current in user-facing docs.
 
 5. Review And Guardrails
+
 - [x] Run focused review for stale or speculative docs language.
 - [x] Add follow-up checklist item in task notes when documentation debt remains.
 - [x] Add a CI or local lint gate to prevent future TSDoc regressions on touched public APIs.
@@ -122,4 +127,3 @@ pnpm --filter @omni-cad/landing run build
   - Added claim/contract gate in `scripts/validate-capability-claims.mjs` and wired it through `pnpm test:agents`.
 - Validation:
   - Passed extension pretest/test/coverage and landing build.
-

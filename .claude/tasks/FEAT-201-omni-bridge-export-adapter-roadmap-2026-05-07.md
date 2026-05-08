@@ -59,11 +59,11 @@ pnpm test:agents
 
 ### Current Verified Matrix
 
-| Adapter | Input Style | Current Verified Exports | Notes |
-|---------|-------------|--------------------------|-------|
-| FreeCAD | Python + document objects | `STL`, `STEP`, `IGES` | Best current path for solid/BREP workflows |
-| OpenSCAD | `.scad` mesh/CSG scripts | `STL` | Mesh-first, should stay honest |
-| OpenGeometry | TS/JS experimental DSL | none | Compile path exists, export path not production-ready |
+| Adapter      | Input Style               | Current Verified Exports | Notes                                                 |
+| ------------ | ------------------------- | ------------------------ | ----------------------------------------------------- |
+| FreeCAD      | Python + document objects | `STL`, `STEP`, `IGES`    | Best current path for solid/BREP workflows            |
+| OpenSCAD     | `.scad` mesh/CSG scripts  | `STL`                    | Mesh-first, should stay honest                        |
+| OpenGeometry | TS/JS experimental DSL    | none                     | Compile path exists, export path not production-ready |
 
 ### Priority Export Families
 
@@ -88,6 +88,7 @@ pnpm test:agents
 3. `pythonOCC` or OCC-backed research spike
 
 Rationale:
+
 - Strong overlap with VS Code Python workflows
 - Better path to real `STEP` and `IGES`
 - Natural fit with the current Python-oriented adapter model
@@ -99,6 +100,7 @@ Rationale:
 3. Optional bridge experiments around manifold/mesh DSLs if they can produce stable contracts
 
 Rationale:
+
 - Expands OmniCAD into native TypeScript/JavaScript CAD authoring
 - Fits VS Code developer audience directly
 - Requires careful separation between solid-ish semantics and mesh-only semantics
@@ -110,6 +112,7 @@ Rationale:
 3. Parametric Python macro/project profiles inside the FreeCAD family
 
 Rationale:
+
 - Sometimes the right abstraction is a profile on top of an existing adapter rather than a whole new engine
 - Improves UX for real-world user ecosystems without fragmenting the router too early
 
@@ -120,6 +123,7 @@ Rationale:
 3. `3MF`
 
 Rationale:
+
 - These widen utility for CNC, laser, and print workflows
 - They should be introduced only when adapter semantics and save-dialog messaging can distinguish them cleanly from solid export
 
@@ -168,3 +172,17 @@ Rationale:
   - P2: JS/TS CAD family hardening
   - P3/P4: ecosystem profiles and drafting/fabrication targets
 - Validation gate alignment remains tied to test-first + E2E completion policy.
+
+## Execution Notes (2026-05-08)
+
+- Implemented Slice A code foundation for a central capability matrix:
+  - Added `packages/extension/src/export/capabilityMatrix.ts`
+  - Matrix now tracks shipped runtime adapter export contracts (`freecad`, `openscad`, `cadquery`, `build123d`, `opengeometry`)
+- Added unit assertions that enforce runtime-to-matrix alignment in `extension.test.ts`.
+  - Router capabilities for `.py`, `.scad`, `.cq.py`, `.b3d.py`, `.ts` are checked against matrix entries.
+- Validation:
+  - `pnpm --filter omni-cad run pretest` ✅
+  - `pnpm --filter omni-cad run test` ✅ (59 passing)
+  - `pnpm test:agents` ✅
+- Pending for full Slice A completion:
+  - wire matrix metadata into toolbar/export UX messaging for format family labels (solid vs mesh vs drafting).

@@ -64,16 +64,19 @@ Implement a consent-first auto-discovery system for CAD engines installed on the
 ## Safe Defaults (Platform-Specific Scans)
 
 ### macOS
+
 - FreeCAD: `/Applications/FreeCAD.app/Contents/MacOS/FreeCAD`
 - OpenSCAD: `/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD`
 - Fallback: `which freecad`, `which openscad`
 
 ### Linux
+
 - FreeCAD: `/usr/bin/freecad`, snap: `snap info freecad` + snap path
 - OpenSCAD: `/usr/bin/openscad`, snap: `snap info openscad` + snap path
 - Fallback: `which freecad`, `which openscad`
 
 ### Windows
+
 - FreeCAD: `C:\Program Files\FreeCAD\bin\FreeCAD.exe`, also check registry `HKEY_LOCAL_MACHINE\Software\FreeCAD`
 - OpenSCAD: `C:\Program Files\OpenSCAD\openscad.exe`, also check registry
 - Fallback: Windows PATH search, no default shell (use registry fallback)
@@ -174,6 +177,23 @@ pnpm test:agents
 ## Status
 
 - [x] Planning complete; ready for `/validate` → `/test` → `/execute-task` pipeline.
+
+## Execution Notes (2026-05-08)
+
+- Implemented startup discovery helpers in `EngineRouter`:
+  - `discoverInstalledEngines()` platform-aware path probing + PATH fallback
+  - `isConfiguredPathStale()` for absolute-path revalidation
+  - `isExecutablePath()` reusable executable probe
+- Implemented consent-first activation setup in `extension.ts`:
+  - first-open/stale-path trigger
+  - modal consent prompt for detected engines
+  - manual setup fallback via quick pick + validated input
+  - config persistence target (workspace when available, global fallback)
+- Added extension setting `omniCAD.autoSetupOnStartup` (default `true`) to allow disabling startup setup flow.
+- Added unit test coverage in `extension.test.ts` for default-path discovery, PATH fallback, and stale-path logic.
+- Pending:
+  - add first-open E2E story coverage
+  - run full pnpm validation gates once local package manager mismatch is resolved
 
 ## Next Steps
 

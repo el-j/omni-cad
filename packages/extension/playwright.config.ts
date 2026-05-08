@@ -1,16 +1,16 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: './src/test/e2e/stories',
+  testDir: "./src/test/e2e/stories",
   timeout: 120000,
   expect: {
     timeout: 15000,
   },
   fullyParallel: false,
   workers: 1,
-  reporter: 'html',
+  reporter: "html",
   use: {
-    trace: 'on-first-retry',
-    video: 'on',
+    trace: "on-first-retry",
+    video: "on",
   },
 });

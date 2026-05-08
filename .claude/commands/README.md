@@ -4,20 +4,20 @@ This is a thin, test-driven adaptation of the blueprint workflow for the OmniCAD
 
 ## Command Set
 
-| Command | Purpose |
-|---------|---------|
-| `/bootstrap` | Refresh the agent system from current repo reality |
-| `/task` | Write a task plan in `.claude/tasks/` |
-| `/validate` | Compare that plan with code reality |
-| `/test` | Create or update black-box acceptance tests first |
-| `/execute-task` | Implement only what is needed to make planned tests pass |
-| `/docs` | Update docs and landing communication for shipped changes |
-| `/review` | Review code against the plan and repo conventions |
-| `/testfix` | Resolve failures without removing coverage |
-| `/learn` | Persist concrete workflow learnings into command files |
-| `/orchestrator` | Run queued tasks sequentially |
-| `/state` | Show queue and task state |
-| `/resolve` | Convert merge conflicts or blocked overlaps into a repair task |
+| Command         | Purpose                                                        |
+| --------------- | -------------------------------------------------------------- |
+| `/bootstrap`    | Refresh the agent system from current repo reality             |
+| `/task`         | Write a task plan in `.claude/tasks/`                          |
+| `/validate`     | Compare that plan with code reality                            |
+| `/test`         | Create or update black-box acceptance tests first              |
+| `/execute-task` | Implement only what is needed to make planned tests pass       |
+| `/docs`         | Update docs and landing communication for shipped changes      |
+| `/review`       | Review code against the plan and repo conventions              |
+| `/testfix`      | Resolve failures without removing coverage                     |
+| `/learn`        | Persist concrete workflow learnings into command files         |
+| `/orchestrator` | Run queued tasks sequentially                                  |
+| `/state`        | Show queue and task state                                      |
+| `/resolve`      | Convert merge conflicts or blocked overlaps into a repair task |
 
 ## Pipeline
 

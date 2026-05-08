@@ -1,1 +1,1 @@
-export * from '@omni-cad/shared-types';
+export * from "@omni-cad/shared-types";

@@ -11,7 +11,7 @@ export interface MeshPayload {
 /**
  * Export formats currently modeled by OmniCAD contracts.
  */
-export type ExportFormat = 'STEP' | 'STL' | 'IGES' | 'glTF';
+export type ExportFormat = "STEP" | "STL" | "IGES" | "glTF";
 
 /**
  * Adapter capability descriptor used for routing, UI gating, and MCP validation.
@@ -35,18 +35,18 @@ export interface EngineExecutionOptions {
  */
 export type CompileResponse =
   | {
-    success: true;
-    meshes: MeshPayload[];
-    computeTimeMs: number;
-    warnings?: string[];
-  }
+      success: true;
+      meshes: MeshPayload[];
+      computeTimeMs: number;
+      warnings?: string[];
+    }
   | {
-    success: false;
-    meshes: MeshPayload[];
-    computeTimeMs: number;
-    errors: string[];
-    warnings?: string[];
-  };
+      success: false;
+      meshes: MeshPayload[];
+      computeTimeMs: number;
+      errors: string[];
+      warnings?: string[];
+    };
 
 /**
  * Geometric metadata for measurement or metadata-oriented MCP calls.
@@ -75,9 +75,19 @@ export interface ICadEngine {
   id: string;
   capabilities: EngineCapabilities;
   supportedExtensions: string[];
-  compile(code: string, options?: EngineExecutionOptions): Promise<CompileResponse>;
-  getBrepMetadata(code: string, options?: EngineExecutionOptions): Promise<BrepMetadata>;
-  export(code: string, format: ExportFormat, options?: EngineExecutionOptions): Promise<Buffer>;
+  compile(
+    code: string,
+    options?: EngineExecutionOptions,
+  ): Promise<CompileResponse>;
+  getBrepMetadata(
+    code: string,
+    options?: EngineExecutionOptions,
+  ): Promise<BrepMetadata>;
+  export(
+    code: string,
+    format: ExportFormat,
+    options?: EngineExecutionOptions,
+  ): Promise<Buffer>;
   dispose(): void;
 }
 
@@ -85,29 +95,29 @@ export interface ICadEngine {
  * Message bus contract from extension host to webview UI.
  */
 export type ExtensionToWebviewMessage =
-  | { type: 'compiling' }
-  | { type: 'updateMesh'; payload: CompileResponse }
-  | { type: 'showError'; message: string }
-  | { type: 'exportStarted' }
-  | { type: 'exportComplete'; filePath: string }
+  | { type: "compiling" }
+  | { type: "updateMesh"; payload: CompileResponse }
+  | { type: "showError"; message: string }
+  | { type: "exportStarted" }
+  | { type: "exportComplete"; filePath: string }
   | {
-    type: 'engineCapabilities';
-    payload: {
-      engineId?: string;
-      capabilities?: EngineCapabilities;
-      reason?: string;
-    };
-  }
+      type: "engineCapabilities";
+      payload: {
+        engineId?: string;
+        capabilities?: EngineCapabilities;
+        reason?: string;
+      };
+    }
   | {
-    type: 'updateConfig';
-    payload: {
-      renderScale: number;
+      type: "updateConfig";
+      payload: {
+        renderScale: number;
+      };
     };
-  };
 
 /**
  * Message bus contract from webview UI to extension host.
  */
 export type WebviewToExtensionMessage =
-  | { type: 'requestExport'; format: ExportFormat }
-  | { type: 'ready' };
+  | { type: "requestExport"; format: ExportFormat }
+  | { type: "ready" };

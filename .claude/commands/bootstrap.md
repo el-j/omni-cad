@@ -1,4 +1,5 @@
 <!-- skill: bootstrap -->
+
 # /bootstrap -- OmniCAD Agent Bootstrap
 
 Refresh the OmniCAD agent workflow from the current repository state.

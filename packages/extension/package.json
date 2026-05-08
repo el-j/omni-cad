@@ -79,7 +79,7 @@
         },
         "omniCAD.renderScale": {
           "type": "number",
-          "default": 1.0,
+          "default": 1,
           "description": "Global scaling factor for the 3D viewer. Useful for scaling mm models to a manageable size."
         }
       }

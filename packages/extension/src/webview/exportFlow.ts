@@ -1,6 +1,9 @@
-import * as path from 'path';
-import { getDefaultExportPath, getExportFileInfo } from '../export/exportFormats';
-import { EngineExecutionOptions, ExportFormat, ICadEngine } from '../types';
+import {
+  getDefaultExportPath,
+  getExportFileInfo,
+} from "../export/exportFormats";
+import { EngineExecutionOptions, ExportFormat, ICadEngine } from "../types";
+import { EngineRouter } from "../engines/EngineRouter";
 
 type EditorDocumentLike = {
   fileName: string;
@@ -28,12 +31,15 @@ type ResolvedExportRequest =
       saveDialog: SaveDialogShape;
     };
 
-const validFormats: ExportFormat[] = ['STEP', 'STL', 'IGES', 'glTF'];
+const validFormats: ExportFormat[] = ["STEP", "STL", "IGES", "glTF"];
 
 /**
  * Builds save dialog defaults for an export request.
  */
-export function buildExportSaveDialog(format: ExportFormat, document: EditorDocumentLike): SaveDialogShape {
+export function buildExportSaveDialog(
+  format: ExportFormat,
+  document: EditorDocumentLike,
+): SaveDialogShape {
   const fileInfo = getExportFileInfo(format);
   return {
     defaultPath: document.isUntitled
@@ -50,22 +56,25 @@ export function buildExportSaveDialog(format: ExportFormat, document: EditorDocu
 export function resolveExportRequest(
   format: ExportFormat,
   editor: TextEditorLike | undefined,
-  getEngine: (ext: string) => ICadEngine | undefined
+  getEngine: (ext: string) => ICadEngine | undefined,
 ): ResolvedExportRequest {
   if (!validFormats.includes(format)) {
     return { ok: false, message: `Unsupported export format ${format}` };
   }
   if (!editor) {
-    return { ok: false, message: 'No active editor' };
+    return { ok: false, message: "No active editor" };
   }
 
-  const ext = path.extname(editor.document.fileName).toLowerCase();
+  const ext = EngineRouter.getExtensionForFileName(editor.document.fileName);
   const engine = getEngine(ext);
   if (!engine) {
     return { ok: false, message: `No engine for extension ${ext}` };
   }
   if (!engine.capabilities.supportedExportFormats.includes(format)) {
-    return { ok: false, message: `${engine.id} does not support ${format} export` };
+    return {
+      ok: false,
+      message: `${engine.id} does not support ${format} export`,
+    };
   }
 
   return {
@@ -87,7 +96,7 @@ export async function exportToFile(
   sourcePath: string,
   destinationPath: string,
   writeFile: (targetPath: string, data: Buffer) => void,
-  options?: EngineExecutionOptions
+  options?: EngineExecutionOptions,
 ): Promise<void> {
   const mergedOptions: EngineExecutionOptions = {
     sourcePath,

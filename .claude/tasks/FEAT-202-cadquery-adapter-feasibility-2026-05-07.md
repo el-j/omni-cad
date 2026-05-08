@@ -53,30 +53,58 @@ pnpm test:agents
 ## Feasibility Outcome (2026-05-07)
 
 ### Viability: ✅ Confirmed
+
 - CadQuery is pure Python, subprocess-spawnable (parallel to FreeCAD), with native `STL`/`STEP` export via `.export()` method.
 
 ### Runtime Strategy
+
 - Spawn Python subprocess with CadQuery runner script; requires `python3` + `pip install cadquery`.
 - Build inline executor wrapper to handle missing/mismatched environments gracefully.
 
 ### Extension Mapping & FreeCAD Overlap
+
 - **Blocker**: Both adapt `.py` files; FreeCAD currently claims ownership in EngineRouter.
 - **Resolution**: Adopt marker-based differentiation—CadQuery uses `# cadquery` comment at head, or introduce `.cq.py` extension with config-based preference.
 
 ### First Export Contract: STL
+
 - Implement `CadQueryAdapter.export()` targeting STL as proven first contract.
 - STEP follows same pattern after STL is validated.
 
 ### Key Blockers & Mitigations
+
 1. Python environment mismatch (FreeCAD ships Python; CadQuery doesn't) → require explicit detection + helpful error messaging.
 2. Extension `.py` overlap → implement config preference or `.cq.py` extension fork.
 3. Missing CadQuery install → graceful skip with install guidance, not silent fallback.
 
 ### Next Implementation Slice
+
 1. Add `.cq.py` extension support + config-preferred routing for ambiguous `.py` files.
 2. Implement `CadQueryAdapter` with STL export only; test with sample `Box()` geometry.
 3. Add environment detection & pip availability check; skip render/export if not available.
 4. E2E test: `.cq.py` file → render → export STL (pass/fail clear).
 
 ### Decision: Ready for FEAT-204 Python BREP Implementation
+
 - CadQuery is viable and should be paired with `build123d` in a shared `PythonBrepAdapter` base layer.
+
+## Execution Notes (2026-05-08)
+
+- Implemented `CadQueryAdapter` runtime slice in `packages/extension/src/engines/CadQueryAdapter.ts`.
+  - `supportedExtensions: ['.cq.py']`
+  - `capabilities.supportedExportFormats: ['STL']`
+  - Python subprocess runner (`python3`) with CadQuery install guidance on missing runtime
+  - STL compile/export pipeline with STL mesh parsing and metadata bounds derivation
+- Updated routing to support compound extension handling via `EngineRouter.getExtensionForFileName()`.
+  - `.cq.py` now routes to `cadquery`
+  - `.py` remains routed to `freecad`
+- Updated extension activation and export flow to use compound extension resolution for save/compile/export paths.
+- Added focused unit coverage:
+  - `.cq.py` router resolution
+  - CadQuery STL capability exposure
+  - `resolveExportRequest()` route correctness for `.cq.py`
+- Validation:
+  - `pnpm --filter omni-cad run pretest` ✅
+  - `pnpm --filter omni-cad run test` ✅ (55 passing)
+- Pending:
+  - Add E2E story for `.cq.py` render/export artifact assertion.

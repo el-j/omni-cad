@@ -31,8 +31,8 @@ Use a typed error contract for unsupported/deferred OpenGeometry export handling
 
 ```ts
 type DeferredExportError = {
-  code: 'OMNICAD_UNSUPPORTED_EXPORT';
-  adapter: 'opengeometry';
+  code: "OMNICAD_UNSUPPORTED_EXPORT";
+  adapter: "opengeometry";
   format: string;
   message: string;
   hint?: string;
@@ -40,6 +40,7 @@ type DeferredExportError = {
 ```
 
 Behavior target:
+
 - Export attempts must return/throw this contract shape (or an exact runtime equivalent).
 - `message` must describe current unsupported status.
 - `hint` should point users to supported adapter/format alternatives when available.
@@ -85,27 +86,32 @@ pnpm --filter @omni-cad/landing run build
 ## Implementation Checklist
 
 1. Capability Truthfulness
+
 - [x] Audit `Features.tsx` and remove/qualify unverified export claims.
 - [x] Align docs table entries with verified adapter capabilities.
 - [x] Ensure matrix language distinguishes shipped vs planned support.
 
 2. OpenGeometry Contract Hardening
+
 - [x] Replace export placeholder throw text with a typed unsupported/deferred contract.
 - [x] Add/update adapter tests asserting stable error code/message shape.
 - [x] Replace hardcoded metadata placeholder values with computed metadata or explicit deferred response.
 - [x] Add tests that lock metadata contract shape for OpenGeometry.
 
 3. Export Flow Robustness
+
 - [x] Add failure-path tests for save dialog cancellation and file-write errors.
 - [x] Ensure webview error propagation is user-actionable and typed.
 - [x] Add regression tests for unsupported format resolution in export flow helper.
 
 4. E2E Assertions
+
 - [x] Extend E2E suite to assert output artifact existence for at least one FreeCAD and one OpenSCAD export.
 - [x] Assert exported file byte size is greater than zero.
 - [x] Keep E2E assertions deterministic and temp-directory isolated.
 
 5. MCP Story Alignment
+
 - [x] Validate e2e MCP story assumptions against actual command registration.
 - [x] Remove or revise story steps that rely on non-existent command ids.
 - [x] Add a focused test that checks command registration contract where applicable.
@@ -143,4 +149,3 @@ pnpm --filter @omni-cad/landing run build
   - `packages/extension/src/test/e2e/suite/extension.e2e.ts` includes non-empty artifact assertions for FreeCAD STEP and OpenSCAD STL exports.
 - Validation:
   - Passed `pnpm test:agents`, extension pretest/test/coverage/e2e, and landing build.
-

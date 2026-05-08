@@ -18,6 +18,7 @@ pnpm --filter omni-cad run package
 Datei: packages/extension/package.json
 
 Wichtige Felder:
+
 - name
 - publisher
 - version
@@ -25,6 +26,7 @@ Wichtige Felder:
 - engines
 
 Empfehlung fuer Marketplace-Qualitaet:
+
 - README und ggf. Icon im Extension-Paket sauber pflegen
 - .vscodeignore so halten, dass nur noetige Artefakte in der VSIX landen
 
@@ -43,6 +45,7 @@ Empfehlung fuer Marketplace-Qualitaet:
 ## Schritt 4: In GitHub als Secret hinterlegen
 
 In GitHub Repository Settings > Secrets and variables > Actions:
+
 - VSCE_PAT
 - OVSX_PAT (optional)
 
@@ -52,6 +55,7 @@ In GitHub Repository Settings > Secrets and variables > Actions:
 
 Das Repo nutzt Release-Automation in .github/workflows/release.yml.
 Empfehlung:
+
 - main veroeffentlicht stabil im offiziellen Marketplace
 - beta/alpha bleiben Vorabkanaele
 
@@ -69,6 +73,7 @@ Die Pipeline braucht zur Laufzeit nur den gueltigen PAT im GitHub Secret.
 Damit bleibt der Publish-Prozess funktionsfaehig, auch wenn keine aktive Azure-Testsession mehr besteht.
 
 Wichtig ist nur:
+
 1. PAT rechtzeitig rotieren
 2. Publisher-Setup nicht aendern
 3. Secret in GitHub aktuell halten
