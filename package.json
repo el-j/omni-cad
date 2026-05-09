@@ -15,16 +15,16 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.4",
+    "@tailwindcss/postcss": "^4.3.0",
     "@vscode/test-electron": "^2.5.2",
     "husky": "^9.1.7",
     "prettier": "^3.8.3",
-    "turbo": "^2.9.10"
+    "turbo": "^2.9.12"
   },
   "workspaces": [
     "packages/extension",
     "packages/shared-types",
     "packages/landing"
   ],
-  "packageManager": "pnpm@11.0.8"
+  "packageManager": "pnpm@11.0.9"
 }
