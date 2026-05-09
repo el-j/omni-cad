@@ -1,3 +1,10 @@
+# [1.3.0-alpha.2](https://github.com/el-j/omni-cad/compare/v1.3.0-alpha.1...v1.3.0-alpha.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* **release:** disable github issue comments and fix PR template placeholder ([ab38d76](https://github.com/el-j/omni-cad/commit/ab38d76ce0a3d498efc0ba574700c312a5928988)), closes [#123](https://github.com/el-j/omni-cad/issues/123)
+
 # [1.3.0-alpha.1](https://github.com/el-j/omni-cad/compare/v1.2.0...v1.3.0-alpha.1) (2026-05-09)
 
 
