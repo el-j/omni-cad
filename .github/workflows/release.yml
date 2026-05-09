@@ -86,6 +86,58 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Debug Branch Resolution
+        run: |
+          echo "╔════════════════════════════════════════════════════════╗"
+          echo "║ semantic-release Branch Resolution                     ║"
+          echo "╚════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "Current branch: ${{ github.ref_name }}"
+          echo ""
+          node -e "
+            const config = require('./.releaserc.json');
+            const branch = '${{ github.ref_name }}';
+            const patterns = [
+              { pattern: 'main', exact: true },
+              { pattern: 'develop', exact: true },
+              { pattern: 'feature/*', glob: true },
+              { pattern: 'fix/*', glob: true }
+            ];
+            
+            let matched = null;
+            for (const { pattern, exact, glob } of patterns) {
+              if (exact && branch === pattern) {
+                matched = pattern;
+                break;
+              }
+              if (glob) {
+                const regex = pattern.replace('*', '.*');
+                if (new RegExp('^' + regex + '$').test(branch)) {
+                  matched = pattern;
+                  break;
+                }
+              }
+            }
+            
+            const branchConfig = config.branches.find(b => b.name === matched);
+            
+            console.log('Branch Pattern Match:');
+            console.log('  Pattern: ' + (matched || 'NONE'));
+            console.log('  Channel: ' + (branchConfig?.channel || 'none'));
+            if (branchConfig?.prerelease) {
+              console.log('  Prerelease: ' + branchConfig.prerelease);
+              console.log('  Release Type: Prerelease');
+            } else {
+              console.log('  Release Type: Production');
+            }
+            console.log('');
+            console.log('Configured Branches:');
+            config.branches.forEach(b => {
+              const pre = b.prerelease ? ' (prerelease: ' + b.prerelease + ')' : '';
+              console.log('  ' + b.name + ' → ' + b.channel + pre);
+            });
+          "
+
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
@@ -202,10 +254,11 @@ jobs:
         id: channel
         run: |
           case "${GITHUB_REF_NAME}" in
-            main)  echo "channel=latest" >> "$GITHUB_OUTPUT" ;;
-            beta)  echo "channel=beta" >> "$GITHUB_OUTPUT" ;;
-            alpha) echo "channel=alpha" >> "$GITHUB_OUTPUT" ;;
-            *)     echo "channel=develop" >> "$GITHUB_OUTPUT" ;;
+            main)      echo "channel=prod" >> "$GITHUB_OUTPUT" ;;
+            develop)   echo "channel=beta" >> "$GITHUB_OUTPUT" ;;
+            feature/*) echo "channel=alpha" >> "$GITHUB_OUTPUT" ;;
+            fix/*)     echo "channel=alpha" >> "$GITHUB_OUTPUT" ;;
+            *)         echo "channel=alpha" >> "$GITHUB_OUTPUT" ;;
           esac
 
       - name: Build docs for release version
