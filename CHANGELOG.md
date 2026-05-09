@@ -1,3 +1,16 @@
+# [1.3.0-alpha.3](https://github.com/el-j/omni-cad/compare/v1.3.0-alpha.2...v1.3.0-alpha.3) (2026-05-09)
+
+
+### Bug Fixes
+
+* **e2e:** harden CI launcher for headless xvfb-run environments ([ee0c535](https://github.com/el-j/omni-cad/commit/ee0c5359d8fc6a88d20e7faa3064a42661769953))
+* **release:** remove stale json config so semantic-release uses js config ([2d025c0](https://github.com/el-j/omni-cad/commit/2d025c03940a74e9b7e6d24d795ece9ff81131f6))
+
+
+### Features
+
+* add semantic release configuration and improve test scripts formatting ([b437d2e](https://github.com/el-j/omni-cad/commit/b437d2e7652873b3e7d1478261a885bdaf9e1504))
+
 # [1.3.0-alpha.2](https://github.com/el-j/omni-cad/compare/v1.3.0-alpha.1...v1.3.0-alpha.2) (2026-05-09)
 
 
