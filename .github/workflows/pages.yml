@@ -20,9 +20,10 @@ on:
       rollback_channel:
         description: 'Channel to roll back when rollback_version is set.'
         required: false
-        default: latest
+        default: prod
         type: choice
         options:
+          - prod
           - latest
           - beta
           - alpha
@@ -44,7 +45,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Publish Develop Docs Channel
+    name: Publish Stable Root Site
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -72,7 +73,7 @@ jobs:
         run: |
           keep="${{ github.event.inputs.keep_prerelease_versions || '12' }}"
           rollbackVersion="${{ github.event.inputs.rollback_version || '' }}"
-          rollbackChannel="${{ github.event.inputs.rollback_channel || 'latest' }}"
+          rollbackChannel="${{ github.event.inputs.rollback_channel || 'prod' }}"
 
           if [ -n "$rollbackVersion" ]; then
             echo "do_build=false" >> "$GITHUB_OUTPUT"
@@ -86,13 +87,13 @@ jobs:
 
           echo "keep_prerelease=$keep" >> "$GITHUB_OUTPUT"
 
-      - name: Build landing app
+      - name: Build stable root site
         if: steps.mode.outputs.do_build == 'true'
         run: pnpm --filter @omni-cad/landing run build
         env:
-          VITE_BASE_PATH: /omni-cad/channels/develop/
-          VITE_DOCS_VERSION: develop
-          VITE_DOCS_CHANNEL: develop
+          VITE_BASE_PATH: /omni-cad/
+          VITE_DOCS_VERSION: main
+          VITE_DOCS_CHANNEL: stable
 
       - name: Restore existing published site
         run: |
@@ -104,17 +105,12 @@ jobs:
             git worktree remove /tmp/gh-pages --force
           fi
 
-      - name: Merge develop docs channel into published site
+      - name: Sync stable root site
         if: steps.mode.outputs.do_build == 'true'
         run: |
-          node scripts/docs/merge-versioned-site.mjs \
+          node scripts/docs/sync-root-site.mjs \
             --site .pages-site \
-            --dist packages/landing/dist \
-            --id develop \
-            --label Develop \
-            --kind channel \
-            --path channels/develop/ \
-            --default-if-empty channels/develop/
+            --dist packages/landing/dist
 
       - name: Roll back docs channel to version
         if: steps.mode.outputs.do_rollback == 'true'

@@ -37,7 +37,7 @@ function readIndex(indexPath) {
   if (!fs.existsSync(indexPath)) {
     return {
       generatedAt: new Date().toISOString(),
-      defaultTarget: 'channels/develop/',
+      defaultTarget: 'channels/prod/',
       targets: [],
     };
   }

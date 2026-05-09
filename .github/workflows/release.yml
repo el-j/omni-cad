@@ -319,17 +319,17 @@ jobs:
             --version ${{ needs.release.outputs.new_release_git_tag }}
 
       - name: Set default target for stable channel
-        if: steps.channel.outputs.channel == 'latest'
+        if: steps.channel.outputs.channel == 'prod'
         run: |
           node scripts/docs/merge-versioned-site.mjs \
             --site .pages-site \
             --dist /tmp/docs-channel \
-            --id latest \
-            --label latest \
+            --id prod \
+            --label prod \
             --kind channel \
-            --path channels/latest/ \
+            --path channels/prod/ \
             --version ${{ needs.release.outputs.new_release_git_tag }} \
-            --default-target channels/latest/
+            --default-target channels/prod/
 
       - name: Apply prerelease retention policy
         run: |

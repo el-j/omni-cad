@@ -55,7 +55,7 @@ function readIndex(indexPath) {
   if (!fs.existsSync(indexPath)) {
     return {
       generatedAt: new Date().toISOString(),
-      defaultTarget: 'channels/develop/',
+      defaultTarget: 'channels/prod/',
       targets: [],
     };
   }
@@ -63,7 +63,7 @@ function readIndex(indexPath) {
   const parsed = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
   return {
     generatedAt: parsed.generatedAt || new Date().toISOString(),
-    defaultTarget: parsed.defaultTarget || 'channels/develop/',
+    defaultTarget: parsed.defaultTarget || 'channels/prod/',
     targets: Array.isArray(parsed.targets) ? parsed.targets : [],
   };
 }
@@ -92,41 +92,6 @@ function sortTargets(targets) {
 
     return String(a.id).localeCompare(String(b.id));
   });
-}
-
-function writeRedirectPages(siteDir) {
-  const html = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OmniCAD Docs</title>
-  </head>
-  <body>
-    <script>
-      (function () {
-        var base = '/omni-cad/';
-        var fallback = 'channels/develop/';
-        fetch(base + 'versions.json', { cache: 'no-store' })
-          .then(function (res) {
-            if (!res.ok) throw new Error('metadata unavailable');
-            return res.json();
-          })
-          .then(function (meta) {
-            var target = (meta && meta.defaultTarget) || fallback;
-            window.location.replace(base + target);
-          })
-          .catch(function () {
-            window.location.replace(base + fallback);
-          });
-      })();
-    </script>
-  </body>
-</html>
-`;
-
-  fs.writeFileSync(path.join(siteDir, 'index.html'), html, 'utf8');
-  fs.writeFileSync(path.join(siteDir, '404.html'), html, 'utf8');
 }
 
 function main() {
@@ -175,7 +140,6 @@ function main() {
   index.targets = sortTargets(index.targets);
 
   fs.writeFileSync(metadataPath, `${JSON.stringify(index, null, 2)}\n`, 'utf8');
-  writeRedirectPages(siteDir);
 }
 
 main();

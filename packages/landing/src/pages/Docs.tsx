@@ -2,7 +2,7 @@ import React from "react";
 
 export const Docs: React.FC = () => {
   const docsVersion = import.meta.env.VITE_DOCS_VERSION || "unversioned";
-  const docsChannel = import.meta.env.VITE_DOCS_CHANNEL || "develop";
+  const docsChannel = import.meta.env.VITE_DOCS_CHANNEL || "stable";
   const assetUrl = (path: string) =>
     `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
   const appRouteUrl = (path: string) =>

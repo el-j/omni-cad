@@ -3,6 +3,9 @@ import { VideoPlayer } from "./VideoPlayer";
 import { CodeWindow } from "./CodeWindow";
 
 export const Hero: React.FC = () => {
+  const baseUrl = import.meta.env.BASE_URL;
+  const docsHref = `${baseUrl}docs`;
+  const channelHref = (channel: string) => `${baseUrl}channels/${channel}/`;
   const installHref = `${import.meta.env.BASE_URL}docs`;
 
   return (
@@ -55,6 +58,39 @@ export const Hero: React.FC = () => {
               className="px-8 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all"
             >
               View on GitHub
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl mb-8">
+            <a
+              href={docsHref}
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10 transition-colors"
+            >
+              <div className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">
+                Stable
+              </div>
+              <div className="font-semibold text-white">Main Docs</div>
+              <div className="text-sm text-gray-400 mt-1">Root page</div>
+            </a>
+            <a
+              href={channelHref("beta")}
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10 transition-colors"
+            >
+              <div className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">
+                Channel
+              </div>
+              <div className="font-semibold text-white">Beta Docs</div>
+              <div className="text-sm text-gray-400 mt-1">Pre-release</div>
+            </a>
+            <a
+              href={channelHref("alpha")}
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10 transition-colors"
+            >
+              <div className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">
+                Channel
+              </div>
+              <div className="font-semibold text-white">Alpha Docs</div>
+              <div className="text-sm text-gray-400 mt-1">Early preview</div>
             </a>
           </div>
 
