@@ -95,7 +95,7 @@ jobs:
           echo "Current branch: ${{ github.ref_name }}"
           echo ""
           node -e "
-            const config = require('./.releaserc.json');
+            const config = require('./.releaserc.js');
             const branch = '${{ github.ref_name }}';
             const patterns = [
               { pattern: 'main', exact: true },
