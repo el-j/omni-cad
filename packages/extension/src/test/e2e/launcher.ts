@@ -55,14 +55,14 @@ export async function openCommandPalette(
   modifierKey: string,
 ): Promise<import('@playwright/test').Locator> {
   await window.keyboard.press('F1');
-  await window.waitForTimeout(400);
+  await window.waitForTimeout(500);
 
   const palette = window.locator('.quick-input-filter input');
-  if (!(await palette.isVisible({ timeout: 1200 }).catch(() => false))) {
+  if (!(await palette.isVisible({ timeout: 2000 }).catch(() => false))) {
     await window.keyboard.press(`${modifierKey}+Shift+P`);
-    await window.waitForTimeout(400);
+    await window.waitForTimeout(500);
   }
-  await palette.waitFor({ state: 'visible', timeout: 6000 });
+  await palette.waitFor({ state: 'visible', timeout: 12000 });
   return palette;
 }
 
@@ -73,17 +73,17 @@ export async function runCommand(
 ): Promise<boolean> {
   const palette = await openCommandPalette(window, modifierKey);
   await palette.fill(`> ${title}`);
-  await window.waitForTimeout(250);
+  await window.waitForTimeout(400);
   const entry = window
     .locator(`.quick-input-list-entry:has-text("${title}")`)
     .first();
-  const visible = await entry.isVisible({ timeout: 1200 }).catch(() => false);
+  const visible = await entry.isVisible({ timeout: 4000 }).catch(() => false);
   if (!visible) {
     await window.keyboard.press('Escape').catch(() => undefined);
     return false;
   }
   await window.keyboard.press('Enter');
-  await window.waitForTimeout(800);
+  await window.waitForTimeout(1000);
   return true;
 }
 /**
@@ -269,6 +269,8 @@ export async function launchVSCode(
   await window.waitForLoadState('domcontentloaded');
   // In CI the extension host can keep background requests alive; don't hard-fail on networkidle.
   await window.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => undefined);
+  // Allow extension activation and UI initialization to complete
+  await window.waitForTimeout(2000);
 
   // Clean up temporary directories on close
   electronApp.on('close', () => {
