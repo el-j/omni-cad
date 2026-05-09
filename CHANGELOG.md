@@ -1,3 +1,11 @@
+## [1.4.1-beta.1](https://github.com/el-j/omni-cad/compare/v1.4.0...v1.4.1-beta.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* **release:** use valid prerelease identifiers for wildcard branches ([e8b209e](https://github.com/el-j/omni-cad/commit/e8b209edb274bdbee205deb6c7c1be6d9e1158e8))
+* repair gh-pages and release workflows for develop and main ([ed59414](https://github.com/el-j/omni-cad/commit/ed59414e54c0f37c912f9b906b61d9752fbf3172))
+
 # [1.4.0-beta.4](https://github.com/el-j/omni-cad/compare/v1.4.0-beta.3...v1.4.0-beta.4) (2026-05-09)
 
 
