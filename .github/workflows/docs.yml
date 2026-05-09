@@ -24,7 +24,7 @@ on:
 
 jobs:
   build-and-document:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
       - uses: actions/checkout@v4
@@ -40,8 +40,23 @@ jobs:
 
       - name: Install System Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y freecad openscad xvfb libasound2 libgbm1 libnss3 libxss1
+          sudo apt-get update -qq
+
+          # Ubuntu 24.04 renamed libasound2 to libasound2t64. Keep compatibility.
+          if apt-cache show libasound2 >/dev/null 2>&1; then
+            AUDIO_PKG=libasound2
+          else
+            AUDIO_PKG=libasound2t64
+          fi
+
+          sudo apt-get install -y --no-install-recommends \
+            freecad \
+            openscad \
+            xvfb \
+            "$AUDIO_PKG" \
+            libgbm1 \
+            libnss3 \
+            libxss1
           
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
