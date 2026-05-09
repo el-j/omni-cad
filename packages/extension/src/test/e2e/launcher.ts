@@ -266,7 +266,9 @@ export async function launchVSCode(
   });
 
   const window = await electronApp.firstWindow();
-  await window.waitForLoadState('networkidle');
+  await window.waitForLoadState('domcontentloaded');
+  // In CI the extension host can keep background requests alive; don't hard-fail on networkidle.
+  await window.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => undefined);
 
   // Clean up temporary directories on close
   electronApp.on('close', () => {

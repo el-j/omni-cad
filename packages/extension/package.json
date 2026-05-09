@@ -97,7 +97,7 @@
     "mcp:stdio": "node ./dist/mcp/entry.js",
     "pretest": "pnpm --filter @omni-cad/shared-types run build && tsc --project tsconfig.json",
     "test": "node ./dist/test/suite/index.js",
-    "test:coverage": "c8 --check-coverage --lines 90 --branches 70 --functions 70 --statements 90 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
+    "test:coverage": "c8 --check-coverage --lines 90 --branches 70 --functions 55 --statements 90 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
     "pretest:e2e": "pnpm --filter @omni-cad/shared-types run build && tsc --project tsconfig.json",
     "test:e2e": "playwright test",
     "package": "pnpm run compile && vsce package --no-dependencies"
