@@ -13,7 +13,7 @@
 
 ## Related issues
 
-<!-- Link any relevant issues: Closes #123 -->
+<!-- Link any relevant issues: Closes #<issue-number> -->
 
 ## Checklist
 
