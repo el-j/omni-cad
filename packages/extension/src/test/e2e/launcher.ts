@@ -1,23 +1,23 @@
-import { _electron as electron } from '@playwright/test';
-import { downloadAndUnzipVSCode } from '@vscode/test-electron';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
+import { _electron as electron } from "@playwright/test";
+import { downloadAndUnzipVSCode } from "@vscode/test-electron";
+import * as path from "path";
+import * as fs from "fs";
+import * as os from "os";
 
-const isMac = process.platform === 'darwin';
-const modifier = isMac ? 'Meta' : 'Control';
+const isMac = process.platform === "darwin";
+const modifier = isMac ? "Meta" : "Control";
 
 async function dismissOnboardingOverlay(
-  window: import('@playwright/test').Page,
+  window: import("@playwright/test").Page,
 ): Promise<void> {
-  const overlay = window.locator('.onboarding-a-overlay');
+  const overlay = window.locator(".onboarding-a-overlay");
   const visible = await overlay.isVisible({ timeout: 100 }).catch(() => false);
   if (!visible) {
     return;
   }
 
-  await window.keyboard.press('Escape').catch(() => undefined);
-  const closeBtn = overlay.locator('button').first();
+  await window.keyboard.press("Escape").catch(() => undefined);
+  const closeBtn = overlay.locator("button").first();
   if (await closeBtn.isVisible({ timeout: 100 }).catch(() => false)) {
     await closeBtn.click({ force: true }).catch(() => undefined);
   }
@@ -51,79 +51,81 @@ const SETUP_DISMISS_SELECTORS = [
 ];
 
 export async function openCommandPalette(
-  window: import('@playwright/test').Page,
+  window: import("@playwright/test").Page,
   modifierKey: string,
-): Promise<import('@playwright/test').Locator> {
+): Promise<import("@playwright/test").Locator> {
   // Try F1 first, then keyboard combo if needed
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt === 0) {
-      await window.keyboard.press('F1');
+      await window.keyboard.press("F1");
     } else if (attempt === 1) {
       await window.keyboard.press(`${modifierKey}+Shift+P`);
     } else {
       // Last resort: use F1 again after a longer wait
       await window.waitForTimeout(1000);
-      await window.keyboard.press('F1');
+      await window.keyboard.press("F1");
     }
-    
+
     await window.waitForTimeout(800);
-    const palette = window.locator('.quick-input-filter input');
-    
+    const palette = window.locator(".quick-input-filter input");
+
     if (await palette.isVisible({ timeout: 3000 }).catch(() => false)) {
       return palette;
     }
   }
-  
-  throw new Error('Command palette failed to open after 3 attempts');
+
+  throw new Error("Command palette failed to open after 3 attempts");
 }
 
 export async function runCommand(
-  window: import('@playwright/test').Page,
+  window: import("@playwright/test").Page,
   modifierKey: string,
   title: string,
 ): Promise<boolean> {
-  let palette: import('@playwright/test').Locator;
+  let palette: import("@playwright/test").Locator;
   try {
     palette = await openCommandPalette(window, modifierKey);
-  } catch (e) {
-    console.warn(`Failed to open command palette: ${e.message}`);
+  } catch (e: unknown) {
+    console.warn(`Failed to open command palette: ${(e as Error).message}`);
     return false;
   }
-  
+
   await palette.fill(`> ${title}`);
   await window.waitForTimeout(600);
-  
+
   // Look for the command entry with retries
   for (let attempt = 0; attempt < 2; attempt++) {
     const entry = window
       .locator(`.quick-input-list-entry:has-text("${title}")`)
       .first();
-    
+
     const visible = await entry.isVisible({ timeout: 5000 }).catch(() => false);
     if (visible) {
-      await window.keyboard.press('Enter');
+      await window.keyboard.press("Enter");
       await window.waitForTimeout(1200);
       return true;
     }
-    
+
     if (attempt === 0) {
       // Retry: clear and retype
-      await palette.fill('');
+      await palette.fill("");
       await window.waitForTimeout(300);
       await palette.fill(`> ${title}`);
       await window.waitForTimeout(600);
     }
   }
-  
-  await window.keyboard.press('Escape').catch(() => undefined);
+
+  await window.keyboard.press("Escape").catch(() => undefined);
   return false;
+}
+
 /**
  * Waits for the OmniCAD setup notification toast to appear and clicks
  * "Use Detected Paths" (or "Skip For Now" as fallback) to dismiss it.
  * Returns true if the notification was found and dismissed, false otherwise.
  */
 export async function dismissOmniCadSetupNotification(
-  window: import('@playwright/test').Page,
+  window: import("@playwright/test").Page,
   timeoutMs = 8000,
 ): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
@@ -135,8 +137,8 @@ export async function dismissOmniCadSetupNotification(
       const btn = window.locator(selector).first();
       const visible = await btn.isVisible({ timeout: 200 }).catch(() => false);
       if (visible) {
-        if (selector.includes('.quick-input-widget')) {
-          await window.keyboard.press('Enter').catch(() => undefined);
+        if (selector.includes(".quick-input-widget")) {
+          await window.keyboard.press("Enter").catch(() => undefined);
         } else {
           await btn.click({ force: true });
         }
@@ -146,12 +148,12 @@ export async function dismissOmniCadSetupNotification(
     }
 
     const quickInputVisible = await window
-      .locator('.quick-input-widget')
+      .locator(".quick-input-widget")
       .isVisible({ timeout: 150 })
       .catch(() => false);
     if (quickInputVisible) {
       // Accept first action as a fallback; setup quick-pick orders "Use Detected Paths" first.
-      await window.keyboard.press('Enter').catch(() => undefined);
+      await window.keyboard.press("Enter").catch(() => undefined);
       await window.waitForTimeout(150);
       return true;
     }
@@ -166,9 +168,9 @@ export async function dismissOmniCadSetupNotification(
  * to become visible. Returns the locator when found, or null on timeout.
  */
 export async function waitForOmniCadSetupNotification(
-  window: import('@playwright/test').Page,
+  window: import("@playwright/test").Page,
   timeoutMs = 12000,
-): Promise<import('@playwright/test').Locator | null> {
+): Promise<import("@playwright/test").Locator | null> {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
@@ -185,7 +187,7 @@ export async function waitForOmniCadSetupNotification(
 }
 
 export async function openOmniCadViewer(
-  window: import('@playwright/test').Page,
+  window: import("@playwright/test").Page,
   modifierKey: string,
   timeoutMs = 10000,
 ): Promise<void> {
@@ -195,7 +197,7 @@ export async function openOmniCadViewer(
     const opened = await runCommand(
       window,
       modifierKey,
-      'OmniCAD: Open Viewer',
+      "OmniCAD: Open Viewer",
     );
     if (!opened) {
       await window.waitForTimeout(300);
@@ -205,73 +207,73 @@ export async function openOmniCadViewer(
 
     await dismissOmniCadSetupNotification(window, 800);
     const slider = window
-      .frameLocator('iframe.webview')
-      .frameLocator('iframe#active-frame')
-      .locator('.scale-slider');
+      .frameLocator("iframe.webview")
+      .frameLocator("iframe#active-frame")
+      .locator(".scale-slider");
     if (await slider.isVisible({ timeout: 1200 }).catch(() => false)) {
       return;
     }
-    await window.keyboard.press('Escape').catch(() => undefined);
+    await window.keyboard.press("Escape").catch(() => undefined);
     await window.waitForTimeout(300);
   }
 
   throw new Error(
-    'Failed to open OmniCAD viewer and locate scale slider within timeout',
+    "Failed to open OmniCAD viewer and locate scale slider within timeout",
   );
 }
 
 export async function launchVSCode(
   extensionPath: string,
   testFile?: string,
-  videoDirName: string = 'default',
+  videoDirName: string = "default",
   autoDismissSetupPopup = true,
   settingsOverrides: Record<string, unknown> = {},
 ) {
   const vscodeExecutablePath = await downloadAndUnzipVSCode();
   const userDataDir = fs.mkdtempSync(
-    path.join(os.tmpdir(), 'vscode-test-user-'),
+    path.join(os.tmpdir(), "vscode-test-user-"),
   );
   const extensionsDir = fs.mkdtempSync(
-    path.join(os.tmpdir(), 'vscode-test-exts-'),
+    path.join(os.tmpdir(), "vscode-test-exts-"),
   );
 
   // Clean settings to force a "First Run" state that we control
-  const settingsDir = path.join(userDataDir, 'User');
+  const settingsDir = path.join(userDataDir, "User");
   fs.mkdirSync(settingsDir, { recursive: true });
   fs.writeFileSync(
-    path.join(settingsDir, 'settings.json'),
+    path.join(settingsDir, "settings.json"),
     JSON.stringify({
-      'workbench.welcomePage.enabled': false,
-      'workbench.startupEditor': 'none',
-      'telemetry.enableTelemetry': false,
-      'telemetry.enableCrashReporter': false,
-      'workbench.tips.enabled': false,
-      'omniCAD.enableExperimentalOpenGeometry': true,
-      'editor.minimap.enabled': false,
-      'window.restoreWindows': 'none',
-      'workbench.editor.showTabs': 'single',
-      'workbench.welcomePage.walkthroughs.enabled': false,
-      'workbench.account.onboarding.enabled': false,
-      'extensions.ignoreRecommendations': true,
-      'security.workspace.trust.enabled': false,
-      'workbench.enableExperiments': false,
-      'workbench.sideBar.visible': false,
-      'workbench.auxiliaryBar.visible': false,
-      'workbench.activityBar.visible': false,
-      'workbench.statusBar.visible': false,
-      'chat.enabled': false,
-      'inlineChat.enabled': false,
-      'github.copilot.chat.enabled': false,
-      'workbench.panel.opened': false,
-      'workbench.editor.showSecondarySideBar': false,
-      'workbench.panel.defaultLocation': 'hidden',
+      "workbench.welcomePage.enabled": false,
+      "workbench.startupEditor": "none",
+      "telemetry.enableTelemetry": false,
+      "telemetry.enableCrashReporter": false,
+      "workbench.tips.enabled": false,
+      "omniCAD.enableExperimentalOpenGeometry": true,
+      "editor.minimap.enabled": false,
+      "window.restoreWindows": "none",
+      "workbench.editor.showTabs": "single",
+      "workbench.welcomePage.walkthroughs.enabled": false,
+      "workbench.account.onboarding.enabled": false,
+      "extensions.ignoreRecommendations": true,
+      "security.workspace.trust.enabled": false,
+      "workbench.enableExperiments": false,
+      "workbench.sideBar.visible": false,
+      "workbench.auxiliaryBar.visible": false,
+      "workbench.activityBar.visible": false,
+      "workbench.statusBar.visible": false,
+      "chat.enabled": false,
+      "inlineChat.enabled": false,
+      "github.copilot.chat.enabled": false,
+      "workbench.panel.opened": false,
+      "workbench.editor.showSecondarySideBar": false,
+      "workbench.panel.defaultLocation": "hidden",
       ...settingsOverrides,
     }),
   );
 
   const videoDir = path.resolve(
     extensionPath,
-    'test-results/videos',
+    "test-results/videos",
     videoDirName,
   );
   if (!fs.existsSync(videoDir)) fs.mkdirSync(videoDir, { recursive: true });
@@ -279,25 +281,25 @@ export async function launchVSCode(
   const electronApp = await electron.launch({
     executablePath: vscodeExecutablePath,
     args: [
-      '--extensionDevelopmentPath=' + extensionPath,
-      '--extensions-dir=' + extensionsDir,
-      '--no-sandbox',
-      '--disable-gpu-sandbox',
-      '--disable-updates',
-      '--disable-telemetry',
-      '--disable-workspace-trust',
-      '--disable-side-bar',
-      '--disable-activity-bar',
-      '--disable-panel',
-      '--disable-keytar-storage',
-      '--user-data-dir=' + userDataDir,
+      "--extensionDevelopmentPath=" + extensionPath,
+      "--extensions-dir=" + extensionsDir,
+      "--no-sandbox",
+      "--disable-gpu-sandbox",
+      "--disable-updates",
+      "--disable-telemetry",
+      "--disable-workspace-trust",
+      "--disable-side-bar",
+      "--disable-activity-bar",
+      "--disable-panel",
+      "--disable-keytar-storage",
+      "--user-data-dir=" + userDataDir,
       ...(testFile ? [testFile] : []),
     ],
     recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } },
   });
 
   const window = await electronApp.firstWindow();
-  
+
   // In CI (headless/xvfb-run), domcontentloaded may not fire reliably.
   // Skip it and wait for actual VS Code UI to appear instead.
   // Timeout after 60s in case Electron is truly stuck.
@@ -305,17 +307,19 @@ export async function launchVSCode(
     .locator('div[class*="workbench"]')
     .isVisible({ timeout: 60000 })
     .catch(() => false);
-  
+
   if (!uiReady) {
     // Fallback: wait longer for networkidle as proxy for readiness
-    await window.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+    await window
+      .waitForLoadState("networkidle", { timeout: 30000 })
+      .catch(() => undefined);
   }
-  
+
   // Allow extension host activation to complete
   await window.waitForTimeout(3000);
 
   // Clean up temporary directories on close
-  electronApp.on('close', () => {
+  electronApp.on("close", () => {
     try {
       fs.rmSync(userDataDir, { recursive: true, force: true });
       fs.rmSync(extensionsDir, { recursive: true, force: true });
@@ -326,17 +330,17 @@ export async function launchVSCode(
   try {
     // Spam Escape to close simple modals
     for (let i = 0; i < 3; i++) {
-      await window.keyboard.press('Escape');
+      await window.keyboard.press("Escape");
       await window.waitForTimeout(500);
     }
 
     // Target the onboarding overlay specifically
-    const overlay = window.locator('.onboarding-a-overlay');
+    const overlay = window.locator(".onboarding-a-overlay");
     if (await overlay.isVisible({ timeout: 100 })) {
       // Find the "X" button (usually the first button without text in the overlay)
       const closeBtn = overlay
-        .locator('button')
-        .filter({ hasText: '' })
+        .locator("button")
+        .filter({ hasText: "" })
         .first();
       if (await closeBtn.isVisible()) {
         await closeBtn.click();
@@ -353,7 +357,7 @@ export async function launchVSCode(
   } catch (e) {}
   // 2. Workspace Cleanup: Zen Mode (Hide Sidebar, Panel, Auxiliary Bar)
   await dismissOmniCadSetupNotification(window, 800);
-  await runCommand(window, modifier, 'View: Hide Secondary Side Bar').catch(
+  await runCommand(window, modifier, "View: Hide Secondary Side Bar").catch(
     () => false,
   );
 
@@ -371,21 +375,21 @@ export async function launchVSCode(
         const opened = await runCommand(
           window,
           modifier,
-          'OmniCAD: Open Viewer',
+          "OmniCAD: Open Viewer",
         ).catch(() => false);
         if (opened) {
           activated = true;
-          await window.keyboard.press('Escape');
+          await window.keyboard.press("Escape");
           break;
         }
         await window.waitForTimeout(100);
       }
       if (!activated)
-        console.warn('Extension activation signal not detected after 20s');
+        console.warn("Extension activation signal not detected after 20s");
     }
   } catch (e) {}
 
-  await window.click('.monaco-editor');
+  await window.click(".monaco-editor");
   await window.waitForTimeout(1000);
 
   return { electronApp, userDataDir, window, modifier };

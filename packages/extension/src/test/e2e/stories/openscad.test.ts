@@ -62,7 +62,6 @@ test("capture openscad render story", async () => {
     await window.keyboard.press(`${modifier}+S`);
     await window.waitForTimeout(1000);
 
-
     // 4. Wait for the engine to show result
     await window.waitForTimeout(3000);
   } finally {

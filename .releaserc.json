@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/semantic-release.json",
+  "branches": [
+    { "name": "main", "channel": "prod" },
+    { "name": "develop", "channel": "beta", "prerelease": "beta" },
+    { "name": "feature/*", "channel": "alpha", "prerelease": "alpha" },
+    { "name": "fix/*", "channel": "alpha", "prerelease": "alpha" }
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false,
+        "pkgRoot": "packages/extension",
+        "prepare": "scripts/semantic-release-prepare.cjs"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["packages/extension/package.json", "CHANGELOG.md"],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}

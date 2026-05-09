@@ -23,7 +23,7 @@ test("capture mcp setup story", async () => {
     // 1. Open the registered OmniCAD viewer command (popup-safe)
     await window.click(".monaco-editor");
     await openOmniCadViewer(window, modifier, 15000);
-    
+
     // 2. Document active monitoring
     await window.click(".monaco-editor");
     await window.keyboard.press(`${modifier}+End`);

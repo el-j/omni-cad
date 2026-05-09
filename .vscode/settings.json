@@ -1,4 +1,4 @@
 {
-    "omniCAD.freecadPath": "/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd",
-    "omniCAD.openscadPath": "/opt/homebrew/bin/openscad"
+  "omniCAD.freecadPath": "/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd",
+  "omniCAD.openscadPath": "/opt/homebrew/bin/openscad"
 }
