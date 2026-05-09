@@ -1,3 +1,10 @@
+# [1.3.0-alpha.4](https://github.com/el-j/omni-cad/compare/v1.3.0-alpha.3...v1.3.0-alpha.4) (2026-05-09)
+
+
+### Bug Fixes
+
+* **docs:** serve stable root site and keep beta/alpha channels beside it ([0380fc2](https://github.com/el-j/omni-cad/commit/0380fc22caf978c3cae4d93320b93a12f803bb2f))
+
 # [1.3.0-alpha.3](https://github.com/el-j/omni-cad/compare/v1.3.0-alpha.2...v1.3.0-alpha.3) (2026-05-09)
 
 
