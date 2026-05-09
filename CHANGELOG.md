@@ -1,3 +1,10 @@
+# [1.4.0-beta.3](https://github.com/el-j/omni-cad/compare/v1.4.0-beta.2...v1.4.0-beta.3) (2026-05-09)
+
+
+### Bug Fixes
+
+* update workflow to use Ubuntu 22.04 and improve system dependency installation ([6926df2](https://github.com/el-j/omni-cad/commit/6926df293ce46fd43cfc571b87639ec20489c289))
+
 # [1.4.0-beta.2](https://github.com/el-j/omni-cad/compare/v1.4.0-beta.1...v1.4.0-beta.2) (2026-05-09)
 
 
