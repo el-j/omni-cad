@@ -100,7 +100,8 @@
     "test:coverage": "c8 --check-coverage --lines 90 --branches 70 --functions 55 --statements 90 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
     "pretest:e2e": "pnpm --filter @omni-cad/shared-types run build && tsc --project tsconfig.json",
     "test:e2e": "playwright test",
-    "package": "pnpm run compile && vsce package --no-dependencies"
+    "package": "pnpm run compile && vsce package --no-dependencies",
+    "publish:vsce": "vsce publish --no-dependencies"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
