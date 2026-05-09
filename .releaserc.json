@@ -1,10 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/semantic-release.json",
   "branches": [
-    "main",
-    { "name": "develop", "channel": "develop", "prerelease": "dev" },
-    { "name": "feature/*", "prerelease": true },
-    { "name": "fix/*", "prerelease": true }
+    { "name": "main", "channel": "prod" },
+    { "name": "develop", "channel": "beta", "prerelease": "beta" },
+    { "name": "feature/*", "channel": "alpha", "prerelease": "alpha" },
+    { "name": "fix/*", "channel": "alpha", "prerelease": "alpha" }
   ],
   "plugins": [
     "@semantic-release/commit-analyzer",
