@@ -10,8 +10,6 @@ test-results/**
 .gitignore
 .vscodeignore
 esbuild.js
-tsconfig.json
-.releaserc.json
 demo.ts
 demo.py
 demo.scad

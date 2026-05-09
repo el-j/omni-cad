@@ -96,7 +96,7 @@ omni-cad/
 ├── package.json               # Root workspace scripts
 ├── pnpm-workspace.yaml
 ├── turbo.json
-└── .releaserc.json            # Semantic-release configuration
+└── .releaserc.js              # Semantic-release configuration
 ```
 
 ---
