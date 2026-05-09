@@ -54,16 +54,27 @@ export async function openCommandPalette(
   window: import('@playwright/test').Page,
   modifierKey: string,
 ): Promise<import('@playwright/test').Locator> {
-  await window.keyboard.press('F1');
-  await window.waitForTimeout(500);
-
-  const palette = window.locator('.quick-input-filter input');
-  if (!(await palette.isVisible({ timeout: 2000 }).catch(() => false))) {
-    await window.keyboard.press(`${modifierKey}+Shift+P`);
-    await window.waitForTimeout(500);
+  // Try F1 first, then keyboard combo if needed
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt === 0) {
+      await window.keyboard.press('F1');
+    } else if (attempt === 1) {
+      await window.keyboard.press(`${modifierKey}+Shift+P`);
+    } else {
+      // Last resort: use F1 again after a longer wait
+      await window.waitForTimeout(1000);
+      await window.keyboard.press('F1');
+    }
+    
+    await window.waitForTimeout(800);
+    const palette = window.locator('.quick-input-filter input');
+    
+    if (await palette.isVisible({ timeout: 3000 }).catch(() => false)) {
+      return palette;
+    }
   }
-  await palette.waitFor({ state: 'visible', timeout: 12000 });
-  return palette;
+  
+  throw new Error('Command palette failed to open after 3 attempts');
 }
 
 export async function runCommand(
@@ -71,21 +82,41 @@ export async function runCommand(
   modifierKey: string,
   title: string,
 ): Promise<boolean> {
-  const palette = await openCommandPalette(window, modifierKey);
-  await palette.fill(`> ${title}`);
-  await window.waitForTimeout(400);
-  const entry = window
-    .locator(`.quick-input-list-entry:has-text("${title}")`)
-    .first();
-  const visible = await entry.isVisible({ timeout: 4000 }).catch(() => false);
-  if (!visible) {
-    await window.keyboard.press('Escape').catch(() => undefined);
+  let palette: import('@playwright/test').Locator;
+  try {
+    palette = await openCommandPalette(window, modifierKey);
+  } catch (e) {
+    console.warn(`Failed to open command palette: ${e.message}`);
     return false;
   }
-  await window.keyboard.press('Enter');
-  await window.waitForTimeout(1000);
-  return true;
-}
+  
+  await palette.fill(`> ${title}`);
+  await window.waitForTimeout(600);
+  
+  // Look for the command entry with retries
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const entry = window
+      .locator(`.quick-input-list-entry:has-text("${title}")`)
+      .first();
+    
+    const visible = await entry.isVisible({ timeout: 5000 }).catch(() => false);
+    if (visible) {
+      await window.keyboard.press('Enter');
+      await window.waitForTimeout(1200);
+      return true;
+    }
+    
+    if (attempt === 0) {
+      // Retry: clear and retype
+      await palette.fill('');
+      await window.waitForTimeout(300);
+      await palette.fill(`> ${title}`);
+      await window.waitForTimeout(600);
+    }
+  }
+  
+  await window.keyboard.press('Escape').catch(() => undefined);
+  return false;
 /**
  * Waits for the OmniCAD setup notification toast to appear and clicks
  * "Use Detected Paths" (or "Skip For Now" as fallback) to dismiss it.
@@ -266,11 +297,22 @@ export async function launchVSCode(
   });
 
   const window = await electronApp.firstWindow();
-  await window.waitForLoadState('domcontentloaded');
-  // In CI the extension host can keep background requests alive; don't hard-fail on networkidle.
-  await window.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => undefined);
-  // Allow extension activation and UI initialization to complete
-  await window.waitForTimeout(2000);
+  
+  // In CI (headless/xvfb-run), domcontentloaded may not fire reliably.
+  // Skip it and wait for actual VS Code UI to appear instead.
+  // Timeout after 60s in case Electron is truly stuck.
+  const uiReady = await window
+    .locator('div[class*="workbench"]')
+    .isVisible({ timeout: 60000 })
+    .catch(() => false);
+  
+  if (!uiReady) {
+    // Fallback: wait longer for networkidle as proxy for readiness
+    await window.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+  }
+  
+  // Allow extension host activation to complete
+  await window.waitForTimeout(3000);
 
   // Clean up temporary directories on close
   electronApp.on('close', () => {

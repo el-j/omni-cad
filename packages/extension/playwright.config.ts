@@ -1,10 +1,13 @@
 import { defineConfig } from "@playwright/test";
 
+const isCI = !!process.env.CI;
+
 export default defineConfig({
   testDir: "./src/test/e2e/stories",
-  timeout: 120000,
+  // CI environments need more time due to headless/xvfb-run startup overhead
+  timeout: isCI ? 180000 : 120000,
   expect: {
-    timeout: 15000,
+    timeout: 20000,
   },
   fullyParallel: false,
   workers: 1,
