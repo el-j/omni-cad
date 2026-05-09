@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
-import { MeshPayload } from '../../../types';
+import React, { useEffect, useRef } from "react";
+import * as THREE from "three";
+import { MeshPayload } from "../../../types";
 
 interface SceneProps {
   meshPayload: MeshPayload | null;
@@ -9,7 +9,12 @@ interface SceneProps {
   scale: number;
 }
 
-export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid, scale }) => {
+export const Scene: React.FC<SceneProps> = ({
+  meshPayload,
+  wireframe,
+  showGrid,
+  scale,
+}) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -22,7 +27,9 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid, 
   const spherical = useRef(new THREE.Spherical(5, Math.PI / 4, Math.PI / 4));
 
   useEffect(() => {
-    if (!mountRef.current) { return; }
+    if (!mountRef.current) {
+      return;
+    }
 
     const width = mountRef.current.clientWidth;
     const height = mountRef.current.clientHeight;
@@ -58,48 +65,60 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid, 
     animate();
 
     const onResize = () => {
-      if (!mountRef.current) { return; }
+      if (!mountRef.current) {
+        return;
+      }
       const w = mountRef.current.clientWidth;
       const h = mountRef.current.clientHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
-    window.addEventListener('resize', onResize);
+    window.addEventListener("resize", onResize);
 
     const onMouseDown = (e: MouseEvent) => {
       isDragging.current = true;
       lastMouse.current = { x: e.clientX, y: e.clientY };
     };
     const onMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) { return; }
+      if (!isDragging.current) {
+        return;
+      }
       const dx = e.clientX - lastMouse.current.x;
       const dy = e.clientY - lastMouse.current.y;
       spherical.current.theta -= dx * 0.01;
-      spherical.current.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.current.phi + dy * 0.01));
+      spherical.current.phi = Math.max(
+        0.1,
+        Math.min(Math.PI - 0.1, spherical.current.phi + dy * 0.01),
+      );
       camera.position.setFromSpherical(spherical.current);
       camera.lookAt(0, 0, 0);
       lastMouse.current = { x: e.clientX, y: e.clientY };
     };
-    const onMouseUp = () => { isDragging.current = false; };
+    const onMouseUp = () => {
+      isDragging.current = false;
+    };
     const onWheel = (e: WheelEvent) => {
-      spherical.current.radius = Math.max(1, spherical.current.radius + e.deltaY * 0.01);
+      spherical.current.radius = Math.max(
+        1,
+        spherical.current.radius + e.deltaY * 0.01,
+      );
       camera.position.setFromSpherical(spherical.current);
       camera.lookAt(0, 0, 0);
     };
 
-    renderer.domElement.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    renderer.domElement.addEventListener('wheel', onWheel, { passive: true });
+    renderer.domElement.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    renderer.domElement.addEventListener("wheel", onWheel, { passive: true });
 
     return () => {
       cancelAnimationFrame(frameRef.current);
-      renderer.domElement.removeEventListener('mousedown', onMouseDown);
-      renderer.domElement.removeEventListener('wheel', onWheel);
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+      renderer.domElement.removeEventListener("mousedown", onMouseDown);
+      renderer.domElement.removeEventListener("wheel", onWheel);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
       if (meshRef.current) {
         scene.remove(meshRef.current);
         meshRef.current.geometry.dispose();
@@ -120,7 +139,9 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid, 
   // Update mesh when payload changes
   useEffect(() => {
     const scene = sceneRef.current;
-    if (!scene) { return; }
+    if (!scene) {
+      return;
+    }
 
     if (meshRef.current) {
       scene.remove(meshRef.current);
@@ -129,12 +150,24 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid, 
       meshRef.current = null;
     }
 
-    if (!meshPayload || meshPayload.vertices.length === 0 || meshPayload.vertices.length % 3 !== 0) { return; }
+    if (
+      !meshPayload ||
+      meshPayload.vertices.length === 0 ||
+      meshPayload.vertices.length % 3 !== 0
+    ) {
+      return;
+    }
 
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(meshPayload.vertices, 3));
+    geo.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(meshPayload.vertices, 3),
+    );
     if (meshPayload.normals.length > 0) {
-      geo.setAttribute('normal', new THREE.Float32BufferAttribute(meshPayload.normals, 3));
+      geo.setAttribute(
+        "normal",
+        new THREE.Float32BufferAttribute(meshPayload.normals, 3),
+      );
     }
     if (meshPayload.indices.length > 0) {
       geo.setIndex(meshPayload.indices);
@@ -169,5 +202,5 @@ export const Scene: React.FC<SceneProps> = ({ meshPayload, wireframe, showGrid, 
     }
   }, [showGrid]);
 
-  return <div ref={mountRef} style={{ width: '100%', height: '100%' }} />;
+  return <div ref={mountRef} style={{ width: "100%", height: "100%" }} />;
 };

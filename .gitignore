@@ -9,5 +9,8 @@ CHANGELOG.md
 
 .turbo
 test-results
+.build/
 
 demo
+
+.env

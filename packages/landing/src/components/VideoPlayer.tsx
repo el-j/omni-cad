@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 
 interface VideoPlayerProps {
   src: string;
@@ -6,8 +6,15 @@ interface VideoPlayerProps {
   className?: string;
 }
 
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, label, className = '' }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  src,
+  label,
+  className = "",
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const resolvedSrc = src.startsWith("http")
+    ? src
+    : `${import.meta.env.BASE_URL}${src.replace(/^\//, "")}`;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -25,17 +32,19 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, label, className 
       }
     };
 
-    video.addEventListener('loadedmetadata', handleInitialLoad);
-    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener("loadedmetadata", handleInitialLoad);
+    video.addEventListener("timeupdate", handleTimeUpdate);
 
     return () => {
-      video.removeEventListener('loadedmetadata', handleInitialLoad);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener("loadedmetadata", handleInitialLoad);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
     };
   }, []);
 
   return (
-    <div className={`relative bg-card border border-white/10 rounded-xl overflow-hidden shadow-2xl ${className}`}>
+    <div
+      className={`relative bg-card border border-white/10 rounded-xl overflow-hidden shadow-2xl ${className}`}
+    >
       {label && (
         <span className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] uppercase tracking-widest font-bold text-blue-400 z-10">
           ● {label}
@@ -49,7 +58,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, label, className 
         playsInline
         className="w-full h-full object-cover"
       >
-        <source src={src} type="video/webm" />
+        <source src={resolvedSrc} type="video/webm" />
       </video>
     </div>
   );

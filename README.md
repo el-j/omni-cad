@@ -10,7 +10,7 @@
 [![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Extension-007ACC?logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=omni-cad.omni-cad)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
-_Write CAD models in TypeScript, Python, or OpenSCAD — see them live in 3D, export to any format._
+_Write CAD models in TypeScript, Python, or OpenSCAD — see them live in 3D, with capability-aware export from the viewer._
 
 [🌐 Landing Page](https://el-j.github.io/omni-cad/) · [📦 Latest Release](https://github.com/el-j/omni-cad/releases/latest) · [🐛 Report a Bug](https://github.com/el-j/omni-cad/issues/new?template=bug_report.yml) · [✨ Request a Feature](https://github.com/el-j/omni-cad/issues/new?template=feature_request.yml)
 
@@ -24,11 +24,11 @@ _Write CAD models in TypeScript, Python, or OpenSCAD — see them live in 3D, ex
 
 OmniCAD is a VS Code extension that acts as a **universal frontend router** for CAD engines. Instead of juggling multiple tools, you write your CAD model in the language you prefer, and OmniCAD automatically picks the right engine, compiles it, and renders the result in a live 3D viewer — all inside VS Code.
 
-| Language / File | Engine | Use Case |
-|---|---|---|
-| `.ts` / `.js` | [OpenGeometry](https://opengeometry.dev) | Experimental preview only until real runtime integration |
-| `.py` / `.fcmacro` | [FreeCAD](https://www.freecad.org/) | Full BREP solid modelling |
-| `.scad` | [OpenSCAD](https://openscad.org/) | CSG-based 3D printing models |
+| Language / File    | Engine                                   | Use Case                                                 |
+| ------------------ | ---------------------------------------- | -------------------------------------------------------- |
+| `.ts` / `.js`      | [OpenGeometry](https://opengeometry.dev) | Experimental preview only until real runtime integration |
+| `.py` / `.fcmacro` | [FreeCAD](https://www.freecad.org/)      | Full BREP solid modelling                                |
+| `.scad`            | [OpenSCAD](https://openscad.org/)        | CSG-based 3D printing models                             |
 
 ---
 
@@ -37,6 +37,7 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 - **Live 3D Viewer** — Three.js-powered WebGL viewer opens beside your editor. Save your file, see the update instantly.
 - **Engine Router** — Strategy-pattern dispatcher automatically selects the right backend for each file extension.
 - **Capability-aware Export** — Export actions are gated by the active engine's actual supported formats.
+- **Current export coverage** — OpenSCAD exports STL, and FreeCAD exports STL, STEP, and IGES.
 - **MCP Integration** — Built-in [Model Context Protocol](https://modelcontextprotocol.io) server exposes `compile_and_measure` and `export_geometry` tools to any MCP-capable AI agent.
 - **Guarded experimental runtime** — OpenGeometry is explicitly gated until a real runtime is integrated.
 - **Professional CI/CD** — Semantic versioning, automated `.vsix` releases, coverage reports, E2E tests in headless VS Code.
@@ -63,7 +64,7 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 1. **Open a supported file** — create or open any `.ts`, `.js`, `.py`, `.fcmacro`, or `.scad` file.
 2. **Open the viewer** — run `OmniCAD: Open Viewer` from the Command Palette (`Ctrl+Shift+P`).
 3. **Edit and save** — every time you save the file, OmniCAD re-compiles and updates the 3D view automatically.
-4. **Export** — click the **Export** button in the viewer toolbar and choose your format.
+4. **Export** — use the viewer toolbar to export one of the formats supported by the active engine.
 
 ### Example: OpenGeometry (TypeScript)
 
@@ -106,12 +107,12 @@ doc.recompute()
 
 All settings are under the **OmniCAD** section in VS Code Settings (`Ctrl+,`):
 
-| Setting | Default | Description |
-|---|---|---|
-| `omniCAD.freecadPath` | `FreeCADCmd` | Path to the `FreeCADCmd` executable |
-| `omniCAD.openscadPath` | `openscad` | Path to the `openscad` CLI executable |
-| `omniCAD.mcpEnabled` | `false` | Enable guarded MCP server startup |
-| `omniCAD.enableExperimentalOpenGeometry` | `false` | Enable OpenGeometry preview mode |
+| Setting                                  | Default      | Description                           |
+| ---------------------------------------- | ------------ | ------------------------------------- |
+| `omniCAD.freecadPath`                    | `FreeCADCmd` | Path to the `FreeCADCmd` executable   |
+| `omniCAD.openscadPath`                   | `openscad`   | Path to the `openscad` CLI executable |
+| `omniCAD.mcpEnabled`                     | `false`      | Enable guarded MCP server startup     |
+| `omniCAD.enableExperimentalOpenGeometry` | `false`      | Enable OpenGeometry preview mode      |
 
 ---
 
@@ -149,33 +150,32 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide.
 
 ### Prerequisites
 
-| Tool | Version | Notes |
-|---|---|---|
-| Node.js | ≥ 20 | Use [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) |
-| npm | ≥ 10 | Comes with Node.js |
-| VS Code | ≥ 1.85 | For running/debugging the extension |
-| FreeCAD | any | Optional — only needed for `.py`/`.fcmacro` |
-| OpenSCAD | any | Optional — only needed for `.scad` |
+| Tool     | Version | Notes                                                                            |
+| -------- | ------- | -------------------------------------------------------------------------------- |
+| Node.js  | ≥ 20    | Use [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) |
+| npm      | ≥ 10    | Comes with Node.js                                                               |
+| VS Code  | ≥ 1.85  | For running/debugging the extension                                              |
+| FreeCAD  | any     | Optional — only needed for `.py`/`.fcmacro`                                      |
+| OpenSCAD | any     | Optional — only needed for `.scad`                                               |
 
 ### Setup
 
 ```bash
 git clone https://github.com/el-j/omni-cad.git
 cd omni-cad
-npm install
+pnpm install
 ```
 
 ### Commands
 
 ```bash
-npm run compile        # Bundle extension + webview with esbuild
-npm run watch          # Same, but in watch mode
-npm run lint           # TypeScript type-check (no emit)
-npm test               # Run unit tests (Mocha)
-npm run test:coverage  # Run unit tests with c8 coverage report
-npm run test:e2e       # Run E2E tests in a headless VS Code instance
-npm run package        # Package a distributable .vsix
-npm run build          # compile + package in one step
+pnpm lint                                 # Run workspace lint/type-check tasks
+pnpm test                                 # Run workspace tests
+pnpm build                                # Build all workspace packages
+pnpm test:e2e                             # Run workspace E2E flow
+pnpm --filter omni-cad run compile        # Build the VS Code extension bundle
+pnpm --filter omni-cad run package        # Package the extension as a .vsix
+pnpm --filter @omni-cad/landing run dev   # Start the landing/docs app locally
 ```
 
 ### Running locally in VS Code
@@ -188,11 +188,38 @@ npm run build          # compile + package in one step
 
 ## 🧪 Testing
 
-| Suite | Command | What it tests |
-|---|---|---|
-| Unit | `npm test` | EngineRouter dispatch, adapter stubs, compile/export responses |
-| Coverage | `npm run test:coverage` | Same, with c8 line/branch/function coverage |
-| E2E | `npm run test:e2e` | Extension activation, command registration, config defaults, FreeCAD render path — runs inside a real VS Code instance via `@vscode/test-electron` |
+| Suite     | Command                                    | What it tests                                                                                                                                      |
+| --------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workspace | `pnpm test`                                | Package-level test suites orchestrated through the workspace                                                                                       |
+| Coverage  | `pnpm --filter omni-cad run test:coverage` | Extension unit coverage with c8 line/branch/function thresholds                                                                                    |
+| E2E       | `pnpm --filter omni-cad run test:e2e`      | Extension activation, command registration, config defaults, FreeCAD render path — runs inside a real VS Code instance via `@vscode/test-electron` |
+
+---
+
+## 🔢 Versioning
+
+OmniCAD uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`) with automated releases via `semantic-release`.
+
+- **`main`** → stable releases (`1.2.3`)
+- **`develop`** → integration prereleases (`1.2.4-dev.1`)
+- **`feature/*`** → feature prereleases (`1.2.4-feature-my-branch.1`)
+- **`fix/*`** → fix prereleases (`1.2.4-fix-issue-123.1`)
+
+Version bumps are determined by Conventional Commit messages:
+
+- `feat:` → minor bump
+- `fix:` / `perf:` → patch bump
+- `BREAKING CHANGE:` or `feat!:` / `fix!:` → major bump
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Publish to VS Code Marketplace
+- [ ] Add macOS and Windows E2E jobs
+- [ ] Add export pipeline tests for STEP/STL/IGES/glTF
+- [ ] Add configurable render quality/performance presets
+- [ ] Add first-party engine adapter templates for contributors
 
 ---
 

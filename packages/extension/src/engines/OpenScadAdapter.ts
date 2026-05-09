@@ -1,7 +1,7 @@
-import * as cp from 'child_process';
-import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
+import * as cp from "child_process";
+import * as path from "path";
+import * as os from "os";
+import * as fs from "fs";
 import {
   ICadEngine,
   CompileResponse,
@@ -9,44 +9,67 @@ import {
   EngineExecutionOptions,
   MeshPayload,
   ExportFormat,
-} from '../types';
+} from "../types";
 
+/**
+ * OpenSCAD adapter for mesh-first CSG workflows.
+ */
 export class OpenScadAdapter implements ICadEngine {
-  id = 'openscad';
-  supportedExtensions = ['.scad'];
+  id = "openscad";
+  supportedExtensions = [".scad"];
   capabilities = {
-    supportedExportFormats: ['STL'] as ExportFormat[],
+    supportedExportFormats: ["STL"] as ExportFormat[],
     supportsBrepMetadata: true,
     renderable: true,
   };
   private openscadPath: string;
 
-  constructor(openscadPath = 'openscad') {
+  constructor(openscadPath = "openscad") {
     this.openscadPath = openscadPath;
   }
 
-  async compile(code: string, _options?: EngineExecutionOptions): Promise<CompileResponse> {
+  /** Compiles OpenSCAD source into an STL-derived mesh payload for rendering. */
+  async compile(
+    code: string,
+    _options?: EngineExecutionOptions,
+  ): Promise<CompileResponse> {
     const start = Date.now();
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omnicad-openscad-'));
-    const tmpInput = path.join(tmpDir, 'model.scad');
-    const tmpOutput = path.join(tmpDir, 'model.stl');
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "omnicad-openscad-"));
+    const tmpInput = path.join(tmpDir, "model.scad");
+    const tmpOutput = path.join(tmpDir, "model.stl");
     try {
-      fs.writeFileSync(tmpInput, code, 'utf8');
+      fs.writeFileSync(tmpInput, code, "utf8");
       await this._runOpenScad(tmpInput, tmpOutput);
       const mesh = this._parseStl(tmpOutput);
-      return { success: true, meshes: [mesh], computeTimeMs: Date.now() - start };
+      return {
+        success: true,
+        meshes: [mesh],
+        computeTimeMs: Date.now() - start,
+      };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, meshes: [], errors: [msg], computeTimeMs: Date.now() - start };
+      return {
+        success: false,
+        meshes: [],
+        errors: [msg],
+        computeTimeMs: Date.now() - start,
+      };
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   }
 
-  async getBrepMetadata(code: string, options?: EngineExecutionOptions): Promise<BrepMetadata> {
+  /** Derives coarse geometric metadata from STL mesh bounds and topology counts. */
+  async getBrepMetadata(
+    code: string,
+    options?: EngineExecutionOptions,
+  ): Promise<BrepMetadata> {
     const result = await this.compile(code, options);
     if (!result.success || !result.meshes?.length) {
-      throw new Error((!result.success ? result.errors.join('\n') : undefined) ?? 'Failed to compile OpenSCAD model');
+      throw new Error(
+        (!result.success ? result.errors.join("\n") : undefined) ??
+          "Failed to compile OpenSCAD model",
+      );
     }
     const bounds = this._calculateBounds(result.meshes[0].vertices);
     return {
@@ -60,21 +83,24 @@ export class OpenScadAdapter implements ICadEngine {
     };
   }
 
+  /** Exports OpenSCAD code to STL bytes. */
   async export(
     code: string,
     format: ExportFormat,
-    options?: EngineExecutionOptions
+    options?: EngineExecutionOptions,
   ): Promise<Buffer> {
     void options;
-    if (format !== 'STL') {
+    if (format !== "STL") {
       throw new Error(`OpenSCAD export for ${format} is not implemented yet`);
     }
 
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omnicad-openscad-export-'));
-    const tmpInput = path.join(tmpDir, 'model.scad');
-    const tmpOutput = path.join(tmpDir, 'model.stl');
+    const tmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "omnicad-openscad-export-"),
+    );
+    const tmpInput = path.join(tmpDir, "model.scad");
+    const tmpOutput = path.join(tmpDir, "model.stl");
     try {
-      fs.writeFileSync(tmpInput, code, 'utf8');
+      fs.writeFileSync(tmpInput, code, "utf8");
       await this._runOpenScad(tmpInput, tmpOutput);
       return fs.readFileSync(tmpOutput);
     } finally {
@@ -86,21 +112,25 @@ export class OpenScadAdapter implements ICadEngine {
 
   private _runOpenScad(inputPath: string, outputPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const proc = cp.spawn(this.openscadPath, ['-o', outputPath, inputPath], {
+      const proc = cp.spawn(this.openscadPath, ["-o", outputPath, inputPath], {
         timeout: 60000,
       });
-      let stderr = '';
-      let stdout = '';
-      proc.stdout.on('data', (d: Buffer) => { stdout += d.toString(); });
-      proc.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
-      proc.on('close', (code: number | null) => {
+      let stderr = "";
+      let stdout = "";
+      proc.stdout.on("data", (d: Buffer) => {
+        stdout += d.toString();
+      });
+      proc.stderr.on("data", (d: Buffer) => {
+        stderr += d.toString();
+      });
+      proc.on("close", (code: number | null) => {
         if (code === 0) {
           resolve();
         } else {
           reject(new Error(`openscad exited ${code}: ${stderr || stdout}`));
         }
       });
-      proc.on('error', reject);
+      proc.on("error", reject);
     });
   }
 
@@ -110,7 +140,7 @@ export class OpenScadAdapter implements ICadEngine {
     if (binaryMesh) {
       return binaryMesh;
     }
-    return this._parseAsciiStl(buffer.toString('utf8'));
+    return this._parseAsciiStl(buffer.toString("utf8"));
   }
 
   private _parseBinaryStl(buffer: Buffer): MeshPayload | null {
@@ -139,7 +169,7 @@ export class OpenScadAdapter implements ICadEngine {
         vertices.push(
           buffer.readFloatLE(vertexOffset),
           buffer.readFloatLE(vertexOffset + 4),
-          buffer.readFloatLE(vertexOffset + 8)
+          buffer.readFloatLE(vertexOffset + 8),
         );
         normals.push(...normal);
         indices.push(index * 3 + vertexIndex);
@@ -150,7 +180,8 @@ export class OpenScadAdapter implements ICadEngine {
   }
 
   private _parseAsciiStl(text: string): MeshPayload {
-    const facetRegex = /facet\s+normal\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+outer\s+loop\s+vertex\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+vertex\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+vertex\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+endloop\s+endfacet/gi;
+    const facetRegex =
+      /facet\s+normal\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+outer\s+loop\s+vertex\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+vertex\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+vertex\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+endloop\s+endfacet/gi;
     const vertices: number[] = [];
     const normals: number[] = [];
     const indices: number[] = [];
@@ -170,7 +201,7 @@ export class OpenScadAdapter implements ICadEngine {
     }
 
     if (!indices.length) {
-      throw new Error('OpenSCAD export did not contain any STL triangles');
+      throw new Error("OpenSCAD export did not contain any STL triangles");
     }
 
     return { vertices, normals, indices };
@@ -196,11 +227,16 @@ export class OpenScadAdapter implements ICadEngine {
     }
 
     if (
-      !Number.isFinite(bounds.xMin) || !Number.isFinite(bounds.xMax) ||
-      !Number.isFinite(bounds.yMin) || !Number.isFinite(bounds.yMax) ||
-      !Number.isFinite(bounds.zMin) || !Number.isFinite(bounds.zMax)
+      !Number.isFinite(bounds.xMin) ||
+      !Number.isFinite(bounds.xMax) ||
+      !Number.isFinite(bounds.yMin) ||
+      !Number.isFinite(bounds.yMax) ||
+      !Number.isFinite(bounds.zMin) ||
+      !Number.isFinite(bounds.zMax)
     ) {
-      throw new Error('OpenSCAD mesh bounds could not be computed from the exported geometry');
+      throw new Error(
+        "OpenSCAD mesh bounds could not be computed from the exported geometry",
+      );
     }
 
     return bounds;

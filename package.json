@@ -2,12 +2,13 @@
   "name": "omni-cad-monorepo",
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build && pnpm --filter omni-cad run package && node scripts/copy-vsix-to-root.mjs",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:agents": "node scripts/validate-agent-workflow.mjs && node scripts/validate-capability-claims.mjs",
     "test:e2e": "turbo run test:e2e || true && cd packages/extension && npx ts-node scripts/finalize-docs.ts",
     "dev": "turbo run dev",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,html,css}\"",
@@ -16,9 +17,14 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",
     "@vscode/test-electron": "^2.5.2",
-    "husky": "^9.0.11",
-    "prettier": "^3.3.0",
-    "turbo": "^2.0.0"
+    "husky": "^9.1.7",
+    "prettier": "^3.8.3",
+    "turbo": "^2.9.10"
   },
-  "packageManager": "pnpm@10.33.2"
+  "workspaces": [
+    "packages/extension",
+    "packages/shared-types",
+    "packages/landing"
+  ],
+  "packageManager": "pnpm@11.0.8"
 }
