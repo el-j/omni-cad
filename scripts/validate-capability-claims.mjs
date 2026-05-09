@@ -39,6 +39,9 @@ assert.ok(
   !/Setup AI Bridge|Show MCP Status/.test(mcpStory),
   'MCP setup story must not depend on non-contributed command palette entries.'
 );
-assert.match(mcpStory, /OmniCAD: Open Viewer/);
+assert.ok(
+  /OmniCAD: Open Viewer/.test(mcpStory) || /openOmniCadViewer\s*\(/.test(mcpStory),
+  'MCP setup story must exercise the contributed OmniCAD viewer command directly or through openOmniCadViewer helper.'
+);
 
 console.log('Capability claim validation passed.');
