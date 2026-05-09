@@ -1,3 +1,11 @@
+# [1.4.0-beta.2](https://github.com/el-j/omni-cad/compare/v1.4.0-beta.1...v1.4.0-beta.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* remove version specification for pnpm setup ([dff8357](https://github.com/el-j/omni-cad/commit/dff8357b3186d4e123bbdf66f679287dc773b3fa))
+* update formatting and improve code readability in updateCheck.ts ([2e146d9](https://github.com/el-j/omni-cad/commit/2e146d939997dd753121b677aadcc7175d11534d))
+
 # [1.4.0-beta.1](https://github.com/el-j/omni-cad/compare/v1.3.0...v1.4.0-beta.1) (2026-05-09)
 
 
