@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-05-10T07:38:15.969Z",
+  "defaultTarget": "channels/prod/",
+  "targets": [
+    {
+      "id": "beta",
+      "label": "beta",
+      "kind": "channel",
+      "path": "channels/beta/",
+      "version": "v1.4.1-beta.2",
+      "updatedAt": "2026-05-10T07:38:15.928Z"
+    },
+    {
+      "id": "v1.4.1-beta.2",
+      "label": "v1.4.1-beta.2",
+      "kind": "version",
+      "path": "versions/v1.4.1-beta.2/",
+      "version": null,
+      "updatedAt": "2026-05-10T07:38:15.876Z"
+    }
+  ]
+}
