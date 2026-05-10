@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/omni-cad/versions/v1.4.1/sw.js', { scope: '/omni-cad/versions/v1.4.1/' })})}
