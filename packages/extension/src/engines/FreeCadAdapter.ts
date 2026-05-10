@@ -190,6 +190,7 @@ export class FreeCadAdapter implements ICadEngine {
       `EXPORT_PATH = r${JSON.stringify(exportPath)}`,
       `EXPORT_FORMAT = ${JSON.stringify(format)}`,
       "",
+      "# Guard ShapeColor writes so headless FreeCAD runs do not fail when ViewObject is unavailable.",
       "def _omnicad_safe_set_shape_color(target, color):",
       "    try:",
       '        view_object = getattr(target, "ViewObject", None)',
@@ -400,10 +401,14 @@ export class FreeCadAdapter implements ICadEngine {
       return null;
     }
     const maxChannel = Math.max(...channels);
-    const normalizedChannels =
-      maxChannel > 1
-        ? channels.map((channel) => channel / 255)
-        : [...channels];
+    if (maxChannel > 1 && !channels.every((channel) => Number.isInteger(channel))) {
+      return null;
+    }
+    const useByteRange =
+      maxChannel > 1 && channels.every((channel) => Number.isInteger(channel));
+    const normalizedChannels = useByteRange
+      ? channels.map((channel) => channel / 255)
+      : [...channels];
     if (normalizedChannels.some((channel) => channel < 0)) {
       return null;
     }

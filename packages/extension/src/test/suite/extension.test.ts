@@ -193,6 +193,20 @@ suite("OmniCAD Extension Tests", () => {
       assert.deepStrictEqual(color, [0.2, 0.4, 0.6]);
     });
 
+    test("ignores ambiguous mixed-unit ShapeColor tuples", () => {
+      const extractColor = (
+        adapter as unknown as {
+          _extractPrimaryShapeColor: (
+            code: string,
+          ) => [number, number, number] | null;
+        }
+      )._extractPrimaryShapeColor.bind(adapter);
+      const color = extractColor(
+        "obj.ViewObject.ShapeColor = (0.5, 2, 0.3)",
+      );
+      assert.strictEqual(color, null);
+    });
+
     test("builds runner script with guarded ShapeColor assignment transform", () => {
       const buildRunnerScript = (
         adapter as unknown as {
