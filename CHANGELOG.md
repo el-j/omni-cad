@@ -1,3 +1,10 @@
+## [1.4.1-beta.2](https://github.com/el-j/omni-cad/compare/v1.4.1-beta.1...v1.4.1-beta.2) (2026-05-10)
+
+
+### Bug Fixes
+
+* **pages:** persist full site snapshot and restore stable root on release deploy ([5d70219](https://github.com/el-j/omni-cad/commit/5d70219d5e4f63101627eba6b3b300952e588fe9))
+
 ## [1.4.1-beta.1](https://github.com/el-j/omni-cad/compare/v1.4.0...v1.4.1-beta.1) (2026-05-09)
 
 
