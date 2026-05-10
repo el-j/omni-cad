@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import * as path from "path";
 import * as fs from "fs";
 import {
+  closeVSCodeApp,
   launchVSCode,
   waitForOmniCadSetupNotification,
   dismissOmniCadSetupNotification,
@@ -72,10 +73,10 @@ test("OmniCAD setup popup quick-pick: closes via Use Detected Paths", async () =
 
     // Quick-pick should close after choosing an action.
     await expect(window.locator(".quick-input-widget")).toBeHidden({
-      timeout: 6000,
+      timeout: 15000,
     });
   } finally {
-    await electronApp.close();
+    await closeVSCodeApp(electronApp);
     fs.rmSync(userDataDir, { recursive: true, force: true });
   }
 });

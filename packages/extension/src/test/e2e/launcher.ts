@@ -1,4 +1,5 @@
 import { _electron as electron } from "@playwright/test";
+import type { ElectronApplication } from "@playwright/test";
 import { downloadAndUnzipVSCode } from "@vscode/test-electron";
 import * as path from "path";
 import * as fs from "fs";
@@ -8,6 +9,7 @@ const isMac = process.platform === "darwin";
 const modifier = isMac ? "Meta" : "Control";
 const FIRST_WINDOW_TIMEOUT_MS = 60000;
 const RESTART_SETTLE_TIME_MS = 1200;
+const CLOSE_TIMEOUT_MS = 10000;
 
 async function dismissOnboardingOverlay(
   window: import("@playwright/test").Page,
@@ -307,7 +309,9 @@ export async function launchVSCode(
       "--user-data-dir=" + userDataDir,
       ...(testFile ? [testFile] : []),
     ],
-    recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } },
+    ...(process.env.CI
+      ? {}
+      : { recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }),
   });
 
   const window = (await Promise.race([
@@ -411,4 +415,29 @@ export async function launchVSCode(
   await window.waitForTimeout(1000);
 
   return { electronApp, userDataDir, window, modifier };
+}
+
+export async function closeVSCodeApp(
+  electronApp: ElectronApplication,
+): Promise<void> {
+  const closed = await Promise.race([
+    electronApp
+      .close()
+      .then(() => true)
+      .catch(() => false),
+    new Promise<boolean>((resolve) =>
+      setTimeout(() => resolve(false), CLOSE_TIMEOUT_MS),
+    ),
+  ]);
+
+  if (closed) return;
+
+  console.warn(
+    `closeVSCodeApp: electronApp.close() timed out after ${CLOSE_TIMEOUT_MS} ms; killing process`,
+  );
+
+  const proc = electronApp.process();
+  if (proc && !proc.killed) {
+    proc.kill("SIGKILL");
+  }
 }

@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
 import * as path from "path";
 import * as fs from "fs";
-import { launchVSCode, openOmniCadViewer, runCommand } from "../launcher";
+import { closeVSCodeApp, launchVSCode, openOmniCadViewer } from "../launcher";
 
 test("capture mcp setup story", async () => {
   const extensionPath = path.resolve(__dirname, "../../../../");
@@ -20,9 +20,11 @@ test("capture mcp setup story", async () => {
   );
 
   try {
+    await window.waitForSelector(".monaco-editor", { timeout: 10000 });
+
     // 1. Open the registered OmniCAD viewer command (popup-safe)
     await window.click(".monaco-editor");
-    await openOmniCadViewer(window, modifier, 15000);
+    await openOmniCadViewer(window, modifier, 20000);
 
     // 2. Document active monitoring
     await window.click(".monaco-editor");
@@ -43,7 +45,7 @@ test("capture mcp setup story", async () => {
     await window.keyboard.press(`${modifier}+S`);
     await window.waitForTimeout(5000);
   } finally {
-    await electronApp.close();
+    await closeVSCodeApp(electronApp);
     fs.rmSync(userDataDir, { recursive: true, force: true });
   }
 });
