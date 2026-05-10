@@ -6,6 +6,8 @@ import * as os from "os";
 
 const isMac = process.platform === "darwin";
 const modifier = isMac ? "Meta" : "Control";
+const FIRST_WINDOW_TIMEOUT_MS = 60000;
+const RESTART_SETTLE_TIME_MS = 1200;
 
 async function dismissOnboardingOverlay(
   window: import("@playwright/test").Page,
@@ -303,7 +305,7 @@ export async function launchVSCode(
     new Promise<never>((_, reject) => {
       setTimeout(
         () => reject(new Error("Timed out waiting for VS Code first window")),
-        60000,
+        FIRST_WINDOW_TIMEOUT_MS,
       );
     }),
   ])) as import("@playwright/test").Page;
@@ -375,7 +377,7 @@ export async function launchVSCode(
     if (await restartBtn.isVisible({ timeout: 1000 })) {
       await restartBtn.click();
       // Keep this bounded and defer activation checks to per-test helpers.
-      await window.waitForTimeout(1200);
+      await window.waitForTimeout(RESTART_SETTLE_TIME_MS);
     }
   } catch (e) {}
 
