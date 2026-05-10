@@ -193,6 +193,29 @@ suite("OmniCAD Extension Tests", () => {
       assert.deepStrictEqual(color, [0.2, 0.4, 0.6]);
     });
 
+    test("builds runner script with guarded ShapeColor assignment transform", () => {
+      const buildRunnerScript = (
+        adapter as unknown as {
+          _buildRunnerScript: (
+            sourcePath: string,
+            code: string,
+            exportPath: string,
+            format: ExportFormat,
+          ) => string;
+        }
+      )._buildRunnerScript.bind(adapter);
+      const runner = buildRunnerScript(
+        "/tmp/model.py",
+        "obj.ViewObject.ShapeColor = (0.2, 0.3, 0.4)",
+        "/tmp/model.stl",
+        "STL",
+      );
+      assert.match(runner, /class _OmniCadShapeColorGuard/);
+      assert.match(runner, /def _omnicad_safe_set_shape_color/);
+      assert.match(runner, /ast\.parse/);
+      assert.match(runner, /_omnicad_safe_set_shape_color/);
+    });
+
     test("compile returns failure when FreeCAD is not installed", async () => {
       const result = await adapter.compile("import FreeCAD");
       assert.strictEqual(result.success, false);
