@@ -428,7 +428,7 @@ export class FreeCadAdapter implements ICadEngine {
     color: [number, number, number],
   ): number[] {
     const colors: number[] = [];
-    for (let index = 0; index < vertexCount; index++) {
+    for (let vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++) {
       colors.push(color[0], color[1], color[2]);
     }
     return colors;

@@ -178,7 +178,7 @@ export const Scene: React.FC<SceneProps> = ({
     if (hasVertexColors) {
       geo.setAttribute(
         "color",
-        new THREE.Float32BufferAttribute(meshPayload.colors!, 3),
+        new THREE.Float32BufferAttribute(meshPayload.colors, 3),
       );
     }
     if (!meshPayload.normals.length) {
