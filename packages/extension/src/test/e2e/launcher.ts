@@ -287,6 +287,16 @@ export async function launchVSCode(
       "--extensions-dir=" + extensionsDir,
       "--no-sandbox",
       "--disable-gpu-sandbox",
+      // Disable hardware GPU so Electron/Chromium falls back to the software
+      // rasteriser (SwiftShader/Mesa) in headless CI environments.  Without
+      // this flag, GPU compositor initialisation silently hangs when no real
+      // GPU is available (e.g. GitHub-hosted runners with xvfb), which
+      // prevents Monaco from ever rendering and causes every test to consume
+      // its full timeout budget.
+      "--disable-gpu",
+      // Prevent Chromium from using /dev/shm, which is limited (64 MB) in
+      // Docker-like CI environments and can cause renderer crashes.
+      "--disable-dev-shm-usage",
       "--disable-updates",
       "--disable-telemetry",
       "--disable-workspace-trust",
@@ -308,20 +318,25 @@ export async function launchVSCode(
         FIRST_WINDOW_TIMEOUT_MS,
       );
     }),
-  ])) as import("@playwright/test").Page;
+  ]).catch(async (err) => {
+    // Ensure the Electron process is cleaned up before propagating.
+    await electronApp.close().catch(() => undefined);
+    throw err;
+  })) as import("@playwright/test").Page;
 
   // In CI (headless/xvfb-run), domcontentloaded may not fire reliably.
-  // Skip it and wait for actual VS Code UI to appear instead.
-  // Timeout after 60s in case Electron is truly stuck.
+  // Wait for the workbench to be visible; 30 s is plenty — if it hasn't
+  // appeared by then the GPU software-render fallback is still stuck and
+  // we should fail fast rather than burning the full test timeout.
   const uiReady = await window
     .locator('div[class*="workbench"]')
-    .isVisible({ timeout: 60000 })
+    .isVisible({ timeout: 30000 })
     .catch(() => false);
 
   if (!uiReady) {
-    // Fallback: wait longer for networkidle as proxy for readiness
+    // Fallback: wait for networkidle as a proxy for readiness
     await window
-      .waitForLoadState("networkidle", { timeout: 30000 })
+      .waitForLoadState("networkidle", { timeout: 15000 })
       .catch(() => undefined);
   }
 
@@ -381,7 +396,18 @@ export async function launchVSCode(
     }
   } catch (e) {}
 
-  await window.click(".monaco-editor");
+  // Focus the editor so that keyboard shortcuts work in subsequent tests.
+  // Use an explicit 5 s timeout so that if Monaco is still loading the click
+  // fails fast rather than inheriting the full remaining test-timeout budget.
+  const clickOk = await window
+    .click(".monaco-editor", { timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!clickOk) {
+    console.warn(
+      "launchVSCode: .monaco-editor not ready after 5 s — editor focus skipped",
+    );
+  }
   await window.waitForTimeout(1000);
 
   return { electronApp, userDataDir, window, modifier };

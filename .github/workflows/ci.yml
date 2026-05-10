@@ -141,8 +141,22 @@ jobs:
       - name: Cache VS Code test downloads
         uses: actions/cache@v4
         with:
-          path: ~/.vscode-test
+          # VS Code is downloaded by @vscode/test-electron into the package's
+          # local .vscode-test dir, not ~/.vscode-test.  Caching the correct
+          # path avoids a 200 MB re-download on every CI run.
+          path: packages/extension/.vscode-test
           key: vscode-test-${{ runner.os }}-stable
 
       - name: Run extension E2E
         run: xvfb-run -a pnpm --filter omni-cad run test:e2e
+        env:
+          # Force Mesa software OpenGL so WebGL works without a physical GPU.
+          LIBGL_ALWAYS_SOFTWARE: "1"
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: packages/extension/test-results/
+          retention-days: 7
