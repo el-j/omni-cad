@@ -1,4 +1,4 @@
-# [1.5.0](https://github.com/el-j/omni-cad/compare/v1.4.1...v1.5.0) (2026-05-10)
+# [1.5.0-beta.1](https://github.com/el-j/omni-cad/compare/v1.4.1...v1.5.0-beta.1) (2026-05-10)
 
 
 ### Features
