@@ -1,3 +1,10 @@
+# [1.5.0-beta.1](https://github.com/el-j/omni-cad/compare/v1.4.1...v1.5.0-beta.1) (2026-05-10)
+
+
+### Features
+
+* **landing:** replace docs roadmap with plugin delivery milestones ([72942e8](https://github.com/el-j/omni-cad/commit/72942e8d9c5ad4037caba7daed9f9a357529b6e4))
+
 ## [1.4.1](https://github.com/el-j/omni-cad/compare/v1.4.0...v1.4.1) (2026-05-10)
 
 
