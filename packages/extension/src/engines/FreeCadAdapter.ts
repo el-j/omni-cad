@@ -400,19 +400,20 @@ export class FreeCadAdapter implements ICadEngine {
     ) {
       return null;
     }
-    const maxChannel = Math.max(...channels);
-    if (maxChannel > 1 && !channels.every((channel) => Number.isInteger(channel))) {
+    const allUnitRange = channels.every(
+      (channel) => channel >= 0 && channel <= 1,
+    );
+    const allByteRange = channels.every(
+      (channel) =>
+        channel >= 0 && channel <= 255 && Number.isInteger(channel),
+    );
+    if (!allUnitRange && !allByteRange) {
       return null;
     }
-    const useByteRange =
-      maxChannel > 1 && channels.every((channel) => Number.isInteger(channel));
-    const normalizedChannels = useByteRange
+    const normalizedChannels = allByteRange
       ? channels.map((channel) => channel / 255)
       : [...channels];
-    if (normalizedChannels.some((channel) => channel < 0)) {
-      return null;
-    }
-    return normalizedChannels.map((channel) => Math.min(channel, 1)) as [
+    return normalizedChannels as [
       number,
       number,
       number,
