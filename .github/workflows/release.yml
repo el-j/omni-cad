@@ -417,7 +417,7 @@ jobs:
 
       - name: Publish to VS Code Marketplace
         if: env.VSCE_PAT != ''
-        run: pnpm --filter omni-cad run publish:vsce -- --packagePath "${{ github.workspace }}/${{ steps.vsix.outputs.path }}" -p "$VSCE_PAT"
+        run: pnpm --filter omni-cad exec vsce publish --no-dependencies --packagePath "${{ steps.vsix.outputs.path }}" -p "$VSCE_PAT"
 
       - name: Skip VS Code Marketplace publish
         if: env.VSCE_PAT == ''
