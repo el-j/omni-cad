@@ -13,8 +13,8 @@ module.exports = {
   branches: [
     { name: 'main', channel: 'prod' },
     { name: 'develop', channel: 'beta', prerelease: 'beta' },
-    { name: 'feature/*', channel: 'alpha', prerelease: 'alpha' },
-    { name: 'fix/*', channel: 'alpha', prerelease: 'alpha' },
+    { name: 'feature/*', channel: 'alpha', prerelease: 'feature' },
+    { name: 'fix/*', channel: 'alpha', prerelease: 'fix' },
   ],
   plugins: [
     '@semantic-release/commit-analyzer',

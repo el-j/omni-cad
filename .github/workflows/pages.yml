@@ -35,7 +35,7 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -126,6 +126,18 @@ jobs:
           node scripts/docs/apply-retention.mjs \
             --site .pages-site \
             --keep-prerelease "${{ steps.mode.outputs.keep_prerelease }}"
+
+      - name: Ensure nojekyll marker
+        run: touch .pages-site/.nojekyll
+
+      - name: Persist site snapshot to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: .pages-site
+          force_orphan: false
+          keep_files: false
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
