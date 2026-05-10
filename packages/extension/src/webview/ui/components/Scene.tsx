@@ -172,12 +172,22 @@ export const Scene: React.FC<SceneProps> = ({
     if (meshPayload.indices.length > 0) {
       geo.setIndex(meshPayload.indices);
     }
+    const hasVertexColors =
+      Array.isArray(meshPayload.colors) &&
+      meshPayload.colors.length === meshPayload.vertices.length;
+    if (hasVertexColors) {
+      geo.setAttribute(
+        "color",
+        new THREE.Float32BufferAttribute(meshPayload.colors!, 3),
+      );
+    }
     if (!meshPayload.normals.length) {
       geo.computeVertexNormals();
     }
 
     const mat = new THREE.MeshStandardMaterial({
-      color: 0x4fc3f7,
+      color: hasVertexColors ? 0xffffff : 0x4fc3f7,
+      vertexColors: hasVertexColors,
       side: THREE.DoubleSide,
     });
     const mesh = new THREE.Mesh(geo, mat);

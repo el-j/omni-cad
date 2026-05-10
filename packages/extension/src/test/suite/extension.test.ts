@@ -175,6 +175,24 @@ suite("OmniCAD Extension Tests", () => {
   suite("FreeCadAdapter", () => {
     const adapter = new FreeCadAdapter("nonexistent_freecad_cmd");
 
+    test("extracts primary ShapeColor tuple from script source", () => {
+      const extractColor = (
+        adapter as unknown as {
+          _extractPrimaryShapeColor: (
+            code: string,
+          ) => [number, number, number] | null;
+        }
+      )._extractPrimaryShapeColor.bind(adapter);
+      const color = extractColor(
+        [
+          'doc = App.newDocument("Smoke")',
+          'base = doc.addObject("Part::Feature", "Base")',
+          "base.ViewObject.ShapeColor = (0.2, 0.4, 0.6)",
+        ].join("\n"),
+      );
+      assert.deepStrictEqual(color, [0.2, 0.4, 0.6]);
+    });
+
     test("compile returns failure when FreeCAD is not installed", async () => {
       const result = await adapter.compile("import FreeCAD");
       assert.strictEqual(result.success, false);
@@ -209,6 +227,38 @@ suite("OmniCAD Extension Tests", () => {
       assert.ok(
         result.meshes![0].indices.length > 0,
         "mesh should contain indices",
+      );
+    });
+
+    test("compile tolerates ShapeColor assignment in headless FreeCAD and returns mesh colors", async function () {
+      if (!fs.existsSync(freecadExecutable)) {
+        this.skip();
+      }
+
+      const workingAdapter = new FreeCadAdapter(freecadExecutable);
+      const result = await workingAdapter.compile(
+        [
+          "import FreeCAD as App",
+          "import Part",
+          'doc = App.newDocument("Smoke")',
+          'box = doc.addObject("Part::Feature", "Box")',
+          "box.Shape = Part.makeBox(1, 2, 3)",
+          "box.ViewObject.ShapeColor = (0.2, 0.3, 0.4)",
+        ].join("\n"),
+      );
+
+      assert.strictEqual(
+        result.success,
+        true,
+        !result.success ? result.errors.join("\n") : undefined,
+      );
+      assert.ok(result.meshes.length > 0, "expected at least one mesh");
+      assert.ok(result.meshes[0].vertices.length > 0, "expected mesh vertices");
+      assert.ok(Array.isArray(result.meshes[0].colors), "expected mesh colors");
+      assert.strictEqual(
+        result.meshes[0].colors?.length,
+        result.meshes[0].vertices.length,
+        "expected one RGB tuple per vertex",
       );
     });
 

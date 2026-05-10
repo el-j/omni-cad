@@ -47,6 +47,13 @@ export class FreeCadAdapter implements ICadEngine {
       }
       await this._exportWithFreeCad(sourcePath, code, exportPath, "STL");
       const mesh = this._parseStl(exportPath);
+      const shapeColor = this._extractPrimaryShapeColor(code);
+      if (shapeColor) {
+        mesh.colors = this._buildVertexColors(
+          mesh.vertices.length / 3,
+          shapeColor,
+        );
+      }
       return {
         success: true,
         meshes: [mesh],
@@ -183,6 +190,48 @@ export class FreeCadAdapter implements ICadEngine {
       `EXPORT_PATH = r${JSON.stringify(exportPath)}`,
       `EXPORT_FORMAT = ${JSON.stringify(format)}`,
       "",
+      "class _OmniCadViewObjectProxy:",
+      "    def __init__(self):",
+      '        object.__setattr__(self, "_values", {})',
+      "    def __getattr__(self, name):",
+      '        values = object.__getattribute__(self, "_values")',
+      "        if name in values:",
+      "            return values[name]",
+      "        raise AttributeError(name)",
+      "    def __setattr__(self, name, value):",
+      '        object.__getattribute__(self, "_values")[name] = value',
+      "",
+      "class _OmniCadDocumentObjectProxy:",
+      "    def __init__(self, target):",
+      '        object.__setattr__(self, "_target", target)',
+      '        object.__setattr__(self, "_view_proxy", _OmniCadViewObjectProxy())',
+      "    @property",
+      "    def ViewObject(self):",
+      '        target = object.__getattribute__(self, "_target")',
+      '        view_object = getattr(target, "ViewObject", None)',
+      "        if view_object is not None:",
+      "            return view_object",
+      '        return object.__getattribute__(self, "_view_proxy")',
+      "    def __getattr__(self, name):",
+      '        return getattr(object.__getattribute__(self, "_target"), name)',
+      "    def __setattr__(self, name, value):",
+      '        setattr(object.__getattribute__(self, "_target"), name, value)',
+      "",
+      "def patch_document_add_object():",
+      '    document_type = getattr(App, "Document", None)',
+      "    if document_type is None:",
+      "        return",
+      '    original_add_object = getattr(document_type, "addObject", None)',
+      "    if original_add_object is None:",
+      "        return",
+      '    if getattr(original_add_object, "_omnicad_viewobject_patch", False):',
+      "        return",
+      "    def patched_add_object(self, *args, **kwargs):",
+      "        created = original_add_object(self, *args, **kwargs)",
+      "        return _OmniCadDocumentObjectProxy(created)",
+      '    patched_add_object._omnicad_viewobject_patch = True',
+      "    document_type.addObject = patched_add_object",
+      "",
       "def add_search_paths(source_path):",
       "    current = os.path.dirname(os.path.abspath(source_path))",
       "    visited = set()",
@@ -204,6 +253,7 @@ export class FreeCadAdapter implements ICadEngine {
       '    exec(compile(inline_code, source_path, "exec"), namespace, namespace)',
       "",
       "try:",
+      "    patch_document_add_object()",
       "    execute_source(SOURCE_PATH, INLINE_CODE)",
       "    docs = list(App.listDocuments().values())",
       "    for doc in docs:",
@@ -339,6 +389,49 @@ export class FreeCadAdapter implements ICadEngine {
     }
 
     return { vertices, normals, indices };
+  }
+
+  private _extractPrimaryShapeColor(code: string): [number, number, number] | null {
+    const shapeColorPattern =
+      /(?:^|\s)[A-Za-z_][A-Za-z0-9_]*\.ViewObject\.ShapeColor\s*=\s*\(([^)]*)\)/m;
+    const match = shapeColorPattern.exec(code);
+    if (!match?.[1]) {
+      return null;
+    }
+    const channels = match[1]
+      .split(",")
+      .map((raw) => Number(raw.trim()))
+      .slice(0, 3);
+    if (
+      channels.length !== 3 ||
+      channels.some((channel) => !Number.isFinite(channel))
+    ) {
+      return null;
+    }
+    const maxChannel = Math.max(...channels);
+    const normalizedChannels =
+      maxChannel > 1
+        ? channels.map((channel) => channel / 255)
+        : [...channels];
+    if (normalizedChannels.some((channel) => channel < 0)) {
+      return null;
+    }
+    return normalizedChannels.map((channel) => Math.min(channel, 1)) as [
+      number,
+      number,
+      number,
+    ];
+  }
+
+  private _buildVertexColors(
+    vertexCount: number,
+    color: [number, number, number],
+  ): number[] {
+    const colors: number[] = [];
+    for (let index = 0; index < vertexCount; index++) {
+      colors.push(color[0], color[1], color[2]);
+    }
+    return colors;
   }
 
   private _calculateBounds(vertices: number[]) {
