@@ -298,7 +298,15 @@ export async function launchVSCode(
     recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } },
   });
 
-  const window = await electronApp.firstWindow();
+  const window = (await Promise.race([
+    electronApp.firstWindow(),
+    new Promise<never>((_, reject) => {
+      setTimeout(
+        () => reject(new Error("Timed out waiting for VS Code first window")),
+        60000,
+      );
+    }),
+  ])) as import("@playwright/test").Page;
 
   // In CI (headless/xvfb-run), domcontentloaded may not fire reliably.
   // Skip it and wait for actual VS Code UI to appear instead.
@@ -366,26 +374,8 @@ export async function launchVSCode(
     const restartBtn = window.locator('button:has-text("Restart Extensions")');
     if (await restartBtn.isVisible({ timeout: 1000 })) {
       await restartBtn.click();
-
-      // Wait for extension host to signal readiness via command availability
-      let activated = false;
-      for (let i = 0; i < 20; i++) {
-        await window.bringToFront();
-
-        const opened = await runCommand(
-          window,
-          modifier,
-          "OmniCAD: Open Viewer",
-        ).catch(() => false);
-        if (opened) {
-          activated = true;
-          await window.keyboard.press("Escape");
-          break;
-        }
-        await window.waitForTimeout(100);
-      }
-      if (!activated)
-        console.warn("Extension activation signal not detected after 20s");
+      // Keep this bounded and defer activation checks to per-test helpers.
+      await window.waitForTimeout(1200);
     }
   } catch (e) {}
 
