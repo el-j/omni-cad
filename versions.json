@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-10T08:01:24.852Z",
+  "generatedAt": "2026-05-10T08:02:32.121Z",
   "defaultTarget": "channels/prod/",
   "targets": [
     {
@@ -15,8 +15,8 @@
       "label": "prod",
       "kind": "channel",
       "path": "channels/prod/",
-      "version": "v1.4.1",
-      "updatedAt": "2026-05-10T07:48:27.232Z"
+      "version": "v1.5.0",
+      "updatedAt": "2026-05-10T08:02:32.054Z"
     },
     {
       "id": "v1.4.1",
@@ -33,6 +33,14 @@
       "path": "versions/v1.4.1-beta.2/",
       "version": null,
       "updatedAt": "2026-05-10T07:38:15.876Z"
+    },
+    {
+      "id": "v1.5.0",
+      "label": "v1.5.0",
+      "kind": "version",
+      "path": "versions/v1.5.0/",
+      "version": null,
+      "updatedAt": "2026-05-10T08:02:31.932Z"
     }
   ]
 }
