@@ -231,7 +231,7 @@ jobs:
       group: pages
       cancel-in-progress: false
     permissions:
-      contents: read
+      contents: write
       pages: write
       id-token: write
     environment:
@@ -300,6 +300,21 @@ jobs:
             git worktree remove /tmp/gh-pages --force
           fi
 
+      - name: Build stable root fallback
+        if: github.ref_name == 'main'
+        run: pnpm --filter @omni-cad/landing run build
+        env:
+          VITE_BASE_PATH: /omni-cad/
+          VITE_DOCS_VERSION: main
+          VITE_DOCS_CHANNEL: stable
+
+      - name: Sync stable root fallback
+        if: github.ref_name == 'main'
+        run: |
+          node scripts/docs/sync-root-site.mjs \
+            --site .pages-site \
+            --dist packages/landing/dist
+
       - name: Merge release version snapshot
         run: |
           node scripts/docs/merge-versioned-site.mjs \
@@ -339,6 +354,18 @@ jobs:
           node scripts/docs/apply-retention.mjs \
             --site .pages-site \
             --keep-prerelease 12
+
+      - name: Ensure nojekyll marker
+        run: touch .pages-site/.nojekyll
+
+      - name: Persist site snapshot to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: .pages-site
+          force_orphan: false
+          keep_files: false
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
