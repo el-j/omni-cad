@@ -12,6 +12,7 @@ import { FreeCadAdapter } from "../../../engines/FreeCadAdapter";
 import { OpenScadAdapter } from "../../../engines/OpenScadAdapter";
 import { CadQueryAdapter } from "../../../engines/CadQueryAdapter";
 import { Build123dAdapter } from "../../../engines/Build123dAdapter";
+import { OpenGeometryAdapter } from "../../../engines/OpenGeometryAdapter";
 
 const EXTENSION_ID = "omni-cad.omni-cad";
 const freecadExecutable =
@@ -294,6 +295,43 @@ suite("OmniCAD E2E Tests", function () {
 
       assert.ok(fs.existsSync(outPath), "expected STEP file to be created");
       assert.ok(fs.statSync(outPath).size > 0, "expected STEP file size > 0");
+    } finally {
+      fs.rmSync(outDir, { recursive: true, force: true });
+    }
+  });
+
+  test("OpenGeometry export writes a non-empty STL artifact when experimental mode is enabled", async function () {
+    this.timeout(30000);
+
+    const adapter = new OpenGeometryAdapter(true);
+    const outDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "omnicad-e2e-opengeometry-export-"),
+    );
+    const outPath = path.join(outDir, "artifact.stl");
+    try {
+      const payload = await adapter.export(
+        [
+          "export const model = () => {",
+          "  return box(2, 3, 4);",
+          "};",
+        ].join("\n"),
+        "STL",
+      );
+      fs.writeFileSync(outPath, payload);
+
+      assert.ok(
+        fs.existsSync(outPath),
+        "expected OpenGeometry STL file to be created",
+      );
+      assert.ok(
+        fs.statSync(outPath).size > 0,
+        "expected OpenGeometry STL file size > 0",
+      );
+      assert.match(
+        payload.toString("utf8"),
+        /solid omnicad_opengeometry/,
+        "expected OpenGeometry STL header",
+      );
     } finally {
       fs.rmSync(outDir, { recursive: true, force: true });
     }

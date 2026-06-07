@@ -148,28 +148,29 @@ suite("OmniCAD Extension Tests", () => {
       );
     });
 
-    test("export returns unsupported contract details until a real runtime exists", async () => {
+    test("export rejects when experimental runtime is disabled", async () => {
       await assert.rejects(
         () => adapter.export("// test", "STL"),
-        (err: unknown) => {
-          assert.ok(err instanceof Error);
-          const withCode = err as Error & {
-            code?: string;
-            adapter?: string;
-            format?: string;
-            hint?: string;
-          };
-          assert.strictEqual(withCode.code, "OMNICAD_UNSUPPORTED_EXPORT");
-          assert.strictEqual(withCode.adapter, "opengeometry");
-          assert.strictEqual(withCode.format, "STL");
-          assert.match(
-            withCode.message,
-            /does not currently support STL export/,
-          );
-          assert.match(withCode.hint ?? "", /FreeCAD|OpenSCAD/);
-          return true;
-        },
+        /experimental and disabled by default/,
       );
+    });
+
+    test("export returns STL bytes when experimental runtime is enabled", async () => {
+      const experimentalAdapter = new OpenGeometryAdapter(true);
+      const payload = await experimentalAdapter.export(
+        [
+          "export const model = () => {",
+          "  return box(4, 6, 8);",
+          "};",
+        ].join("\n"),
+        "STL",
+      );
+
+      const text = payload.toString("utf8");
+      assert.match(text, /^solid omnicad_opengeometry/m);
+      assert.match(text, /facet normal/);
+      assert.match(text, /vertex/);
+      assert.match(text, /endsolid omnicad_opengeometry/);
     });
   });
 

@@ -101,7 +101,11 @@ jobs:
 
   e2e:
     name: Extension E2E
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     permissions:
       contents: read
 
@@ -120,6 +124,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install system dependencies for Electron
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
@@ -145,4 +150,9 @@ jobs:
           key: vscode-test-${{ runner.os }}-stable
 
       - name: Run extension E2E
+        if: runner.os == 'Linux'
         run: xvfb-run -a pnpm --filter omni-cad run test:e2e
+
+      - name: Run extension E2E
+        if: runner.os != 'Linux'
+        run: pnpm --filter omni-cad run test:e2e

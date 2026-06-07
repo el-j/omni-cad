@@ -37,7 +37,7 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 - **Live 3D Viewer** — Three.js-powered WebGL viewer opens beside your editor. Save your file, see the update instantly.
 - **Engine Router** — Strategy-pattern dispatcher automatically selects the right backend for each file extension.
 - **Capability-aware Export** — Export actions are gated by the active engine's actual supported formats.
-- **Current export coverage** — OpenSCAD exports STL, and FreeCAD exports STL, STEP, and IGES.
+- **Current export coverage** — OpenSCAD exports STL, FreeCAD exports STL/STEP/IGES, and experimental OpenGeometry mode exports STL.
 - **MCP Integration** — Built-in [Model Context Protocol](https://modelcontextprotocol.io) server exposes `compile_and_measure` and `export_geometry` tools to any MCP-capable AI agent.
 - **Guarded experimental runtime** — OpenGeometry is explicitly gated until a real runtime is integrated.
 - **Professional CI/CD** — Semantic versioning, automated `.vsix` releases, coverage reports, E2E tests in headless VS Code.
@@ -216,7 +216,7 @@ Version bumps are determined by Conventional Commit messages:
 ## 🗺️ Roadmap
 
 - [ ] Publish to VS Code Marketplace
-- [ ] Add macOS and Windows E2E jobs
+- [x] Add macOS and Windows E2E jobs
 - [ ] Add export pipeline tests for STEP/STL/IGES/glTF
 - [ ] Add configurable render quality/performance presets
 - [ ] Add first-party engine adapter templates for contributors

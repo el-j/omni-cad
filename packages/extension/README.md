@@ -16,7 +16,7 @@ It routes your active model file to the correct backend, compiles it on save, an
 
 - FreeCAD: STL, STEP, IGES
 - OpenSCAD: STL
-- OpenGeometry: not yet implemented
+- OpenGeometry: STL (experimental mode only)
 
 The export buttons only enable formats that the active engine currently supports.
 
