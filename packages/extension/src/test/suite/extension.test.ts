@@ -20,6 +20,7 @@ import {
   resolveExportRequest,
 } from "../../webview/exportFlow";
 import { ExportFormat, ICadEngine } from "../../types";
+import { runStartupFirstOpenSetup } from "../../extension";
 
 const freecadExecutable =
   "/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd";
@@ -669,6 +670,87 @@ suite("OmniCAD Extension Tests", () => {
         EngineRouter.isConfiguredPathStale("FreeCADCmd"),
         false,
       );
+    });
+  });
+
+  suite("Startup setup gate", () => {
+    function fakeConfig(values: Record<string, unknown>) {
+      return {
+        get<T>(section: string, defaultValue: T): T {
+          return (Object.prototype.hasOwnProperty.call(values, section)
+            ? values[section]
+            : defaultValue) as T;
+        },
+      };
+    }
+
+    function fakeState(initialValue = false) {
+      let storedValue = initialValue;
+      return {
+        get<T>(_key: string, defaultValue: T): T {
+          return (storedValue as T) ?? defaultValue;
+        },
+        async update(_key: string, value: unknown) {
+          storedValue = Boolean(value);
+        },
+        read() {
+          return storedValue;
+        },
+      };
+    }
+
+    test("skips startup setup after the first completed run", async () => {
+      const state = fakeState(true);
+      let promptCalls = 0;
+
+      const changed = await runStartupFirstOpenSetup(
+        state,
+        fakeConfig({ autoSetupOnStartup: true }),
+        async () => {
+          promptCalls += 1;
+          return true;
+        },
+      );
+
+      assert.strictEqual(changed, false);
+      assert.strictEqual(promptCalls, 0);
+      assert.strictEqual(state.read(), true);
+    });
+
+    test("marks startup setup complete after the initial prompt flow", async () => {
+      const state = fakeState(false);
+      let promptCalls = 0;
+
+      const changed = await runStartupFirstOpenSetup(
+        state,
+        fakeConfig({ autoSetupOnStartup: true }),
+        async () => {
+          promptCalls += 1;
+          return true;
+        },
+      );
+
+      assert.strictEqual(changed, true);
+      assert.strictEqual(promptCalls, 1);
+      assert.strictEqual(state.read(), true);
+    });
+
+    test("does not mark startup setup when auto setup is disabled", async () => {
+      const state = fakeState(false);
+      let promptCalls = 0;
+
+      const changed = await runStartupFirstOpenSetup(
+        state,
+        fakeConfig({ autoSetupOnStartup: false }),
+        async () => {
+          promptCalls += 1;
+          return true;
+        },
+      );
+
+      assert.strictEqual(changed, false);
+      assert.strictEqual(promptCalls, 0);
+      assert.strictEqual(state.read(), false);
     });
   });
 

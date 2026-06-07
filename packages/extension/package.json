@@ -79,7 +79,7 @@
         "omniCAD.autoSetupOnStartup": {
           "type": "boolean",
           "default": true,
-          "description": "Run first-open CAD engine discovery and setup prompts during activation."
+          "description": "Run the initial CAD engine discovery and setup prompts once during first activation."
         },
         "omniCAD.renderScale": {
           "type": "number",
