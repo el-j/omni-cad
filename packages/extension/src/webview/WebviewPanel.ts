@@ -62,7 +62,11 @@ export class WebviewPanel {
     // Listen for config changes
     vscode.workspace.onDidChangeConfiguration(
       (e) => {
-        if (e.affectsConfiguration("omniCAD.renderScale")) {
+        if (
+          e.affectsConfiguration("omniCAD.renderScale") ||
+          e.affectsConfiguration("omniCAD.worldUpAxis") ||
+          e.affectsConfiguration("omniCAD.viewerUnitLabel")
+        ) {
           this._syncConfig();
         }
       },
@@ -74,9 +78,12 @@ export class WebviewPanel {
   private _syncConfig(): void {
     const config = vscode.workspace.getConfiguration("omniCAD");
     const renderScale = config.get<number>("renderScale") ?? 1.0;
+    const worldUpAxis = config.get<"Y" | "Z">("worldUpAxis") ?? "Z";
+    const unitLabel =
+      config.get<"mm" | "cm" | "inch">("viewerUnitLabel") ?? "mm";
     this.sendMessage({
       type: "updateConfig",
-      payload: { renderScale },
+      payload: { renderScale, worldUpAxis, unitLabel },
     });
   }
 

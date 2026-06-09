@@ -1,0 +1,24 @@
+{
+  "validateSourceOpenGeometryInvalid": {
+    "apiVersion": "1.1.0",
+    "success": true,
+    "tool": "validate_source",
+    "data": {
+      "engine": "opengeometry",
+      "valid": false,
+      "issues": [
+        "OpenGeometry source must export `const model = () => ...`."
+      ],
+      "warnings": [],
+      "maxCodeSize": 250000
+    }
+  },
+  "unsupportedFormatError": {
+    "apiVersion": "1.1.0",
+    "success": false,
+    "error": {
+      "code": "UNSUPPORTED_FORMAT",
+      "message": "fake does not support STEP export"
+    }
+  }
+}

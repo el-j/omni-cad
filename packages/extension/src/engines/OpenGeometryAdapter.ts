@@ -4,14 +4,8 @@ import {
   BrepMetadata,
   EngineExecutionOptions,
   ExportFormat,
+  MeshPayload,
 } from "../types";
-
-type UnsupportedOpenGeometryExportError = Error & {
-  code: "OMNICAD_UNSUPPORTED_EXPORT";
-  adapter: "opengeometry";
-  format: string;
-  hint?: string;
-};
 
 /**
  * Experimental TypeScript/JavaScript adapter used for preview-only mesh compilation.
@@ -23,7 +17,7 @@ export class OpenGeometryAdapter implements ICadEngine {
 
   constructor(private readonly experimentalEnabled = false) {
     this.capabilities = {
-      supportedExportFormats: [],
+      supportedExportFormats: experimentalEnabled ? (["STL"] as ExportFormat[]) : [],
       supportsBrepMetadata: false,
       renderable: experimentalEnabled,
       experimental: true,
@@ -134,22 +128,32 @@ export class OpenGeometryAdapter implements ICadEngine {
     };
   }
 
-  /**
-   * OpenGeometry export is intentionally unavailable until a production export backend exists.
-   */
+  /** Exports generated meshes as STL when the experimental runtime is enabled. */
   async export(
     _code: string,
     _format: ExportFormat,
     _options?: EngineExecutionOptions,
   ): Promise<Buffer> {
-    const err = new Error(
-      `OpenGeometry does not currently support ${_format} export.`,
-    ) as UnsupportedOpenGeometryExportError;
-    err.code = "OMNICAD_UNSUPPORTED_EXPORT";
-    err.adapter = "opengeometry";
-    err.format = _format;
-    err.hint = "Use FreeCAD for STEP/IGES/STL or OpenSCAD for STL export.";
-    throw err;
+    if (!this.experimentalEnabled) {
+      throw new Error(
+        "OpenGeometry export is experimental and disabled by default.",
+      );
+    }
+
+    if (_format !== "STL") {
+      throw new Error(`OpenGeometry export for ${_format} is not implemented yet`);
+    }
+
+    const compileResult = await this.compile(_code, _options);
+    if (!compileResult.success || !compileResult.meshes.length) {
+      throw new Error(
+        (!compileResult.success ? compileResult.errors.join("\n") : undefined) ??
+          "OpenGeometry compile did not produce mesh geometry for STL export.",
+      );
+    }
+
+    const stl = this._toAsciiStl(compileResult.meshes);
+    return Buffer.from(stl, "utf8");
   }
 
   dispose(): void {}
@@ -382,5 +386,63 @@ export class OpenGeometryAdapter implements ICadEngine {
     }
 
     return bounds;
+  }
+
+  private _toAsciiStl(meshes: MeshPayload[]): string {
+    const facets: string[] = ["solid omnicad_opengeometry"];
+
+    for (const mesh of meshes) {
+      if (mesh.indices.length > 0) {
+        for (let i = 0; i + 2 < mesh.indices.length; i += 3) {
+          const a = mesh.indices[i] * 3;
+          const b = mesh.indices[i + 1] * 3;
+          const c = mesh.indices[i + 2] * 3;
+          this._pushFacet(facets, mesh.vertices, a, b, c);
+        }
+        continue;
+      }
+
+      for (let i = 0; i + 8 < mesh.vertices.length; i += 9) {
+        this._pushFacet(facets, mesh.vertices, i, i + 3, i + 6);
+      }
+    }
+
+    if (facets.length === 1) {
+      throw new Error("OpenGeometry generated no triangle facets for STL export.");
+    }
+
+    facets.push("endsolid omnicad_opengeometry");
+    return `${facets.join("\n")}\n`;
+  }
+
+  private _pushFacet(
+    out: string[],
+    vertices: number[],
+    a: number,
+    b: number,
+    c: number,
+  ): void {
+    const ax = vertices[a];
+    const ay = vertices[a + 1];
+    const az = vertices[a + 2];
+    const bx = vertices[b];
+    const by = vertices[b + 1];
+    const bz = vertices[b + 2];
+    const cx = vertices[c];
+    const cy = vertices[c + 1];
+    const cz = vertices[c + 2];
+
+    const nx = (by - ay) * (cz - az) - (bz - az) * (cy - ay);
+    const ny = (bz - az) * (cx - ax) - (bx - ax) * (cz - az);
+    const nz = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+    const length = Math.hypot(nx, ny, nz) || 1;
+
+    out.push(`facet normal ${nx / length} ${ny / length} ${nz / length}`);
+    out.push("  outer loop");
+    out.push(`    vertex ${ax} ${ay} ${az}`);
+    out.push(`    vertex ${bx} ${by} ${bz}`);
+    out.push(`    vertex ${cx} ${cy} ${cz}`);
+    out.push("  endloop");
+    out.push("endfacet");
   }
 }
