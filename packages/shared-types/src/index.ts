@@ -112,6 +112,8 @@ export type ExtensionToWebviewMessage =
       type: "updateConfig";
       payload: {
         renderScale: number;
+        worldUpAxis: "Y" | "Z";
+        unitLabel: "mm" | "cm" | "inch";
       };
     };
 

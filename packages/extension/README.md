@@ -10,7 +10,7 @@ It routes your active model file to the correct backend, compiles it on save, an
 - OpenSCAD models (`.scad`) with live STL-based preview
 - Experimental OpenGeometry preview for `.ts` and `.js` when explicitly enabled
 - In-editor 3D viewer with grid, wireframe, and scale controls
-- Guarded MCP entrypoint for automation scenarios
+- Guarded MCP entrypoint for automation scenarios with agent-first diagnostics tools
 
 ## Current export support
 
@@ -43,6 +43,57 @@ You can override both paths in the OmniCAD extension settings.
 - `omniCAD.mcpEnabled`: enables the guarded MCP server entrypoint
 - `omniCAD.enableExperimentalOpenGeometry`: enables experimental OpenGeometry preview
 - `omniCAD.renderScale`: viewer scale factor
+- `omniCAD.worldUpAxis`: viewer world up-axis (`Y` or `Z`)
+- `omniCAD.viewerUnitLabel`: viewer unit label (`mm`, `cm`, `inch`)
+
+## MCP usage
+
+Start the stdio MCP server from this package:
+
+```bash
+pnpm run mcp:stdio
+```
+
+Environment overrides:
+
+- `OMNICAD_FREECAD_PATH`: FreeCAD executable path override
+- `OMNICAD_OPENSCAD_PATH`: OpenSCAD executable path override
+- `OMNICAD_ENABLE_EXPERIMENTAL_OPENGEOMETRY=1`: enable OpenGeometry runtime tools
+- `OMNICAD_MCP_TIMEOUT_MS`: per-tool timeout in milliseconds (default `120000`)
+
+Available tools:
+
+- `compile_and_measure`
+- `export_geometry`
+- `get_engine_capabilities`
+- `validate_source`
+- `explain_compile_failure`
+
+Each tool response is a JSON envelope in the text payload:
+
+```json
+{
+	"apiVersion": "1.1.0",
+	"success": true,
+	"tool": "get_engine_capabilities",
+	"data": {
+		"engines": []
+	}
+}
+```
+
+If a tool fails, the server returns:
+
+```json
+{
+	"apiVersion": "1.1.0",
+	"success": false,
+	"error": {
+		"code": "VALIDATION_FAILED",
+		"message": "..."
+	}
+}
+```
 
 ## Project links
 

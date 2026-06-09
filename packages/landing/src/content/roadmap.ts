@@ -76,7 +76,7 @@ export const roadmapItems: RoadmapItem[] = [
   {
     id: "viewer-scale-settings",
     title: "Improved viewer scale and unit display",
-    status: "in-progress",
+    status: "done",
     owner: "Viewer / UI",
     target: "Q2 2026",
     doneCriteria: [

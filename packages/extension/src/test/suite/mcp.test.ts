@@ -6,8 +6,19 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { EngineRouter } from "../../engines/EngineRouter";
 import { OmniCadMcpServer } from "../../mcp/McpServer";
+import envelopeFixtures from "../fixtures/mcp-envelope-fixtures.json";
 
 const openscadExecutable = "/opt/homebrew/bin/openscad";
+
+function parseEnvelope(text: string) {
+  return JSON.parse(text) as {
+    apiVersion: string;
+    success: boolean;
+    tool?: string;
+    data?: Record<string, unknown>;
+    error?: { code: string; message: string };
+  };
+}
 
 suite("OmniCAD MCP Contracts", () => {
   test("compile_and_measure returns compile failure for disabled opengeometry runtime", async () => {
@@ -16,7 +27,10 @@ suite("OmniCAD MCP Contracts", () => {
       code: "const x = 1;",
       engine: "opengeometry",
     });
-    assert.match(result.content[0].text, /COMPILE_FAILED/);
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.apiVersion, "1.1.0");
+    assert.strictEqual(envelope.success, false);
+    assert.strictEqual(envelope.error?.code, "COMPILE_FAILED");
   });
 
   test("export_geometry validates shape", async () => {
@@ -26,7 +40,9 @@ suite("OmniCAD MCP Contracts", () => {
       engine: "openscad",
       format: "STL",
     });
-    assert.match(result.content[0].text, /VALIDATION_FAILED/);
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.success, false);
+    assert.strictEqual(envelope.error?.code, "VALIDATION_FAILED");
   });
 
   test("compile_and_measure handles empty mesh responses for renderable adapters", async () => {
@@ -53,11 +69,10 @@ suite("OmniCAD MCP Contracts", () => {
       code: "x",
       engine: "freecad",
     });
-    assert.match(result.content[0].text, /COMPILE_FAILED/);
-    assert.match(
-      result.content[0].text,
-      /Engine returned success but produced no meshes/,
-    );
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.success, false);
+    assert.strictEqual(envelope.error?.code, "COMPILE_FAILED");
+    assert.match(envelope.error?.message ?? "", /produced no meshes/);
   });
 
   test("compile_and_measure handles non-finite bounds", async () => {
@@ -97,11 +112,10 @@ suite("OmniCAD MCP Contracts", () => {
       code: "x",
       engine: "freecad",
     });
-    assert.match(result.content[0].text, /RUNTIME_ERROR/);
-    assert.match(
-      result.content[0].text,
-      /Engine returned non-finite bounding box values/,
-    );
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.success, false);
+    assert.strictEqual(envelope.error?.code, "RUNTIME_ERROR");
+    assert.match(envelope.error?.message ?? "", /non-finite bounding box values/);
   });
 
   test("export_geometry rejects formats unsupported by the engine", async () => {
@@ -131,8 +145,10 @@ suite("OmniCAD MCP Contracts", () => {
       engine: "freecad",
       format: "STEP",
     });
-    assert.match(result.content[0].text, /UNSUPPORTED_FORMAT/);
-    assert.match(result.content[0].text, /fake does not support STEP export/);
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.success, false);
+    assert.strictEqual(envelope.error?.code, "UNSUPPORTED_FORMAT");
+    assert.match(envelope.error?.message ?? "", /fake does not support STEP export/);
   });
 
   test("export_geometry succeeds for OpenSCAD STL when the binary is available", async function () {
@@ -149,8 +165,88 @@ suite("OmniCAD MCP Contracts", () => {
       engine: "openscad",
       format: "STL",
     });
-    assert.match(result.content[0].text, /"success":true/);
-    assert.match(result.content[0].text, /"format":"STL"/);
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.success, true);
+    assert.strictEqual(envelope.tool, "export_geometry");
+    assert.strictEqual(envelope.data?.format, "STL");
+  });
+
+  test("get_engine_capabilities returns capabilities envelope", async () => {
+    const server = new OmniCadMcpServer(new EngineRouter());
+    const result = await server.getEngineCapabilities();
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.success, true);
+    assert.strictEqual(envelope.tool, "get_engine_capabilities");
+    assert.ok(Array.isArray(envelope.data?.engines));
+  });
+
+  test("validate_source reports invalid OpenGeometry source", async () => {
+    const server = new OmniCadMcpServer(new EngineRouter());
+    const result = await server.validateSource({
+      code: "const bad = 1;",
+      engine: "opengeometry",
+    });
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.success, true);
+    assert.strictEqual(envelope.tool, "validate_source");
+    assert.strictEqual(envelope.data?.valid, false);
+  });
+
+  test("explain_compile_failure returns remediation hints", async () => {
+    const server = new OmniCadMcpServer(new EngineRouter());
+    const result = await server.explainCompileFailure({
+      code: "const x = 1;",
+      engine: "opengeometry",
+    });
+    const envelope = parseEnvelope(result.content[0].text);
+    assert.strictEqual(envelope.success, true);
+    assert.strictEqual(envelope.tool, "explain_compile_failure");
+    assert.strictEqual(envelope.data?.failed, true);
+    assert.ok(Array.isArray(envelope.data?.hints));
+  });
+
+  test("envelope compatibility fixtures remain stable", async () => {
+    const server = new OmniCadMcpServer(new EngineRouter());
+
+    const validationResult = await server.validateSource({
+      code: "const bad = 1;",
+      engine: "opengeometry",
+    });
+    const validationEnvelope = parseEnvelope(validationResult.content[0].text);
+    assert.deepStrictEqual(
+      validationEnvelope,
+      envelopeFixtures.validateSourceOpenGeometryInvalid,
+    );
+
+    const fakeRouter = new EngineRouter();
+    fakeRouter.get = () => ({
+      id: "fake",
+      capabilities: {
+        supportedExportFormats: ["STL"],
+        supportsBrepMetadata: true,
+        renderable: true,
+      },
+      supportedExtensions: [".fake"],
+      compile: async () => {
+        throw new Error("Not implemented");
+      },
+      getBrepMetadata: async () => {
+        throw new Error("Not implemented");
+      },
+      export: async () => {
+        throw new Error("Not implemented");
+      },
+      dispose: () => {},
+    });
+
+    const fakeServer = new OmniCadMcpServer(fakeRouter);
+    const unsupportedResult = await fakeServer.exportGeometry({
+      code: "x",
+      engine: "freecad",
+      format: "STEP",
+    });
+    const unsupportedEnvelope = parseEnvelope(unsupportedResult.content[0].text);
+    assert.deepStrictEqual(unsupportedEnvelope, envelopeFixtures.unsupportedFormatError);
   });
 
   test("mcp entry starts without crashing", async function () {
@@ -218,6 +314,13 @@ suite("OmniCAD MCP Contracts", () => {
         tools.tools.some((tool) => tool.name === "compile_and_measure"),
       );
       assert.ok(tools.tools.some((tool) => tool.name === "export_geometry"));
+      assert.ok(
+        tools.tools.some((tool) => tool.name === "get_engine_capabilities"),
+      );
+      assert.ok(tools.tools.some((tool) => tool.name === "validate_source"));
+      assert.ok(
+        tools.tools.some((tool) => tool.name === "explain_compile_failure"),
+      );
 
       const result = await client.callTool({
         name: "compile_and_measure",
@@ -229,7 +332,9 @@ suite("OmniCAD MCP Contracts", () => {
         (item) => item.type === "text" && typeof item.text === "string",
       );
       assert.ok(textPart, "expected text tool output");
-      assert.match(textPart.text ?? "", /COMPILE_FAILED/);
+      const envelope = parseEnvelope(textPart.text ?? "{}");
+      assert.strictEqual(envelope.success, false);
+      assert.strictEqual(envelope.error?.code, "COMPILE_FAILED");
     } finally {
       await transport.close();
     }

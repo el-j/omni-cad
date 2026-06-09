@@ -7,6 +7,7 @@ interface SceneProps {
   wireframe: boolean;
   showGrid: boolean;
   scale: number;
+  worldUpAxis: "Y" | "Z";
 }
 
 export const Scene: React.FC<SceneProps> = ({
@@ -14,6 +15,7 @@ export const Scene: React.FC<SceneProps> = ({
   wireframe,
   showGrid,
   scale,
+  worldUpAxis,
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -25,6 +27,21 @@ export const Scene: React.FC<SceneProps> = ({
   const isDragging = useRef(false);
   const lastMouse = useRef({ x: 0, y: 0 });
   const spherical = useRef(new THREE.Spherical(5, Math.PI / 4, Math.PI / 4));
+
+  const applyWorldUpOrientation = (
+    camera: THREE.PerspectiveCamera,
+    radius: number,
+  ) => {
+    if (worldUpAxis === "Z") {
+      camera.up.set(0, 0, 1);
+      spherical.current = new THREE.Spherical(radius, Math.PI / 3, Math.PI / 4);
+    } else {
+      camera.up.set(0, 1, 0);
+      spherical.current = new THREE.Spherical(radius, Math.PI / 3, Math.PI / 4);
+    }
+    camera.position.setFromSpherical(spherical.current);
+    camera.lookAt(0, 0, 0);
+  };
 
   useEffect(() => {
     if (!mountRef.current) {
@@ -45,8 +62,7 @@ export const Scene: React.FC<SceneProps> = ({
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.01, 1000);
-    camera.position.setFromSpherical(spherical.current);
-    camera.lookAt(0, 0, 0);
+    applyWorldUpOrientation(camera, spherical.current.radius);
     cameraRef.current = camera;
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -129,6 +145,13 @@ export const Scene: React.FC<SceneProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (!cameraRef.current) {
+      return;
+    }
+    applyWorldUpOrientation(cameraRef.current, spherical.current.radius);
+  }, [worldUpAxis]);
+
   // Update mesh scale
   useEffect(() => {
     if (meshRef.current) {
@@ -139,6 +162,7 @@ export const Scene: React.FC<SceneProps> = ({
   // Update mesh when payload changes
   useEffect(() => {
     const scene = sceneRef.current;
+    const camera = cameraRef.current;
     if (!scene) {
       return;
     }
@@ -194,7 +218,14 @@ export const Scene: React.FC<SceneProps> = ({
     mesh.scale.set(scale, scale, scale);
     meshRef.current = mesh;
     scene.add(mesh);
-  }, [meshPayload, scale]);
+
+    if (camera) {
+      geo.computeBoundingSphere();
+      const sphere = geo.boundingSphere;
+      const radius = sphere ? Math.max(1.5, sphere.radius * scale * 2.5) : 5;
+      applyWorldUpOrientation(camera, radius);
+    }
+  }, [meshPayload, scale, worldUpAxis]);
 
   // Toggle wireframe on existing mesh without reloading geometry
   useEffect(() => {

@@ -38,8 +38,7 @@
     "onStartupFinished",
     "onLanguage:typescript",
     "onLanguage:python",
-    "onLanguage:scad",
-    "onCommand:omniCAD.openViewer"
+    "onLanguage:scad"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -85,6 +84,18 @@
           "type": "number",
           "default": 0.1,
           "description": "Global scaling factor for the 3D viewer. Useful for scaling mm models to a manageable size."
+        },
+        "omniCAD.worldUpAxis": {
+          "type": "string",
+          "enum": ["Y", "Z"],
+          "default": "Z",
+          "description": "World up-axis used by the viewer camera orientation."
+        },
+        "omniCAD.viewerUnitLabel": {
+          "type": "string",
+          "enum": ["mm", "cm", "inch"],
+          "default": "mm",
+          "description": "Unit label shown in the viewer toolbar."
         }
       }
     }
@@ -99,6 +110,7 @@
     "test": "node ./dist/test/suite/index.js",
     "test:coverage": "c8 --check-coverage --lines 90 --branches 70 --functions 55 --statements 90 --all --include=\"dist/**/*.js\" --exclude=\"dist/test/**\" --exclude=\"dist/webview/**\" --reporter=text --reporter=json-summary node ./dist/test/suite/index.js",
     "pretest:e2e": "pnpm --filter @omni-cad/shared-types run build && tsc --project tsconfig.json",
+    "test:host": "pnpm run pretest:e2e && node ./dist/test/e2e/runTests.js",
     "test:e2e": "playwright test",
     "package": "pnpm run compile && vsce package --no-dependencies",
     "publish:vsce": "vsce publish --no-dependencies"

@@ -20,10 +20,35 @@ const freecadExecutable =
 const openscadExecutable = "/opt/homebrew/bin/openscad";
 const windpowerHelixStation =
   "/Users/rex-fab-alt/Documents/code/playground/windpower-3d/src/base/helix_station.py";
+const requirePythonBrep = process.env.OMNICAD_REQUIRE_PYTHON_BREP === "1";
+
+function resolvePythonExecutable(): string | undefined {
+  const preferred = process.env.OMNICAD_PYTHON_EXECUTABLE;
+  if (preferred) {
+    return preferred;
+  }
+
+  for (const candidate of ["python3", "python"]) {
+    try {
+      cp.execFileSync(candidate, ["--version"], { stdio: "ignore" });
+      return candidate;
+    } catch {
+      // continue probing
+    }
+  }
+
+  return undefined;
+}
+
+const pythonExecutable = resolvePythonExecutable();
 
 function pythonModuleAvailable(moduleName: string): boolean {
+  if (!pythonExecutable) {
+    return false;
+  }
+
   try {
-    cp.execFileSync("python3", ["-c", `import ${moduleName}`], {
+    cp.execFileSync(pythonExecutable, ["-c", `import ${moduleName}`], {
       stdio: "ignore",
     });
     return true;
@@ -395,6 +420,11 @@ suite("OmniCAD E2E Tests", function () {
   test("CadQuery export writes a non-empty STL artifact when CadQuery is available", async function () {
     this.timeout(30000);
     if (!pythonModuleAvailable("cadquery")) {
+      if (requirePythonBrep) {
+        assert.fail(
+          `CadQuery is required but not available for ${pythonExecutable ?? "unknown python executable"}`,
+        );
+      }
       this.skip();
     }
 
@@ -426,6 +456,11 @@ suite("OmniCAD E2E Tests", function () {
   test("build123d export writes a non-empty STL artifact when build123d is available", async function () {
     this.timeout(30000);
     if (!pythonModuleAvailable("build123d")) {
+      if (requirePythonBrep) {
+        assert.fail(
+          `build123d is required but not available for ${pythonExecutable ?? "unknown python executable"}`,
+        );
+      }
       this.skip();
     }
 
