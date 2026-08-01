@@ -1,4 +1,5 @@
 import { _electron as electron } from "@playwright/test";
+import type { ElectronApplication } from "@playwright/test";
 import { downloadAndUnzipVSCode } from "@vscode/test-electron";
 import * as path from "path";
 import * as fs from "fs";
@@ -6,6 +7,9 @@ import * as os from "os";
 
 const isMac = process.platform === "darwin";
 const modifier = isMac ? "Meta" : "Control";
+const FIRST_WINDOW_TIMEOUT_MS = 60000;
+const RESTART_SETTLE_TIME_MS = 1200;
+const CLOSE_TIMEOUT_MS = 10000;
 
 async function dismissOnboardingOverlay(
   window: import("@playwright/test").Page,
@@ -228,14 +232,18 @@ export async function launchVSCode(
   videoDirName: string = "default",
   autoDismissSetupPopup = true,
   settingsOverrides: Record<string, unknown> = {},
+  reuseDirs: {
+    userDataDir?: string;
+    extensionsDir?: string;
+  } = {},
 ) {
   const vscodeExecutablePath = await downloadAndUnzipVSCode();
-  const userDataDir = fs.mkdtempSync(
-    path.join(os.tmpdir(), "vscode-test-user-"),
-  );
-  const extensionsDir = fs.mkdtempSync(
-    path.join(os.tmpdir(), "vscode-test-exts-"),
-  );
+  const userDataDir =
+    reuseDirs.userDataDir ??
+    fs.mkdtempSync(path.join(os.tmpdir(), "vscode-test-user-"));
+  const extensionsDir =
+    reuseDirs.extensionsDir ??
+    fs.mkdtempSync(path.join(os.tmpdir(), "vscode-test-exts-"));
 
   // Clean settings to force a "First Run" state that we control
   const settingsDir = path.join(userDataDir, "User");
@@ -285,6 +293,16 @@ export async function launchVSCode(
       "--extensions-dir=" + extensionsDir,
       "--no-sandbox",
       "--disable-gpu-sandbox",
+      // Disable hardware GPU so Electron/Chromium falls back to the software
+      // rasteriser (SwiftShader/Mesa) in headless CI environments.  Without
+      // this flag, GPU compositor initialisation silently hangs when no real
+      // GPU is available (e.g. GitHub-hosted runners with xvfb), which
+      // prevents Monaco from ever rendering and causes every test to consume
+      // its full timeout budget.
+      "--disable-gpu",
+      // Prevent Chromium from using /dev/shm, which is limited (64 MB) in
+      // Docker-like CI environments and can cause renderer crashes.
+      "--disable-dev-shm-usage",
       "--disable-updates",
       "--disable-telemetry",
       "--disable-workspace-trust",
@@ -295,23 +313,38 @@ export async function launchVSCode(
       "--user-data-dir=" + userDataDir,
       ...(testFile ? [testFile] : []),
     ],
-    recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } },
+    ...(process.env.CI
+      ? {}
+      : { recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }),
   });
 
-  const window = await electronApp.firstWindow();
+  const window = (await Promise.race([
+    electronApp.firstWindow(),
+    new Promise<never>((_, reject) => {
+      setTimeout(
+        () => reject(new Error("Timed out waiting for VS Code first window")),
+        FIRST_WINDOW_TIMEOUT_MS,
+      );
+    }),
+  ]).catch(async (err) => {
+    // Ensure the Electron process is cleaned up before propagating.
+    await electronApp.close().catch(() => undefined);
+    throw err;
+  })) as import("@playwright/test").Page;
 
   // In CI (headless/xvfb-run), domcontentloaded may not fire reliably.
-  // Skip it and wait for actual VS Code UI to appear instead.
-  // Timeout after 60s in case Electron is truly stuck.
+  // Wait for the workbench to be visible; 30 s is plenty — if it hasn't
+  // appeared by then the GPU software-render fallback is still stuck and
+  // we should fail fast rather than burning the full test timeout.
   const uiReady = await window
     .locator('div[class*="workbench"]')
-    .isVisible({ timeout: 60000 })
+    .isVisible({ timeout: 30000 })
     .catch(() => false);
 
   if (!uiReady) {
-    // Fallback: wait longer for networkidle as proxy for readiness
+    // Fallback: wait for networkidle as a proxy for readiness
     await window
-      .waitForLoadState("networkidle", { timeout: 30000 })
+      .waitForLoadState("networkidle", { timeout: 15000 })
       .catch(() => undefined);
   }
 
@@ -366,31 +399,49 @@ export async function launchVSCode(
     const restartBtn = window.locator('button:has-text("Restart Extensions")');
     if (await restartBtn.isVisible({ timeout: 1000 })) {
       await restartBtn.click();
-
-      // Wait for extension host to signal readiness via command availability
-      let activated = false;
-      for (let i = 0; i < 20; i++) {
-        await window.bringToFront();
-
-        const opened = await runCommand(
-          window,
-          modifier,
-          "OmniCAD: Open Viewer",
-        ).catch(() => false);
-        if (opened) {
-          activated = true;
-          await window.keyboard.press("Escape");
-          break;
-        }
-        await window.waitForTimeout(100);
-      }
-      if (!activated)
-        console.warn("Extension activation signal not detected after 20s");
+      // Keep this bounded and defer activation checks to per-test helpers.
+      await window.waitForTimeout(RESTART_SETTLE_TIME_MS);
     }
   } catch (e) {}
 
-  await window.click(".monaco-editor");
+  // Focus the editor so that keyboard shortcuts work in subsequent tests.
+  // Use an explicit 5 s timeout so that if Monaco is still loading the click
+  // fails fast rather than inheriting the full remaining test-timeout budget.
+  const clickOk = await window
+    .click(".monaco-editor", { timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!clickOk) {
+    console.warn(
+      "launchVSCode: .monaco-editor not ready after 5 s — editor focus skipped",
+    );
+  }
   await window.waitForTimeout(1000);
 
   return { electronApp, userDataDir, window, modifier };
+}
+
+export async function closeVSCodeApp(
+  electronApp: ElectronApplication,
+): Promise<void> {
+  const closed = await Promise.race([
+    electronApp
+      .close()
+      .then(() => true)
+      .catch(() => false),
+    new Promise<boolean>((resolve) =>
+      setTimeout(() => resolve(false), CLOSE_TIMEOUT_MS),
+    ),
+  ]);
+
+  if (closed) return;
+
+  console.warn(
+    `closeVSCodeApp: electronApp.close() timed out after ${CLOSE_TIMEOUT_MS} ms; killing process`,
+  );
+
+  const proc = electronApp.process();
+  if (proc && !proc.killed) {
+    proc.kill("SIGKILL");
+  }
 }

@@ -1,4 +1,6 @@
 import * as path from "path";
+import * as os from "os";
+import * as fs from "fs";
 import { runTests } from "@vscode/test-electron";
 
 async function main(): Promise<void> {
@@ -7,6 +9,8 @@ async function main(): Promise<void> {
 
   // The path to the compiled test runner module (must export `run`)
   const extensionTestsPath = path.resolve(__dirname, "./suite");
+  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "oc-vscode-user-"));
+  const extensionsDir = fs.mkdtempSync(path.join(os.tmpdir(), "oc-vscode-exts-"));
 
   await runTests({
     extensionDevelopmentPath,
@@ -20,6 +24,8 @@ async function main(): Promise<void> {
       "--disable-update-check",
       "--disable-workspace-trust-prompt",
       "--no-proxy-server",
+      `--user-data-dir=${userDataDir}`,
+      `--extensions-dir=${extensionsDir}`,
     ],
   });
 }

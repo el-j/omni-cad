@@ -12,6 +12,7 @@ import { FreeCadAdapter } from "../../../engines/FreeCadAdapter";
 import { OpenScadAdapter } from "../../../engines/OpenScadAdapter";
 import { CadQueryAdapter } from "../../../engines/CadQueryAdapter";
 import { Build123dAdapter } from "../../../engines/Build123dAdapter";
+import { OpenGeometryAdapter } from "../../../engines/OpenGeometryAdapter";
 
 const EXTENSION_ID = "omni-cad.omni-cad";
 const freecadExecutable =
@@ -19,10 +20,35 @@ const freecadExecutable =
 const openscadExecutable = "/opt/homebrew/bin/openscad";
 const windpowerHelixStation =
   "/Users/rex-fab-alt/Documents/code/playground/windpower-3d/src/base/helix_station.py";
+const requirePythonBrep = process.env.OMNICAD_REQUIRE_PYTHON_BREP === "1";
+
+function resolvePythonExecutable(): string | undefined {
+  const preferred = process.env.OMNICAD_PYTHON_EXECUTABLE;
+  if (preferred) {
+    return preferred;
+  }
+
+  for (const candidate of ["python3", "python"]) {
+    try {
+      cp.execFileSync(candidate, ["--version"], { stdio: "ignore" });
+      return candidate;
+    } catch {
+      // continue probing
+    }
+  }
+
+  return undefined;
+}
+
+const pythonExecutable = resolvePythonExecutable();
 
 function pythonModuleAvailable(moduleName: string): boolean {
+  if (!pythonExecutable) {
+    return false;
+  }
+
   try {
-    cp.execFileSync("python3", ["-c", `import ${moduleName}`], {
+    cp.execFileSync(pythonExecutable, ["-c", `import ${moduleName}`], {
       stdio: "ignore",
     });
     return true;
@@ -299,6 +325,43 @@ suite("OmniCAD E2E Tests", function () {
     }
   });
 
+  test("OpenGeometry export writes a non-empty STL artifact when experimental mode is enabled", async function () {
+    this.timeout(30000);
+
+    const adapter = new OpenGeometryAdapter(true);
+    const outDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "omnicad-e2e-opengeometry-export-"),
+    );
+    const outPath = path.join(outDir, "artifact.stl");
+    try {
+      const payload = await adapter.export(
+        [
+          "export const model = () => {",
+          "  return box(2, 3, 4);",
+          "};",
+        ].join("\n"),
+        "STL",
+      );
+      fs.writeFileSync(outPath, payload);
+
+      assert.ok(
+        fs.existsSync(outPath),
+        "expected OpenGeometry STL file to be created",
+      );
+      assert.ok(
+        fs.statSync(outPath).size > 0,
+        "expected OpenGeometry STL file size > 0",
+      );
+      assert.match(
+        payload.toString("utf8"),
+        /solid omnicad_opengeometry/,
+        "expected OpenGeometry STL header",
+      );
+    } finally {
+      fs.rmSync(outDir, { recursive: true, force: true });
+    }
+  });
+
   test("OpenSCAD export writes a non-empty STL artifact when OpenSCAD is available", async function () {
     this.timeout(30000);
     if (!fs.existsSync(openscadExecutable)) {
@@ -357,6 +420,11 @@ suite("OmniCAD E2E Tests", function () {
   test("CadQuery export writes a non-empty STL artifact when CadQuery is available", async function () {
     this.timeout(30000);
     if (!pythonModuleAvailable("cadquery")) {
+      if (requirePythonBrep) {
+        assert.fail(
+          `CadQuery is required but not available for ${pythonExecutable ?? "unknown python executable"}`,
+        );
+      }
       this.skip();
     }
 
@@ -388,6 +456,11 @@ suite("OmniCAD E2E Tests", function () {
   test("build123d export writes a non-empty STL artifact when build123d is available", async function () {
     this.timeout(30000);
     if (!pythonModuleAvailable("build123d")) {
+      if (requirePythonBrep) {
+        assert.fail(
+          `build123d is required but not available for ${pythonExecutable ?? "unknown python executable"}`,
+        );
+      }
       this.skip();
     }
 

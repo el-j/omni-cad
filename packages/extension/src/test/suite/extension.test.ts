@@ -20,6 +20,7 @@ import {
   resolveExportRequest,
 } from "../../webview/exportFlow";
 import { ExportFormat, ICadEngine } from "../../types";
+import { runStartupFirstOpenSetup } from "../../firstOpenSetup";
 
 const freecadExecutable =
   "/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd";
@@ -147,33 +148,89 @@ suite("OmniCAD Extension Tests", () => {
       );
     });
 
-    test("export returns unsupported contract details until a real runtime exists", async () => {
+    test("export rejects when experimental runtime is disabled", async () => {
       await assert.rejects(
         () => adapter.export("// test", "STL"),
-        (err: unknown) => {
-          assert.ok(err instanceof Error);
-          const withCode = err as Error & {
-            code?: string;
-            adapter?: string;
-            format?: string;
-            hint?: string;
-          };
-          assert.strictEqual(withCode.code, "OMNICAD_UNSUPPORTED_EXPORT");
-          assert.strictEqual(withCode.adapter, "opengeometry");
-          assert.strictEqual(withCode.format, "STL");
-          assert.match(
-            withCode.message,
-            /does not currently support STL export/,
-          );
-          assert.match(withCode.hint ?? "", /FreeCAD|OpenSCAD/);
-          return true;
-        },
+        /experimental and disabled by default/,
       );
+    });
+
+    test("export returns STL bytes when experimental runtime is enabled", async () => {
+      const experimentalAdapter = new OpenGeometryAdapter(true);
+      const payload = await experimentalAdapter.export(
+        [
+          "export const model = () => {",
+          "  return box(4, 6, 8);",
+          "};",
+        ].join("\n"),
+        "STL",
+      );
+
+      const text = payload.toString("utf8");
+      assert.match(text, /^solid omnicad_opengeometry/m);
+      assert.match(text, /facet normal/);
+      assert.match(text, /vertex/);
+      assert.match(text, /endsolid omnicad_opengeometry/);
     });
   });
 
   suite("FreeCadAdapter", () => {
     const adapter = new FreeCadAdapter("nonexistent_freecad_cmd");
+
+    test("extracts primary ShapeColor tuple from script source", () => {
+      const extractColor = (
+        adapter as unknown as {
+          _extractPrimaryShapeColor: (
+            code: string,
+          ) => [number, number, number] | null;
+        }
+      )._extractPrimaryShapeColor.bind(adapter);
+      const color = extractColor(
+        [
+          'doc = App.newDocument("Smoke")',
+          'base = doc.addObject("Part::Feature", "Base")',
+          "base.ViewObject.ShapeColor = (0.2, 0.4, 0.6)",
+        ].join("\n"),
+      );
+      assert.deepStrictEqual(color, [0.2, 0.4, 0.6]);
+    });
+
+    test("ignores ambiguous mixed-unit ShapeColor tuples", () => {
+      const extractColor = (
+        adapter as unknown as {
+          _extractPrimaryShapeColor: (
+            code: string,
+          ) => [number, number, number] | null;
+        }
+      )._extractPrimaryShapeColor.bind(adapter);
+      const color = extractColor(
+        "obj.ViewObject.ShapeColor = (0.5, 2, 0.3)",
+      );
+      assert.strictEqual(color, null);
+    });
+
+    test("builds runner script with guarded ShapeColor assignment transform", () => {
+      const buildRunnerScript = (
+        adapter as unknown as {
+          _buildRunnerScript: (
+            sourcePath: string,
+            code: string,
+            exportPath: string,
+            format: ExportFormat,
+          ) => string;
+        }
+      )._buildRunnerScript.bind(adapter);
+      const runner = buildRunnerScript(
+        "/tmp/model.py",
+        "obj.ViewObject.ShapeColor = (0.2, 0.3, 0.4)",
+        "/tmp/model.stl",
+        "STL",
+      );
+      assert.match(runner, /class _OmniCadShapeColorGuard/);
+      assert.match(runner, /def _omnicad_safe_set_shape_color/);
+      assert.match(runner, /ast\.parse/);
+      assert.match(runner, /_omnicad_safe_set_shape_color/);
+    });
 
     test("compile returns failure when FreeCAD is not installed", async () => {
       const result = await adapter.compile("import FreeCAD");
@@ -209,6 +266,38 @@ suite("OmniCAD Extension Tests", () => {
       assert.ok(
         result.meshes![0].indices.length > 0,
         "mesh should contain indices",
+      );
+    });
+
+    test("compile tolerates ShapeColor assignment in headless FreeCAD and returns mesh colors", async function () {
+      if (!fs.existsSync(freecadExecutable)) {
+        this.skip();
+      }
+
+      const workingAdapter = new FreeCadAdapter(freecadExecutable);
+      const result = await workingAdapter.compile(
+        [
+          "import FreeCAD as App",
+          "import Part",
+          'doc = App.newDocument("Smoke")',
+          'box = doc.addObject("Part::Feature", "Box")',
+          "box.Shape = Part.makeBox(1, 2, 3)",
+          "box.ViewObject.ShapeColor = (0.2, 0.3, 0.4)",
+        ].join("\n"),
+      );
+
+      assert.strictEqual(
+        result.success,
+        true,
+        !result.success ? result.errors.join("\n") : undefined,
+      );
+      assert.ok(result.meshes.length > 0, "expected at least one mesh");
+      assert.ok(result.meshes[0].vertices.length > 0, "expected mesh vertices");
+      assert.ok(Array.isArray(result.meshes[0].colors), "expected mesh colors");
+      assert.strictEqual(
+        result.meshes[0].colors?.length,
+        result.meshes[0].vertices.length,
+        "expected one RGB tuple per vertex",
       );
     });
 
@@ -582,6 +671,87 @@ suite("OmniCAD Extension Tests", () => {
         EngineRouter.isConfiguredPathStale("FreeCADCmd"),
         false,
       );
+    });
+  });
+
+  suite("Startup setup gate", () => {
+    function fakeConfig(values: Record<string, unknown>) {
+      return {
+        get<T>(section: string, defaultValue: T): T {
+          return (Object.prototype.hasOwnProperty.call(values, section)
+            ? values[section]
+            : defaultValue) as T;
+        },
+      };
+    }
+
+    function fakeState(initialValue = false) {
+      let storedValue = initialValue;
+      return {
+        get<T>(_key: string, defaultValue: T): T {
+          return (storedValue as T) ?? defaultValue;
+        },
+        async update(_key: string, value: unknown) {
+          storedValue = Boolean(value);
+        },
+        read() {
+          return storedValue;
+        },
+      };
+    }
+
+    test("skips startup setup after the first completed run", async () => {
+      const state = fakeState(true);
+      let promptCalls = 0;
+
+      const changed = await runStartupFirstOpenSetup(
+        state,
+        fakeConfig({ autoSetupOnStartup: true }),
+        async () => {
+          promptCalls += 1;
+          return true;
+        },
+      );
+
+      assert.strictEqual(changed, false);
+      assert.strictEqual(promptCalls, 0);
+      assert.strictEqual(state.read(), true);
+    });
+
+    test("marks startup setup complete after the initial prompt flow", async () => {
+      const state = fakeState(false);
+      let promptCalls = 0;
+
+      const changed = await runStartupFirstOpenSetup(
+        state,
+        fakeConfig({ autoSetupOnStartup: true }),
+        async () => {
+          promptCalls += 1;
+          return true;
+        },
+      );
+
+      assert.strictEqual(changed, true);
+      assert.strictEqual(promptCalls, 1);
+      assert.strictEqual(state.read(), true);
+    });
+
+    test("does not mark startup setup when auto setup is disabled", async () => {
+      const state = fakeState(false);
+      let promptCalls = 0;
+
+      const changed = await runStartupFirstOpenSetup(
+        state,
+        fakeConfig({ autoSetupOnStartup: false }),
+        async () => {
+          promptCalls += 1;
+          return true;
+        },
+      );
+
+      assert.strictEqual(changed, false);
+      assert.strictEqual(promptCalls, 0);
+      assert.strictEqual(state.read(), false);
     });
   });
 

@@ -13,6 +13,10 @@ export default defineConfig({
   workers: 1,
   reporter: "html",
   use: {
+    // Bound every page action so a single stuck click/fill cannot consume the
+    // full test-timeout budget.  15 s is generous for any real UI interaction
+    // but prevents indefinite hangs when an element never appears.
+    actionTimeout: 15000,
     trace: "on-first-retry",
     video: "on",
   },

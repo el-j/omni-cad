@@ -5,6 +5,8 @@ interface ToolbarProps {
   showGrid: boolean;
   wireframe: boolean;
   scale: number;
+  unitLabel: "mm" | "cm" | "inch";
+  worldUpAxis: "Y" | "Z";
   supportedFormats: ExportFormat[];
   engineLabel: string | null;
   onToggleGrid: () => void;
@@ -42,6 +44,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   showGrid,
   wireframe,
   scale,
+  unitLabel,
+  worldUpAxis,
   supportedFormats,
   engineLabel,
   onToggleGrid,
@@ -79,7 +83,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         cursor: "default",
       }}
     >
-      <span>Scale: {scale.toFixed(2)}</span>
+      <span>Scale: {scale.toFixed(2)} ({unitLabel})</span>
       <input
         className="scale-slider"
         type="range"
@@ -90,6 +94,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         onChange={(e) => onScaleChange(parseFloat(e.target.value))}
         style={{ width: 80, cursor: "pointer" }}
       />
+    </div>
+    <div
+      style={{
+        ...btnStyle,
+        cursor: "default",
+        padding: "4px 8px",
+      }}
+      title="Configured world up-axis"
+    >
+      Up: {worldUpAxis}
     </div>
     {exportFormats.map((format) => (
       <button

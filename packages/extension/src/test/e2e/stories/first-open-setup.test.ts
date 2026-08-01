@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
+import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import {
+  closeVSCodeApp,
   launchVSCode,
   waitForOmniCadSetupNotification,
   dismissOmniCadSetupNotification,
@@ -38,7 +40,15 @@ test("OmniCAD setup popup quick-pick: closes via Use Detected Paths", async () =
     fs.writeFileSync(dummyFile, 'print("omnicad setup popup test")\n');
   }
 
-  const { electronApp, userDataDir, window, modifier } = await launchVSCode(
+  const profileRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "omnicad-setup-profile-"),
+  );
+  const userDataDir = path.join(profileRoot, "user-data");
+  const extensionsDir = path.join(profileRoot, "extensions");
+  fs.mkdirSync(userDataDir, { recursive: true });
+  fs.mkdirSync(extensionsDir, { recursive: true });
+
+  const firstLaunch = await launchVSCode(
     extensionPath,
     dummyFile,
     "first-open",
@@ -47,9 +57,14 @@ test("OmniCAD setup popup quick-pick: closes via Use Detected Paths", async () =
       "omniCAD.freecadPath": "/tmp/omnicad-stale-freecad",
       "omniCAD.openscadPath": "/tmp/omnicad-stale-openscad",
     },
+    {
+      userDataDir,
+      extensionsDir,
+    },
   );
 
   try {
+    const { electronApp, window, modifier } = firstLaunch;
     await window
       .waitForSelector(".monaco-editor", { timeout: 10000 })
       .catch(() => undefined);
@@ -72,10 +87,41 @@ test("OmniCAD setup popup quick-pick: closes via Use Detected Paths", async () =
 
     // Quick-pick should close after choosing an action.
     await expect(window.locator(".quick-input-widget")).toBeHidden({
-      timeout: 6000,
+      timeout: 15000,
     });
-  } finally {
+
     await electronApp.close();
-    fs.rmSync(userDataDir, { recursive: true, force: true });
+
+    const secondLaunch = await launchVSCode(
+      extensionPath,
+      dummyFile,
+      "first-open-repeat",
+      false,
+      {},
+      {
+        userDataDir,
+        extensionsDir,
+      },
+    );
+
+    try {
+      await secondLaunch.window
+        .waitForSelector(".monaco-editor", { timeout: 10000 })
+        .catch(() => undefined);
+      await secondLaunch.window.waitForTimeout(2000);
+
+      const secondPrompt = await waitForOmniCadSetupNotification(
+        secondLaunch.window,
+        2000,
+      );
+      expect(secondPrompt).toBeNull();
+      await expect(secondLaunch.window.locator(".quick-input-widget")).toBeHidden({
+        timeout: 3000,
+      });
+    } finally {
+      await secondLaunch.electronApp.close();
+    }
+  } finally {
+    fs.rmSync(profileRoot, { recursive: true, force: true });
   }
 });

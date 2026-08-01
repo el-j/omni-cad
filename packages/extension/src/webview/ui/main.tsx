@@ -36,6 +36,8 @@ const App: React.FC = () => {
   const [statusBanner, setStatusBanner] = useState<StatusBanner | null>(null);
 
   const [renderScale, setRenderScale] = useState<number>(1.0);
+  const [worldUpAxis, setWorldUpAxis] = useState<"Y" | "Z">("Z");
+  const [unitLabel, setUnitLabel] = useState<"mm" | "cm" | "inch">("mm");
 
   useEffect(() => {
     if (!statusBanner || statusBanner.tone !== "success") {
@@ -81,6 +83,8 @@ const App: React.FC = () => {
           break;
         case "updateConfig":
           setRenderScale(msg.payload.renderScale);
+          setWorldUpAxis(msg.payload.worldUpAxis);
+          setUnitLabel(msg.payload.unitLabel);
           break;
         case "showError":
           setIsLoading(false);
@@ -128,6 +132,8 @@ const App: React.FC = () => {
         showGrid={showGrid}
         wireframe={wireframe}
         scale={renderScale}
+        unitLabel={unitLabel}
+        worldUpAxis={worldUpAxis}
         supportedFormats={supportedFormats}
         engineLabel={engineLabel}
         onToggleGrid={() => setShowGrid((v) => !v)}
@@ -140,6 +146,7 @@ const App: React.FC = () => {
         wireframe={wireframe}
         showGrid={showGrid}
         scale={renderScale}
+        worldUpAxis={worldUpAxis}
       />
       {isLoading && (
         <div

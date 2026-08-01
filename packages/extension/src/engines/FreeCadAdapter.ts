@@ -47,6 +47,13 @@ export class FreeCadAdapter implements ICadEngine {
       }
       await this._exportWithFreeCad(sourcePath, code, exportPath, "STL");
       const mesh = this._parseStl(exportPath);
+      const shapeColor = this._extractPrimaryShapeColor(code);
+      if (shapeColor) {
+        mesh.colors = this._buildVertexColors(
+          mesh.vertices.length / 3,
+          shapeColor,
+        );
+      }
       return {
         success: true,
         meshes: [mesh],
@@ -170,8 +177,8 @@ export class FreeCadAdapter implements ICadEngine {
     format: ExportFormat,
   ): string {
     return [
+      "import ast",
       "import os",
-      "import runpy",
       "import sys",
       "import traceback",
       "import FreeCAD as App",
@@ -182,6 +189,37 @@ export class FreeCadAdapter implements ICadEngine {
       `INLINE_CODE = ${JSON.stringify(code)}`,
       `EXPORT_PATH = r${JSON.stringify(exportPath)}`,
       `EXPORT_FORMAT = ${JSON.stringify(format)}`,
+      "",
+      "# Guard ShapeColor writes so headless FreeCAD runs do not fail when ViewObject is unavailable.",
+      "def _omnicad_safe_set_shape_color(target, color):",
+      "    try:",
+      '        view_object = getattr(target, "ViewObject", None)',
+      "        if view_object is not None:",
+      '            setattr(view_object, "ShapeColor", color)',
+      "    except Exception:",
+      "        pass",
+      "",
+      "class _OmniCadShapeColorGuard(ast.NodeTransformer):",
+      "    def visit_Assign(self, node):",
+      "        node = self.generic_visit(node)",
+      "        if len(node.targets) != 1:",
+      "            return node",
+      "        target = node.targets[0]",
+      '        if isinstance(target, ast.Attribute) and target.attr == "ShapeColor":',
+      "            view_target = target.value",
+      '            if isinstance(view_target, ast.Attribute) and view_target.attr == "ViewObject":',
+      "                return ast.Expr(value=ast.Call(",
+      '                    func=ast.Name(id="_omnicad_safe_set_shape_color", ctx=ast.Load()),',
+      "                    args=[view_target.value, node.value],",
+      "                    keywords=[],",
+      "                ))",
+      "        return node",
+      "",
+      "def _omnicad_compile_source(source_code, source_path):",
+      '    parsed = ast.parse(source_code, filename=source_path, mode="exec")',
+      "    parsed = _OmniCadShapeColorGuard().visit(parsed)",
+      "    ast.fix_missing_locations(parsed)",
+      '    return compile(parsed, source_path, "exec")',
       "",
       "def add_search_paths(source_path):",
       "    current = os.path.dirname(os.path.abspath(source_path))",
@@ -196,12 +234,16 @@ export class FreeCadAdapter implements ICadEngine {
       "        current = parent",
       "",
       "def execute_source(source_path, inline_code):",
+      '    namespace = {"__file__": source_path, "__name__": "__main__", "_omnicad_safe_set_shape_color": _omnicad_safe_set_shape_color}',
       "    if os.path.exists(source_path):",
       "        add_search_paths(source_path)",
-      '        runpy.run_path(source_path, run_name="__main__")',
+      '        with open(source_path, "r", encoding="utf-8") as source_file:',
+      "            source_code = source_file.read()",
+      "        code_object = _omnicad_compile_source(source_code, source_path)",
+      "        exec(code_object, namespace, namespace)",
       "        return",
-      '    namespace = {"__file__": source_path, "__name__": "__main__"}',
-      '    exec(compile(inline_code, source_path, "exec"), namespace, namespace)',
+      "    code_object = _omnicad_compile_source(inline_code, source_path)",
+      "    exec(code_object, namespace, namespace)",
       "",
       "try:",
       "    execute_source(SOURCE_PATH, INLINE_CODE)",
@@ -339,6 +381,54 @@ export class FreeCadAdapter implements ICadEngine {
     }
 
     return { vertices, normals, indices };
+  }
+
+  private _extractPrimaryShapeColor(code: string): [number, number, number] | null {
+    const shapeColorPattern =
+      /(?:^|\s)[A-Za-z_][A-Za-z0-9_]*\.ViewObject\.ShapeColor\s*=\s*\(([^)]*)\)/m;
+    const match = shapeColorPattern.exec(code);
+    if (!match?.[1]) {
+      return null;
+    }
+    const channels = match[1]
+      .split(",")
+      .map((raw) => Number(raw.trim()))
+      .slice(0, 3);
+    if (
+      channels.length !== 3 ||
+      channels.some((channel) => !Number.isFinite(channel))
+    ) {
+      return null;
+    }
+    const allUnitRange = channels.every(
+      (channel) => channel >= 0 && channel <= 1,
+    );
+    const allByteRange = channels.every(
+      (channel) =>
+        channel >= 0 && channel <= 255 && Number.isInteger(channel),
+    );
+    if (!allUnitRange && !allByteRange) {
+      return null;
+    }
+    const normalizedChannels = allByteRange
+      ? channels.map((channel) => channel / 255)
+      : [...channels];
+    return normalizedChannels as [
+      number,
+      number,
+      number,
+    ];
+  }
+
+  private _buildVertexColors(
+    vertexCount: number,
+    color: [number, number, number],
+  ): number[] {
+    const colors: number[] = [];
+    for (let vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++) {
+      colors.push(color[0], color[1], color[2]);
+    }
+    return colors;
   }
 
   private _calculateBounds(vertices: number[]) {

@@ -23,8 +23,17 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Python CAD dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cadquery build123d
 
       - name: Run workspace lint
         run: pnpm lint
@@ -101,7 +110,11 @@ jobs:
 
   e2e:
     name: Extension E2E
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     permissions:
       contents: read
 
@@ -120,6 +133,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install system dependencies for Electron
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
@@ -138,11 +152,42 @@ jobs:
             libnspr4 \
             libdbus-1-3
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python CAD dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cadquery build123d
+
       - name: Cache VS Code test downloads
         uses: actions/cache@v4
         with:
-          path: ~/.vscode-test
+          # VS Code is downloaded by @vscode/test-electron into the package's
+          # local .vscode-test dir, not ~/.vscode-test.  Caching the correct
+          # path avoids a 200 MB re-download on every CI run.
+          path: packages/extension/.vscode-test
           key: vscode-test-${{ runner.os }}-stable
 
+      - name: Run extension host suite
+        if: runner.os == 'Linux'
+        env:
+          OMNICAD_REQUIRE_PYTHON_BREP: "1"
+          OMNICAD_PYTHON_EXECUTABLE: python
+        run: xvfb-run -a pnpm --filter omni-cad run test:host
+
+      - name: Run extension host suite
+        if: runner.os != 'Linux'
+        env:
+          OMNICAD_REQUIRE_PYTHON_BREP: "1"
+          OMNICAD_PYTHON_EXECUTABLE: python
+        run: pnpm --filter omni-cad run test:host
+
       - name: Run extension E2E
+        if: runner.os == 'Linux'
         run: xvfb-run -a pnpm --filter omni-cad run test:e2e
+
+      - name: Run extension E2E
+        if: runner.os != 'Linux'
+        run: pnpm --filter omni-cad run test:e2e

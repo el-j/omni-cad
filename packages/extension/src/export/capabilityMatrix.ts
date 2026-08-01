@@ -36,7 +36,7 @@ export const ADAPTER_EXPORT_CAPABILITY_MATRIX: AdapterCapabilityEntry[] = [
   {
     adapterId: "opengeometry",
     supportedExportFormats: [],
-    notes: "Experimental runtime; exports intentionally disabled.",
+    notes: "Experimental runtime; STL export is available only when preview mode is explicitly enabled.",
   },
 ];
 

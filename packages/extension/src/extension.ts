@@ -4,6 +4,16 @@ import * as path from "path";
 import { EngineRouter } from "./engines/EngineRouter";
 import { WebviewPanel } from "./webview/WebviewPanel";
 import { CompileResponse } from "./types";
+import {
+  FIRST_OPEN_SETUP_KEY,
+  markFirstOpenSetupComplete,
+  runStartupFirstOpenSetup,
+  SetupConfiguration,
+  SetupConfigurationReader,
+  SetupState,
+} from "./firstOpenSetup";
+
+export { runStartupFirstOpenSetup } from "./firstOpenSetup";
 
 let lastCompileResult: CompileResponse | undefined;
 let startupSetupPromise: Promise<boolean> | undefined;
@@ -45,12 +55,8 @@ function getConfigTarget(): vscode.ConfigurationTarget {
 }
 
 async function runFirstOpenSetup(
-  config: vscode.WorkspaceConfiguration,
+  config: SetupConfiguration,
 ): Promise<boolean> {
-  if (!config.get<boolean>("autoSetupOnStartup", true)) {
-    return false;
-  }
-
   const freecadPath = config.get<string>("freecadPath");
   const openscadPath = config.get<string>("openscadPath");
 
@@ -326,6 +332,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const changed = await runFirstOpenSetup(
         vscode.workspace.getConfiguration("omniCAD"),
       );
+      await markFirstOpenSetupComplete(context.globalState);
       if (changed) {
         refreshRuntime();
       }
@@ -377,7 +384,8 @@ export function activate(context: vscode.ExtensionContext): void {
   syncMcpProcess();
 
   if (!startupSetupPromise) {
-    startupSetupPromise = runFirstOpenSetup(
+    startupSetupPromise = runStartupFirstOpenSetup(
+      context.globalState,
       vscode.workspace.getConfiguration("omniCAD"),
     )
       .then((changed) => {

@@ -1,15 +1,17 @@
 import { test } from "@playwright/test";
 import * as path from "path";
 import * as fs from "fs";
-import { launchVSCode, openOmniCadViewer } from "../launcher";
+import { closeVSCodeApp, launchVSCode, openOmniCadViewer } from "../launcher";
+
+const openscadInitialCode =
+  "difference() {\n  cube([20,20,20], center=true);\n  sphere(r=14, $fn=64);\n}\n";
+const openscadUpdatedCode =
+  "difference() {\n  cube([50,15,75], center=true);\n  sphere(r=14, $fn=64);\n}\n";
 
 test("capture openscad render story", async () => {
   const extensionPath = path.resolve(__dirname, "../../../../");
   const scadFile = path.resolve(extensionPath, "demo.scad");
-  fs.writeFileSync(
-    scadFile,
-    "difference() {\n  cube([20,20,20], center=true);\n  sphere(r=14, $fn=64);\n}\n",
-  );
+  fs.writeFileSync(scadFile, openscadInitialCode);
 
   const { electronApp, userDataDir, window, modifier } = await launchVSCode(
     extensionPath,
@@ -18,18 +20,17 @@ test("capture openscad render story", async () => {
   );
 
   try {
-    await window.waitForSelector(".monaco-editor", { timeout: 1000 });
+    await window.waitForSelector(".monaco-editor", { timeout: 10000 });
 
     // 1. Open OmniCAD Viewer (handles first-open popup race conditions)
-    await openOmniCadViewer(window, modifier, 15000);
-    let palette = window.locator(".quick-input-filter input");
+    await openOmniCadViewer(window, modifier, 20000);
 
     // Pierce the webview iframe to find the scale slider
     const webviewFrame = window
       .frameLocator("iframe.webview")
       .frameLocator("iframe#active-frame");
     const slider = webviewFrame.locator(".scale-slider");
-    await slider.waitFor({ state: "visible", timeout: 6000 });
+    await slider.waitFor({ state: "visible", timeout: 15000 });
     await slider.fill("0.1");
     await window.waitForTimeout(1000);
 
@@ -38,26 +39,10 @@ test("capture openscad render story", async () => {
     await window.keyboard.press(`${modifier}+S`);
     await window.waitForTimeout(1000);
 
-    // 2. LIVE UPDATE: Change 50 to 10
-    // Navigate to line 2 (cube([20,20,20], center=true);
-    await window.keyboard.press("F1");
-    await window.waitForTimeout(1000);
-    await palette.waitFor({ state: "visible", timeout: 1500 });
-    await palette.fill("> Go to Line...");
-    await window.keyboard.press("Enter");
-    await window.waitForTimeout(1000);
-
-    // Type line number '2' and hit Enter
-    await palette.waitFor({ state: "visible", timeout: 1500 });
-    await palette.fill(":2");
-    await window.keyboard.press("Enter");
-    await window.waitForTimeout(1000);
-
-    // Modify cube size to 20x20x5
-    await window.keyboard.press("Shift+End");
-    await window.keyboard.type(" cube([50,15,75], center=true);", {
-      delay: 10,
-    });
+    // 2. LIVE UPDATE: replace editor content with updated script
+    await window.click(".monaco-editor");
+    await window.keyboard.press(`${modifier}+A`);
+    await window.keyboard.type(openscadUpdatedCode, { delay: 0 });
 
     await window.keyboard.press(`${modifier}+S`);
     await window.waitForTimeout(1000);
@@ -65,7 +50,7 @@ test("capture openscad render story", async () => {
     // 4. Wait for the engine to show result
     await window.waitForTimeout(3000);
   } finally {
-    await electronApp.close();
+    await closeVSCodeApp(electronApp);
     fs.rmSync(userDataDir, { recursive: true, force: true });
   }
 });
