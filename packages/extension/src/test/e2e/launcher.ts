@@ -232,14 +232,18 @@ export async function launchVSCode(
   videoDirName: string = "default",
   autoDismissSetupPopup = true,
   settingsOverrides: Record<string, unknown> = {},
+  reuseDirs: {
+    userDataDir?: string;
+    extensionsDir?: string;
+  } = {},
 ) {
   const vscodeExecutablePath = await downloadAndUnzipVSCode();
-  const userDataDir = fs.mkdtempSync(
-    path.join(os.tmpdir(), "vscode-test-user-"),
-  );
-  const extensionsDir = fs.mkdtempSync(
-    path.join(os.tmpdir(), "vscode-test-exts-"),
-  );
+  const userDataDir =
+    reuseDirs.userDataDir ??
+    fs.mkdtempSync(path.join(os.tmpdir(), "vscode-test-user-"));
+  const extensionsDir =
+    reuseDirs.extensionsDir ??
+    fs.mkdtempSync(path.join(os.tmpdir(), "vscode-test-exts-"));
 
   // Clean settings to force a "First Run" state that we control
   const settingsDir = path.join(userDataDir, "User");

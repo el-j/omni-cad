@@ -10,6 +10,7 @@ let startupSetupPromise: Promise<boolean> | undefined;
 
 const FREECAD_DEFAULT = "FreeCADCmd";
 const OPENSCAD_DEFAULT = "openscad";
+const FIRST_OPEN_SETUP_KEY = "omniCAD.firstOpenSetupCompleted";
 
 export function getLastCompileResultForTest(): CompileResponse | undefined {
   return lastCompileResult;
@@ -44,13 +45,22 @@ function getConfigTarget(): vscode.ConfigurationTarget {
     : vscode.ConfigurationTarget.Global;
 }
 
-async function runFirstOpenSetup(
-  config: vscode.WorkspaceConfiguration,
-): Promise<boolean> {
-  if (!config.get<boolean>("autoSetupOnStartup", true)) {
-    return false;
-  }
+interface SetupConfigurationReader {
+  get<T>(section: string, defaultValue?: T): T | undefined;
+}
 
+interface SetupConfiguration extends SetupConfigurationReader {
+  update(key: string, value: unknown, target?: vscode.ConfigurationTarget): Thenable<void>;
+}
+
+interface SetupState {
+  get<T>(key: string, defaultValue?: T): T | undefined;
+  update(key: string, value: unknown): Thenable<void>;
+}
+
+async function runFirstOpenSetup(
+  config: SetupConfiguration,
+): Promise<boolean> {
   const freecadPath = config.get<string>("freecadPath");
   const openscadPath = config.get<string>("openscadPath");
 
@@ -222,6 +232,30 @@ async function runFirstOpenSetup(
   return changed;
 }
 
+async function markFirstOpenSetupComplete(state: SetupState): Promise<void> {
+  await state.update(FIRST_OPEN_SETUP_KEY, true);
+}
+
+export async function runStartupFirstOpenSetup(
+  state: SetupState,
+  config: SetupConfigurationReader,
+  setupRunner: (config: SetupConfiguration) => Promise<boolean> = runFirstOpenSetup,
+): Promise<boolean> {
+  if (state.get<boolean>(FIRST_OPEN_SETUP_KEY, false)) {
+    return false;
+  }
+
+  if (!config.get<boolean>("autoSetupOnStartup", true)) {
+    return false;
+  }
+
+  try {
+    return await setupRunner(config as SetupConfiguration);
+  } finally {
+    await markFirstOpenSetupComplete(state);
+  }
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   const createRouter = () => {
     const config = vscode.workspace.getConfiguration("omniCAD");
@@ -326,6 +360,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const changed = await runFirstOpenSetup(
         vscode.workspace.getConfiguration("omniCAD"),
       );
+      await markFirstOpenSetupComplete(context.globalState);
       if (changed) {
         refreshRuntime();
       }
@@ -377,7 +412,8 @@ export function activate(context: vscode.ExtensionContext): void {
   syncMcpProcess();
 
   if (!startupSetupPromise) {
-    startupSetupPromise = runFirstOpenSetup(
+    startupSetupPromise = runStartupFirstOpenSetup(
+      context.globalState,
       vscode.workspace.getConfiguration("omniCAD"),
     )
       .then((changed) => {

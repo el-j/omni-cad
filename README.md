@@ -37,8 +37,8 @@ OmniCAD is a VS Code extension that acts as a **universal frontend router** for 
 - **Live 3D Viewer** — Three.js-powered WebGL viewer opens beside your editor. Save your file, see the update instantly.
 - **Engine Router** — Strategy-pattern dispatcher automatically selects the right backend for each file extension.
 - **Capability-aware Export** — Export actions are gated by the active engine's actual supported formats.
-- **Current export coverage** — OpenSCAD exports STL, and FreeCAD exports STL, STEP, and IGES.
-- **MCP Integration** — Built-in [Model Context Protocol](https://modelcontextprotocol.io) server exposes `compile_and_measure` and `export_geometry` tools to any MCP-capable AI agent.
+- **Current export coverage** — OpenSCAD exports STL, FreeCAD exports STL/STEP/IGES, and experimental OpenGeometry mode exports STL.
+- **MCP Integration** — Built-in [Model Context Protocol](https://modelcontextprotocol.io) server exposes `compile_and_measure`, `export_geometry`, `get_engine_capabilities`, `validate_source`, and `explain_compile_failure` tools to MCP-capable AI agents.
 - **Guarded experimental runtime** — OpenGeometry is explicitly gated until a real runtime is integrated.
 - **Professional CI/CD** — Semantic versioning, automated `.vsix` releases, coverage reports, E2E tests in headless VS Code.
 
@@ -113,6 +113,8 @@ All settings are under the **OmniCAD** section in VS Code Settings (`Ctrl+,`):
 | `omniCAD.openscadPath`                   | `openscad`   | Path to the `openscad` CLI executable |
 | `omniCAD.mcpEnabled`                     | `false`      | Enable guarded MCP server startup     |
 | `omniCAD.enableExperimentalOpenGeometry` | `false`      | Enable OpenGeometry preview mode      |
+| `omniCAD.worldUpAxis`                    | `Z`          | Viewer world up-axis (`Y` or `Z`)     |
+| `omniCAD.viewerUnitLabel`                | `mm`         | Unit label shown in viewer toolbar    |
 
 ---
 
@@ -137,10 +139,57 @@ All settings are under the **OmniCAD** section in VS Code Settings (`Ctrl+,`):
 │                                                     │
 │  McpServer ──────► compile_and_measure              │
 │   (stdio)  ──────► export_geometry                  │
+│            ──────► get_engine_capabilities          │
+│            ──────► validate_source                  │
+│            ──────► explain_compile_failure          │
 └─────────────────────────────────────────────────────┘
 ```
 
 The `EngineRouter` uses the **Strategy pattern**: each adapter implements the `ICadEngine` interface (`compile`, `getBrepMetadata`, `export`, `dispose`) and registers itself for its file extensions. The router looks up the right adapter by file extension at runtime.
+
+### MCP contract
+
+Run MCP in stdio mode:
+
+```bash
+pnpm --filter omni-cad run mcp:stdio
+```
+
+Optional environment variables:
+
+- `OMNICAD_FREECAD_PATH`: override FreeCAD CLI path
+- `OMNICAD_OPENSCAD_PATH`: override OpenSCAD CLI path
+- `OMNICAD_ENABLE_EXPERIMENTAL_OPENGEOMETRY=1`: enable OpenGeometry runtime tooling
+- `OMNICAD_MCP_TIMEOUT_MS`: per-tool timeout (default `120000`)
+
+All MCP tools return a versioned JSON envelope in the `text` payload:
+
+```json
+{
+  "apiVersion": "1.1.0",
+  "success": true,
+  "tool": "validate_source",
+  "data": {
+    "engine": "opengeometry",
+    "valid": false,
+    "issues": ["OpenGeometry source must export `const model = () => ...`."],
+    "warnings": []
+  }
+}
+```
+
+Error envelope:
+
+```json
+{
+  "apiVersion": "1.1.0",
+  "success": false,
+  "error": {
+    "code": "COMPILE_FAILED",
+    "message": "..."
+  }
+}
+```
 
 ---
 
@@ -191,6 +240,7 @@ pnpm --filter @omni-cad/landing run dev   # Start the landing/docs app locally
 | Suite     | Command                                    | What it tests                                                                                                                                      |
 | --------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Workspace | `pnpm test`                                | Package-level test suites orchestrated through the workspace                                                                                       |
+| Host      | `pnpm --filter omni-cad run test:host`     | Extension test suite executed inside a real VS Code Extension Host (`@vscode/test-electron`) for runtime-faithful validation                     |
 | Coverage  | `pnpm --filter omni-cad run test:coverage` | Extension unit coverage with c8 line/branch/function thresholds                                                                                    |
 | E2E       | `pnpm --filter omni-cad run test:e2e`      | Extension activation, command registration, config defaults, FreeCAD render path — runs inside a real VS Code instance via `@vscode/test-electron` |
 
@@ -216,7 +266,7 @@ Version bumps are determined by Conventional Commit messages:
 ## 🗺️ Roadmap
 
 - [ ] Publish to VS Code Marketplace
-- [ ] Add macOS and Windows E2E jobs
+- [x] Add macOS and Windows E2E jobs
 - [ ] Add export pipeline tests for STEP/STL/IGES/glTF
 - [ ] Add configurable render quality/performance presets
 - [ ] Add first-party engine adapter templates for contributors

@@ -19,7 +19,7 @@ function describeExtensionMessage(message: ExtensionToWebviewMessage): string {
     case "engineCapabilities":
       return `capabilities:${message.payload.engineId ?? "unknown"}`;
     case "updateConfig":
-      return `updateConfig:${message.payload.renderScale}`;
+      return `updateConfig:${message.payload.renderScale}:${message.payload.worldUpAxis}:${message.payload.unitLabel}`;
   }
 }
 
@@ -54,6 +54,10 @@ suite("Protocol contracts", () => {
           },
         },
       },
+      {
+        type: "updateConfig",
+        payload: { renderScale: 0.5, worldUpAxis: "Z", unitLabel: "mm" },
+      },
     ];
 
     assert.deepStrictEqual(messages.map(describeExtensionMessage), [
@@ -63,6 +67,7 @@ suite("Protocol contracts", () => {
       "error:boom",
       "export:/tmp/model.stl",
       "capabilities:openscad",
+      "updateConfig:0.5:Z:mm",
     ]);
   });
 

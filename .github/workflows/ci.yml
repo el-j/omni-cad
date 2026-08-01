@@ -23,8 +23,17 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Python CAD dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cadquery build123d
 
       - name: Run workspace lint
         run: pnpm lint
@@ -101,7 +110,11 @@ jobs:
 
   e2e:
     name: Extension E2E
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     permissions:
       contents: read
 
@@ -120,6 +133,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install system dependencies for Electron
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
@@ -147,16 +161,24 @@ jobs:
           path: packages/extension/.vscode-test
           key: vscode-test-${{ runner.os }}-stable
 
-      - name: Run extension E2E
-        run: xvfb-run -a pnpm --filter omni-cad run test:e2e
+      - name: Run extension host suite
+        if: runner.os == 'Linux'
         env:
-          # Force Mesa software OpenGL so WebGL works without a physical GPU.
-          LIBGL_ALWAYS_SOFTWARE: "1"
+          OMNICAD_REQUIRE_PYTHON_BREP: "1"
+          OMNICAD_PYTHON_EXECUTABLE: python
+        run: xvfb-run -a pnpm --filter omni-cad run test:host
 
-      - name: Upload Playwright test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results
-          path: packages/extension/test-results/
-          retention-days: 7
+      - name: Run extension host suite
+        if: runner.os != 'Linux'
+        env:
+          OMNICAD_REQUIRE_PYTHON_BREP: "1"
+          OMNICAD_PYTHON_EXECUTABLE: python
+        run: pnpm --filter omni-cad run test:host
+
+      - name: Run extension E2E
+        if: runner.os == 'Linux'
+        run: xvfb-run -a pnpm --filter omni-cad run test:e2e
+
+      - name: Run extension E2E
+        if: runner.os != 'Linux'
+        run: pnpm --filter omni-cad run test:e2e

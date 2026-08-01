@@ -26,7 +26,9 @@ export abstract class PythonBrepAdapter implements ICadEngine {
     experimental?: boolean;
   };
 
-  protected pythonExecutable = "python3";
+  protected pythonExecutable =
+    process.env.OMNICAD_PYTHON_EXECUTABLE ??
+    (process.platform === "win32" ? "python" : "python3");
 
   async compile(
     code: string,
