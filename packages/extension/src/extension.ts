@@ -4,13 +4,22 @@ import * as path from "path";
 import { EngineRouter } from "./engines/EngineRouter";
 import { WebviewPanel } from "./webview/WebviewPanel";
 import { CompileResponse } from "./types";
+import {
+  FIRST_OPEN_SETUP_KEY,
+  markFirstOpenSetupComplete,
+  runStartupFirstOpenSetup,
+  SetupConfiguration,
+  SetupConfigurationReader,
+  SetupState,
+} from "./firstOpenSetup";
+
+export { runStartupFirstOpenSetup } from "./firstOpenSetup";
 
 let lastCompileResult: CompileResponse | undefined;
 let startupSetupPromise: Promise<boolean> | undefined;
 
 const FREECAD_DEFAULT = "FreeCADCmd";
 const OPENSCAD_DEFAULT = "openscad";
-const FIRST_OPEN_SETUP_KEY = "omniCAD.firstOpenSetupCompleted";
 
 export function getLastCompileResultForTest(): CompileResponse | undefined {
   return lastCompileResult;
@@ -43,19 +52,6 @@ function getConfigTarget(): vscode.ConfigurationTarget {
     vscode.workspace.workspaceFolders.length > 0
     ? vscode.ConfigurationTarget.Workspace
     : vscode.ConfigurationTarget.Global;
-}
-
-interface SetupConfigurationReader {
-  get<T>(section: string, defaultValue?: T): T | undefined;
-}
-
-interface SetupConfiguration extends SetupConfigurationReader {
-  update(key: string, value: unknown, target?: vscode.ConfigurationTarget): Thenable<void>;
-}
-
-interface SetupState {
-  get<T>(key: string, defaultValue?: T): T | undefined;
-  update(key: string, value: unknown): Thenable<void>;
 }
 
 async function runFirstOpenSetup(
@@ -230,30 +226,6 @@ async function runFirstOpenSetup(
   }
 
   return changed;
-}
-
-async function markFirstOpenSetupComplete(state: SetupState): Promise<void> {
-  await state.update(FIRST_OPEN_SETUP_KEY, true);
-}
-
-export async function runStartupFirstOpenSetup(
-  state: SetupState,
-  config: SetupConfigurationReader,
-  setupRunner: (config: SetupConfiguration) => Promise<boolean> = runFirstOpenSetup,
-): Promise<boolean> {
-  if (state.get<boolean>(FIRST_OPEN_SETUP_KEY, false)) {
-    return false;
-  }
-
-  if (!config.get<boolean>("autoSetupOnStartup", true)) {
-    return false;
-  }
-
-  try {
-    return await setupRunner(config as SetupConfiguration);
-  } finally {
-    await markFirstOpenSetupComplete(state);
-  }
 }
 
 export function activate(context: vscode.ExtensionContext): void {

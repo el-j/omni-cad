@@ -20,7 +20,7 @@ import {
   resolveExportRequest,
 } from "../../webview/exportFlow";
 import { ExportFormat, ICadEngine } from "../../types";
-import { runStartupFirstOpenSetup } from "../../extension";
+import { runStartupFirstOpenSetup } from "../../firstOpenSetup";
 
 const freecadExecutable =
   "/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd";
